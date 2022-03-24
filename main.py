@@ -33,8 +33,9 @@ def convolution_2d(inputs, filter):
                 row = row.write(j, element)
             row = row.stack()
             temp.append(row)
-        output_temp.append(tf.concat(temp, 0))
-    output = tf.concat(output_temp, 0)
+
+        output_temp.append(tf.concat([temp], 0))
+    output = tf.concat([output_temp], 0)
     return output
 
 
@@ -56,4 +57,3 @@ f = tf.constant([[1, 0, -1],
                  [1, 0, -1]], dtype=tf.float32)
 
 out = convolution_2d(B, f)
-tf.print(out)
