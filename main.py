@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
+import time
 
 # To Avoid GPU errors
 physical_devices = tf.config.list_physical_devices("GPU")
@@ -32,40 +33,77 @@ def convolution_2d(inputs, filter):
 #
 # out = convolution_2d(B, f)
 
-# toeplitz diagonal
-input_shape = 6
-kernel_shape = 3
-output_shape = input_shape - kernel_shape + 1
-kernel = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+# populating 2d tensor
+def create_toeplitz():
+    input_shape = [3, 3]
+    kernel_size = 2
 
-row = tf.TensorArray(tf.float32, size=input_shape * input_shape, dynamic_size=False, clear_after_read=False)
-zeros = tf.TensorArray(tf.float32, size=input_shape * input_shape, dynamic_size=False, clear_after_read=False)
+    kernel = tf.reshape(tf.range(1, kernel_size**2+1, dtype=tf.float32), [kernel_size, kernel_size])
 
-for i in range(input_shape * input_shape):
-    if i % input_shape < kernel_shape and i // input_shape < kernel_shape:
-        row = row.write(i, kernel[i // input_shape][(i % input_shape) % kernel_shape])
-    else:
-        row = row.write(i, 0)
-    if i == 0:
-        zeros = zeros.write(i, kernel[0][0])
-    else:
-        zeros = zeros.write(i, 0)
+    t0 = time.time()
+    input_dim = tf.cast(input_shape[-1], tf.int32)
+    input_size = input_dim * input_dim
 
-row = row.stack()
-zeros = zeros.stack()
+    output_dim = input_dim - kernel_size + 1
+    output_size = output_dim * output_dim
 
-out = tf.linalg.LinearOperatorToeplitz(zeros, row).to_dense()
+    row = tf.TensorArray(tf.float32, size=input_size, dynamic_size=False, clear_after_read=False)
+    zeros = tf.TensorArray(tf.float32, size=input_size, dynamic_size=False, clear_after_read=False)
 
-temp = []
-for i in range(input_shape ** 2):
-    j = 0
-    if not (i % input_shape > input_shape - kernel_shape):
-        temp.append(out[i])
+    t1 = time.time()
+    for i in range(input_size):
+        if i % input_dim < kernel_size and i // input_dim < kernel_size:
+            row = row.write(i, kernel[i // input_dim][(i % input_dim) % kernel_size])
+        else:
+            row = row.write(i, 0)
+        if i == 0:
+            zeros = zeros.write(i, kernel[0][0])
+        else:
+            zeros = zeros.write(i, 0)
+    zeros = tf.zeros([input_size])
+    t2 = time.time()
 
-    if len(temp) >= output_shape ** 2:
-        break
+    row = row.stack()
+    # zeros = zeros.stack()
 
-out2 = tf.concat([temp], 0)
+    toeplitz = tf.linalg.LinearOperatorToeplitz(zeros, row).to_dense()
 
-tf.print("out2")
-tf.print(out2, summarize=36)
+    t3 = time.time()
+    # Take a slices of toeplitz matrix because toeplitz is not exactly the same as the matrix that we need
+    temp = []
+    for i in range(input_size):
+        if not (i % input_dim > input_dim - kernel_size):
+            temp.append(toeplitz[i])
+
+        if len(temp) >= output_size:
+            break
+
+    t4 = time.time()
+
+    weight_matrix = tf.concat([temp], 0)
+
+    t_f = time.time()
+
+    t0_ = t_f-t0
+    t1_ = t1-t0
+    t2_ = t2-t1
+    t3_ = t3-t2
+    t4_ = t4-t3
+
+    print("t0 = %s seconds " % t0_)
+    print("t4 = %s seconds " % t4_)
+    print("t3 = %s seconds " % t3_)
+    print("t2 = %s seconds " % t2_)
+    print("t1 = %s seconds " % t1_)
+
+    return weight_matrix
+
+
+def create_toeplitz_with_tf_sparse(input_shape, kernel_size):
+    input_dim = input_shape[-1]
+    input_size = input_shape[-1]**2
+    output_shape = input_shape[-1]
+
+
+if __name__ == '__main__':
+    print()
