@@ -101,7 +101,7 @@ def create_toeplitz():
 
 def create_toeplitz_with_tf_sparse(input_shape, kernel_size):
     input_dim = input_shape[-1]
-    input_size = input_shape[-1]**2
+    input_size = input_dim**2
     output_shape = input_shape[-1]
 
 
