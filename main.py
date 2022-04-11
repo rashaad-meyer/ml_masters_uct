@@ -99,12 +99,25 @@ def create_toeplitz():
     return weight_matrix
 
 
-def create_toeplitz_with_tf_sparse(input_shape, kernel_size):
+def create_toeplitz_with_tf_sparse(input_shape, kernel):
     # Calculate dimensions
     input_dim = input_shape[-1]
     input_size = input_dim ** 2
-    output_dim = input_dim - kernel_size + 1
+
+    kernel_dim = kernel.shape[-1]
+    kernel_size = kernel_dim**2
+
+    output_dim = input_dim - kernel_dim + 1
     output_size = output_dim ** 2
+
+    j = 0
+    k_i = []
+    for i in range(kernel_size):
+        if i % kernel_dim == 0 and i !=0:
+            j = j + (input_dim - kernel_dim)
+
+        k_i.append(j)
+        j = j + 1
 
     indices = []
     j = 0
@@ -113,13 +126,14 @@ def create_toeplitz_with_tf_sparse(input_shape, kernel_size):
 
         if i % (output_dim - 1) == 0 and i != 0:
             j = j + input_dim - output_dim + 1
-            print("hello")
         else:
             j = j + 1
 
-    return indices
+    return k_i
 
 
 if __name__ == '__main__':
-    out = create_toeplitz_with_tf_sparse([3, 3], 2)
+    kernel_size = 3
+    kernel = tf.reshape(tf.range(1, kernel_size**2 + 1), [kernel_size, kernel_size])
+    out = create_toeplitz_with_tf_sparse([6, 6], kernel)
     print(out)
