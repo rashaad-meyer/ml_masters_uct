@@ -49,5 +49,14 @@ class CustomConvolutionLayer(layers.Layer):
 
         self.w = tf.Variable(tf.concat([temp], 0), trainable=True)
 
+    @tf.custom_gradient
+    def custom_op(self, inputs):
+        result = tf.transpose(tf.matmul(self.w, inputs, transpose_b=True))
+
+        def custom_grad(dy, variable):
+            return dy
+
+        return result, custom_grad
+
     def call(self, inputs):
         return tf.transpose(tf.matmul(self.w, inputs, transpose_b=True))

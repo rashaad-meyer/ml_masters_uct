@@ -38,7 +38,7 @@ def create_toeplitz():
     input_shape = [3, 3]
     kernel_size = 2
 
-    kernel = tf.reshape(tf.range(1, kernel_size**2+1, dtype=tf.float32), [kernel_size, kernel_size])
+    kernel = tf.reshape(tf.range(1, kernel_size ** 2 + 1, dtype=tf.float32), [kernel_size, kernel_size])
 
     t0 = time.time()
     input_dim = tf.cast(input_shape[-1], tf.int32)
@@ -84,11 +84,11 @@ def create_toeplitz():
 
     t_f = time.time()
 
-    t0_ = t_f-t0
-    t1_ = t1-t0
-    t2_ = t2-t1
-    t3_ = t3-t2
-    t4_ = t4-t3
+    t0_ = t_f - t0
+    t1_ = t1 - t0
+    t2_ = t2 - t1
+    t3_ = t3 - t2
+    t4_ = t4 - t3
 
     print("t0 = %s seconds " % t0_)
     print("t4 = %s seconds " % t4_)
@@ -100,10 +100,26 @@ def create_toeplitz():
 
 
 def create_toeplitz_with_tf_sparse(input_shape, kernel_size):
+    # Calculate dimensions
     input_dim = input_shape[-1]
-    input_size = input_dim**2
-    output_shape = input_shape[-1]
+    input_size = input_dim ** 2
+    output_dim = input_dim - kernel_size + 1
+    output_size = output_dim ** 2
+
+    indices = []
+    j = 0
+    for i in range(output_size):
+        indices.append([i, j])
+
+        if i % (output_dim - 1) == 0 and i != 0:
+            j = j + input_dim - output_dim + 1
+            print("hello")
+        else:
+            j = j + 1
+
+    return indices
 
 
 if __name__ == '__main__':
-    print()
+    out = create_toeplitz_with_tf_sparse([3, 3], 2)
+    print(out)
