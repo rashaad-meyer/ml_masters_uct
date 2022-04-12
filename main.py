@@ -5,9 +5,9 @@ from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 import time
 
-# To Avoid GPU errors
-physical_devices = tf.config.list_physical_devices("GPU")
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+# To Avoid GPU errors. Turn off if you don't have a GPU
+# physical_devices = tf.config.list_physical_devices("GPU")
+# tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
 def convolution_2d(inputs, filter):
@@ -113,7 +113,7 @@ def create_toeplitz_with_tf_sparse(input_shape, kernel):
     j = 0
     k_i = []
     for i in range(kernel_size):
-        if i % kernel_dim == 0 and i !=0:
+        if i % kernel_dim == 0 and i != 0:
             j = j + (input_dim - kernel_dim)
 
         k_i.append(j)
@@ -121,19 +121,28 @@ def create_toeplitz_with_tf_sparse(input_shape, kernel):
 
     indices = []
     j = 0
+
     for i in range(output_size):
-        indices.append([i, j])
+        for v in k_i:
+            indices.append([i, j+v])
 
         if i % (output_dim - 1) == 0 and i != 0:
             j = j + input_dim - output_dim + 1
         else:
             j = j + 1
 
-    return k_i
+    flat_kernel = tf.reshape(kernel, kernel_size)
+
+    kernel_tile = tf.tile(flat_kernel, [output_size])
+    tf.print(kernel_tile, summarize=36)
+
+    st = tf.SparseTensor(indices=indices, values=kernel_tile, dense_shape=[output_size, input_size])
+    st1 = tf.sparse.to_dense(st)
+    return st1
 
 
 if __name__ == '__main__':
-    kernel_size = 3
-    kernel = tf.reshape(tf.range(1, kernel_size**2 + 1), [kernel_size, kernel_size])
-    out = create_toeplitz_with_tf_sparse([6, 6], kernel)
+    k_s = 3
+    k = tf.reshape(tf.range(1, k_s ** 2 + 1), [k_s, k_s])
+    out = create_toeplitz_with_tf_sparse([6, 6], k)
     print(out)
