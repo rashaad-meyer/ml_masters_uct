@@ -123,17 +123,19 @@ def create_toeplitz_with_tf_sparse(input_shape, kernel):
     j = 0
 
     for i in range(output_size):
+
+        if i % output_dim == 0 and i != 0:
+            j = j + input_dim - output_dim
+
         for v in k_i:
             indices.append([i, j+v])
 
-        if i % (output_dim - 1) == 0 and i != 0:
-            j = j + input_dim - output_dim + 1
-        else:
-            j = j + 1
+        j = j + 1
 
     flat_kernel = tf.reshape(kernel, kernel_size)
-
     kernel_tile = tf.tile(flat_kernel, [output_size])
+
+    # kernel_tile = tf.tile([kernel[0][0]], [output_size])
     tf.print(kernel_tile, summarize=36)
 
     st = tf.SparseTensor(indices=indices, values=kernel_tile, dense_shape=[output_size, input_size])
