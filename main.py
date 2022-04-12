@@ -99,17 +99,13 @@ def create_toeplitz():
     return weight_matrix
 
 
-def create_toeplitz_with_tf_sparse(input_shape, kernel):
-    # Calculate dimensions
-    input_dim = input_shape[-1]
-    input_size = input_dim ** 2
-
-    kernel_dim = kernel.shape[-1]
-    kernel_size = kernel_dim**2
+def create_conv_mat_indices(input_dim, kernel_dim):
+    kernel_size = kernel_dim ** 2
 
     output_dim = input_dim - kernel_dim + 1
     output_size = output_dim ** 2
 
+    # calculate index displacements for each row
     j = 0
     k_i = []
     for i in range(kernel_size):
@@ -122,21 +118,35 @@ def create_toeplitz_with_tf_sparse(input_shape, kernel):
     indices = []
     j = 0
 
+    # calculate indices for entire matrix
     for i in range(output_size):
 
         if i % output_dim == 0 and i != 0:
             j = j + input_dim - output_dim
 
         for v in k_i:
-            indices.append([i, j+v])
+            indices.append([i, j + v])
 
         j = j + 1
+    return indices
 
+
+def create_conv_mat(input_shape, kernel):
+    # Calculate dimensions
+    input_dim = input_shape[-1]
+    input_size = input_dim ** 2
+
+    kernel_dim = kernel.shape[-1]
+    kernel_size = kernel_dim ** 2
+
+    output_dim = input_dim - kernel_dim + 1
+    output_size = output_dim ** 2
+
+    indices = create_conv_mat_indices(input_shape[-1], kernel_dim)
+
+    # flatten kernel then repeat it for output_size amount of times
     flat_kernel = tf.reshape(kernel, kernel_size)
     kernel_tile = tf.tile(flat_kernel, [output_size])
-
-    # kernel_tile = tf.tile([kernel[0][0]], [output_size])
-    tf.print(kernel_tile, summarize=36)
 
     st = tf.SparseTensor(indices=indices, values=kernel_tile, dense_shape=[output_size, input_size])
     st1 = tf.sparse.to_dense(st)
@@ -144,7 +154,7 @@ def create_toeplitz_with_tf_sparse(input_shape, kernel):
 
 
 if __name__ == '__main__':
-    k_s = 3
+    k_s = 2
     k = tf.reshape(tf.range(1, k_s ** 2 + 1), [k_s, k_s])
-    out = create_toeplitz_with_tf_sparse([6, 6], k)
+    out = create_conv_mat([3, 3], k)
     print(out)
