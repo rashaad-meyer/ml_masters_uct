@@ -4,7 +4,8 @@ from tensorflow.keras import layers
 
 
 def forward_fcn(x, h):
-    y = []
+    # TODO change to use tensors
+    y = tf.TensorArray(tf.float32, size=x.shape[-1], dynamic_size=False, clear_after_read=False)
     for i in range(len(x)):
         y.append(0)
         if i >= len(h):
