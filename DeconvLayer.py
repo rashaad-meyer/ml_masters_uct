@@ -15,11 +15,17 @@ class DeconvLayer(layers.Layer):
         )
 
     def call(self, inputs):
-        out = []
+        v = []
         for i in inputs:
-            out.append(self.forward_fcn(inputs, self.w))
-        out = tf.concat([out], 0)
-        return out
+            v.append(self.forward_fcn(i, self.w))
+        v = tf.concat([v], 0)
+
+        y = []
+        for i in v:
+            y.append(self.forward_fcn(i, self.w))
+        y = tf.concat([y], 0)
+
+        return y
 
     @staticmethod
     def forward_fcn(x, h):
