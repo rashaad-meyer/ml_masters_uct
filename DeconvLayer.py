@@ -8,7 +8,7 @@ class DeconvLayer(layers.Layer):
         super(DeconvLayer, self).__init__()
         self.w = self.add_weight(
             name="kernel",
-            shape=(filter_size, 1),
+            shape=(1, filter_size),
             dtype=tf.float32,
             initializer="random_normal",
             trainable=True,
