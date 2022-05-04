@@ -23,7 +23,7 @@ def forward(inputs, h):
 
 
 if __name__ == '__main__':
-    h = tf.random.uniform(shape=[8], minval=0)
+    h = tf.random.uniform(shape=[1, 8], minval=0)
     input_shape = [10, 32]
     tf.print(h)
     (x_train, y_train) = generate_deconv_dataset(h, input_shape)

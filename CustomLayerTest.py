@@ -7,6 +7,7 @@ from DeconvLayer import DeconvLayer
 import DatasetGenerator
 import time
 
+
 # physical_devices = tf.config.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
@@ -56,38 +57,51 @@ def test_deconv_with_single_layer_nn():
     print("Testing Deconvolution Layer with single layer NN")
 
     # Load/generate data
-    h = tf.random.uniform(shape=[8], minval=0)
-    input_shape = [100, 16]
+    h = tf.random.uniform(shape=[1, 3], minval=0)
+    input_shape = [100, 8]
     t0 = time.time()
     (x, y) = DatasetGenerator.generate_deconv_dataset(h, input_shape)
     t1 = time.time()
 
-    size = tf.cast(x.shape[0]/2, tf.int32)
-    (x_train, y_test) = (x[:size], y[:size])
+    size = tf.cast(x.shape[0] / 2, tf.int32)
+    (x_train, y_train) = (x[:size], y[:size])
     (x_test, y_test) = (x[size:], y[size:])
 
-    print("It took " + str(t1-t0) + " seconds to generate the data")
+    print("It took " + str(t1 - t0) + " seconds to generate the data")
+
+    print("x_train")
+    print(x_train.shape)
+
+    print("y_train")
+    print(y_train.shape)
+
+    print("x_test")
+    print(x_test.shape)
+
+    print("y_test")
+    print(y_test.shape)
 
     # Sequential API (Very Convenient, not very flexible)
     model = tf.keras.Sequential(
         [
-            tf.keras.layers.InputLayer(input_shape=32),
+            tf.keras.layers.InputLayer(input_shape=8),
             DeconvLayer(8)
         ]
     )
-    tf.print('--- self.w before training ---')
-    tf.print(model.layers[0].w, summarize=28)
+    tf.print('--- self.kernel before training ---')
+    tf.print(model.layers[0].kernel, summarize=28)
 
     model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
         metrics=["accuracy"],
     )
-    model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
-    model.evaluate(x_test, y_test, batch_size=32, verbose=2)
 
-    tf.print('--- self.w after training ---')
-    tf.print(model.layers[0].w, summarize=28)
+    model.fit(x_train, y_train, batch_size=10, epochs=10, verbose=2)
+    model.evaluate(x_test, y_test, batch_size=10, verbose=2)
+
+    tf.print('--- self.kernel after training ---')
+    tf.print(model.layers[0].kernel, summarize=28)
 
 
 def test_with_single_layer_nn():
@@ -104,8 +118,8 @@ def test_with_single_layer_nn():
             CustomConvolutionLayer(3, [28, 28])
         ]
     )
-    tf.print('--- self.w before training ---')
-    tf.print(model.layers[0].w, summarize=28)
+    tf.print('--- self.kernel before training ---')
+    tf.print(model.layers[0].kernel, summarize=28)
 
     model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -115,10 +129,19 @@ def test_with_single_layer_nn():
     model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
 
-    tf.print('--- self.w after training ---')
-    tf.print(model.layers[0].w, summarize=28)
+    tf.print('--- self.kernel after training ---')
+    tf.print(model.layers[0].kernel, summarize=28)
 
 
 if __name__ == '__main__':
-    test_deconv_with_single_layer_nn()
+    # test_deconv_with_single_layer_nn()
     # test_with_nn()
+    # deconv = DeconvLayer(6)
+    # (x, y) = DatasetGenerator.generate_deconv_dataset(deconv.kernel, [1, 10])
+    # y_ = deconv.call(x)
+    # tf.print(y_)
+    # tf.print(y)
+    A = tf.constant([[0, 1, 2, 3, 4, 5, 6]])
+    h = tf.constant([1, 0, -1])
+    y = tf.nn.conv1d(A, h, stride=[1], padding='VALID')
+    tf.print(A, h)
