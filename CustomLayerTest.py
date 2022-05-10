@@ -124,7 +124,7 @@ def test_with_single_layer_nn():
     model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        metrics=["accuracy"],
+        metrics=["loss"],
     )
     model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
@@ -135,13 +135,8 @@ def test_with_single_layer_nn():
 
 if __name__ == '__main__':
     # test_deconv_with_single_layer_nn()
-    # test_with_nn()
-    # deconv = DeconvLayer(6)
-    # (x, y) = DatasetGenerator.generate_deconv_dataset(deconv.kernel, [1, 10])
-    # y_ = deconv.call(x)
-    # tf.print(y_)
-    # tf.print(y)
+
     A = tf.constant([[0, 1, 2, 3, 4, 5, 6]])
-    h = tf.constant([1, 0, -1])
-    y = tf.nn.conv1d(A, h, stride=[1], padding='VALID')
-    tf.print(A, h)
+    B = tf.reverse(A, [-1])
+    tf.print(B)
+

@@ -13,17 +13,36 @@ class DeconvLayer(layers.Layer):
             initializer="random_normal",
             trainable=True,
         )
+        self.kernel_r = tf.reverse(self.kernel, [-1])
 
     def call(self, inputs):
-        return self.full_conv(inputs)
+        return self.custom_op(inputs, self.kernel, self.kernel_r)
 
     @tf.custom_gradient
-    def full_deconv(self, inputs):
+    def custom_op(self, inputs, h, hr):
+        y = self.full_deconv(inputs, h, hr)
+
+        h = self.kernel
+
+        def grad_fn(dy, variables):
+
+            assert variables is not None
+            assert len(variables) == 1
+
+            grad_vars = []
+
+            grad_inputs = self.full_deconv(inputs, h, hr)
+
+            return grad_inputs
+
+        return y, grad_fn
+
+    def full_deconv(self, inputs, h, hr):
         v = tf.TensorArray(tf.float32, size=0, dynamic_size=True, clear_after_read=False)
         j = 0
 
         for i in inputs:
-            v = v.write(j, self.deconv(i, self.kernel))
+            v = v.write(j, self.deconv(i, h))
             j = j + 1
 
         v = v.stack()
@@ -32,27 +51,12 @@ class DeconvLayer(layers.Layer):
         j = 0
 
         for i in v:
-            y = y.write(j, self.deconv(i, self.kernel))
+            y = y.write(j, self.deconv(i, hr))
             j = j + 1
 
         y = y.stack()
 
-        h = self.kernel
-
-        def grad_fn(dy, variables):
-            # not sure how to compute g
-            g = h
-
-            assert variables is not None
-            assert len(variables) == 1
-
-            grad_vars = []
-
-            grad_vars = tf.nn.conv1d(inputs)
-
-            return
-
-        return y, grad_fn
+        return y
 
     @staticmethod
     def deconv(x, h):
