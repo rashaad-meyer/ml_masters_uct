@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 
 
-def np_tf_FFT_test():
+def np_tf_fft_test():
     sr = 2000
     ts = 1.0 / sr
     t = np.arange(0, 1, ts)
@@ -61,6 +61,7 @@ def forward_pass(xm, hrf):
 
     #
     gm1f = 1 / np.fft.fft2(hm1)
+
     gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
     gm3f = tf.roll(tf.reverse(gm1f, [1]), shift=1, axis=1)
     gm4f = tf.roll(tf.reverse(gm3f, [0]), shift=1, axis=0)
@@ -73,17 +74,30 @@ def forward_pass(xm, hrf):
 
 
 def back_prop(xm, hrf, ym, um):
-    return
+    # FIXME shouldn't have to calculate G again
+    paddings = tf.constant([[0, xm.shape[-2] - hrf.shape[-2]], [0, xm.shape[-1] - hrf.shape[-1]]])
+    hm1 = tf.pad(hrf, paddings, "CONSTANT")
+
+    # Calculate G
+    gm1f = 1 / np.fft.fft2(hm1)
+    gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
+    gm3f = tf.roll(tf.reverse(gm1f, [1]), shift=1, axis=1)
+    gm4f = tf.roll(tf.reverse(gm3f, [0]), shift=1, axis=0)
+    gmf = gm1f * gm2f * gm3f * gm4f
+
+    umf = np.fft.fft2(um)
+    uypxm = np.fft.ifft2(gmf * umf)
+
+    return uypxm
 
 
 if __name__ == '__main__':
     x = tf.ones([6, 6])
     h = tf.constant([[1, 2, 3], [4, 5, 6]], dtype=tf.float32)
 
-    hr = tf.reverse(h, [0])
-    hr = tf.roll(h, shift=1, axis=0)
-    m = np.arange(3)
-    m = m * m
+    X = tf.signal.rfft2d(x)
+    x1 = tf.signal.irfft2d(X)
 
-    y = forward_pass(x, h)
-    print(y)
+    tf.print(x, summarize=6)
+    tf.print(X, summarize=6)
+    tf.print(x1, summarize=6)
