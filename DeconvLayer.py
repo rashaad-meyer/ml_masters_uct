@@ -19,23 +19,54 @@ class DeconvLayer(layers.Layer):
         return self.custom_op(inputs, self.kernel, self.kernel_r)
 
     @tf.custom_gradient
-    def custom_op(self, inputs, h, hr):
-        y = self.full_deconv(inputs, h, hr)
+    def custom_op(self, xm, hrf, hr):
+        ym = self.full_deconv(xm, hrf, hr)
 
-        h = self.kernel
-
-        def grad_fn(dy, variables):
-
+        def grad_fn(um, variables):
             assert variables is not None
             assert len(variables) == 1
 
+            grad_inputs = self.full_deconv(um, hrf, hr)
+
             grad_vars = []
 
-            grad_inputs = self.full_deconv(inputs, h, hr)
+            for j in range(um.shape[-1]):
 
-            return grad_inputs
+                vm = self.deconv(ym[j], hrf)
 
-        return y, grad_fn
+                zero = tf.zeros(vm.shape)
+                vmq = tf.concat([vm, zero], 0)
+
+                uyqm1 = tf.TensorArray(tf.float32, size=hrf.shape[-1], dynamic_size=False, clear_after_read=False)
+
+                for i in range(hrf.shape[-1]):
+                    vmq = tf.roll(vmq, shift=1, axis=0)
+                    temp = tf.tensordot(um[j], vmq[:xm.shape[-1]], 1)
+                    uyqm1 = uyqm1.write(i, temp)
+
+                uyqm1 = uyqm1.stack()
+
+                vm = self.deconv(ym[j], hr)
+
+                zero = tf.zeros(vm.shape)
+                vmq = tf.concat([vm, zero], 0)
+
+                uyqm2 = tf.TensorArray(tf.float32, size=hrf.shape[-1], dynamic_size=False, clear_after_read=False)
+
+                for i in range(hrf.shape[-1]):
+                    vmq = tf.roll(vmq, shift=-1, axis=0)
+                    temp = tf.tensordot(um[j], vmq[:xm.shape[-1]], 1)
+                    uyqm2 = uyqm2.write(i, temp)
+
+                uyqm2 = uyqm2.stack()
+
+                uyqm = -tf.add(uyqm1, uyqm2)
+                grad_vars.append(uyqm)
+
+            grad_vars = tf.concat([grad_vars], 0)
+            return grad_inputs, grad_vars
+
+        return ym, grad_fn
 
     def full_deconv(self, inputs, h, hr):
         v = tf.TensorArray(tf.float32, size=0, dynamic_size=True, clear_after_read=False)
@@ -61,15 +92,13 @@ class DeconvLayer(layers.Layer):
     @staticmethod
     def deconv(x, h):
         y = tf.TensorArray(tf.float32, size=x.shape[-1], dynamic_size=False, clear_after_read=False)
-        v = []
         for i in range(x.shape[-1]):
             element = tf.constant(0, dtype=tf.float32)
             if i >= h.shape[-1]:
                 for j in range(h.shape[-1]):
-                    temp = tf.multiply(h[0][j], v[i - j - 1])
+                    temp = tf.multiply(h[0][j], x[i - j - 1])
                     element = tf.add(element, temp)
                 element = tf.add(element, x[i])
-            v.append(element)
             y = y.write(i, element)
         y = y.stack()
         return y
