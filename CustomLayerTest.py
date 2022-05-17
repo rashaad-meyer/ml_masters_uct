@@ -134,7 +134,7 @@ def test_with_single_layer_nn():
 
 
 if __name__ == '__main__':
-    # test_deconv_with_single_layer_nn()
+    test_deconv_with_single_layer_nn()
 
     A = tf.constant([[0, 1, 2, 3, 4, 5, 6]])
     B = tf.reverse(A, [-1])
