@@ -134,9 +134,7 @@ def test_with_single_layer_nn():
 
 
 if __name__ == '__main__':
-    test_deconv_with_single_layer_nn()
-
-    A = tf.constant([[0, 1, 2, 3, 4, 5, 6]])
-    B = tf.reverse(A, [-1])
-    tf.print(B)
-
+    # test_deconv_with_single_layer_nn()
+    (x_train1, y_train1), (x_test1, y_test1) = mnist.load_data()
+    print(x_train1.shape)
+    print(y_train1.shape)

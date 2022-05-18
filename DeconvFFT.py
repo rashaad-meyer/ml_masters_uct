@@ -100,4 +100,4 @@ if __name__ == '__main__':
 
     tf.print(x, summarize=6)
     tf.print(X, summarize=6)
-    tf.print(x1, summarize=6)
+    print(x1)
