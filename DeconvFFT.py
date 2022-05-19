@@ -59,18 +59,19 @@ def forward_pass(xm, hrf):
     paddings = tf.constant([[0, xm.shape[-2] - hrf.shape[-2]], [0, xm.shape[-1] - hrf.shape[-1]]])
     hm1 = tf.pad(hrf, paddings, "CONSTANT")
 
-    #
-    gm1f = 1 / np.fft.fft2(hm1)
-
+    gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
     gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
     gm3f = tf.roll(tf.reverse(gm1f, [1]), shift=1, axis=1)
     gm4f = tf.roll(tf.reverse(gm3f, [0]), shift=1, axis=0)
-    gmf = gm1f * gm2f * gm3f * gm4f
 
-    ymf = gmf * np.fft.fft2(xm)
-    ym = np.fft.ifft2(ymf)
+    gmf1 = tf.multiply(gm1f, gm2f)
+    gmf2 = tf.multiply(gm3f, gm4f)
+    gmf = tf.multiply(gmf1, gmf2)
 
-    return tf.cast(ym, dtype=tf.float32)
+    ymf = tf.multiply(gmf, tf.signal.rfft2d(xm))
+    ym = tf.signal.irfft2d(ymf)
+
+    return ym
 
 
 def back_prop(xm, hrf, ym, um):

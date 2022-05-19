@@ -20,9 +20,11 @@ class DeconvDft2dLayer(layers.Layer):
         gm3f = tf.roll(tf.reverse(gm1f, [1]), shift=1, axis=1)
         gm4f = tf.roll(tf.reverse(gm3f, [0]), shift=1, axis=0)
 
-        gmf = gm1f * gm2f * gm3f * gm4f
+        gmf1 = tf.multiply(gm1f, gm2f)
+        gmf2 = tf.multiply(gm3f, gm4f)
+        gmf = tf.multiply(gmf1, gmf2)
 
-        ymf = gmf * tf.signal.rfft2d(xm)
+        ymf = tf.multiply(gmf, tf.signal.rfft2d(xm))
         ym = tf.signal.irfft2d(ymf)
 
         return ym
