@@ -4,7 +4,7 @@ from tensorflow.keras import layers
 
 class DeconvDft2dLayer(layers.Layer):
 
-    def __init__(self, h_shape, input_shape):
+    def __init__(self, h_shape):
         super(DeconvDft2dLayer, self).__init__()
         self.h_shape = h_shape
         self.w = tf.Variable(name='w',
