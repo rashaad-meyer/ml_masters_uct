@@ -55,9 +55,15 @@ def np_tf_fft_test():
 
 
 def forward_pass(xm, hrf):
+    # pad input
+    padding = tf.constant(
+        [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
+    xm = tf.pad(xm, padding, "CONSTANT")
+
     # pad filter to input size
     paddings = tf.constant([[0, xm.shape[-2] - hrf.shape[-2]], [0, xm.shape[-1] - hrf.shape[-1]]])
     hm1 = tf.pad(hrf, paddings, "CONSTANT")
+
 
     gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
     gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
@@ -93,12 +99,13 @@ def back_prop(xm, hrf, ym, um):
 
 
 if __name__ == '__main__':
-    x = tf.ones([6, 6])
+    # random uniform can't be the issue
+    x = tf.random.uniform([6, 6], minval=0)
+    # hrf = tf.constant([[0.01, 0.02, 0.03], [0.04, 0.05, 0.06], [0.07, 0.08, 0.09]])
+    hrf = tf.random.uniform((3, 3), minval=0)
     h = tf.constant([[1, 2, 3], [4, 5, 6]], dtype=tf.float32)
 
     X = tf.signal.rfft2d(x)
     x1 = tf.signal.irfft2d(X)
 
-    tf.print(x, summarize=6)
-    tf.print(X, summarize=6)
-    print(x1)
+    y = forward_pass(x, hrf)

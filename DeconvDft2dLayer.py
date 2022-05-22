@@ -12,6 +12,10 @@ class DeconvDft2dLayer(layers.Layer):
                              trainable=True)
 
     def custom_op(self, xm):
+        padding = tf.constant(
+            [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
+        xm = tf.pad(xm, padding, "CONSTANT")
+
         paddings = tf.constant([[0, xm.shape[-2] - self.w.shape[-2]], [0, xm.shape[-1] - self.w.shape[-1]]])
         hm1 = tf.pad(self.w, paddings, "CONSTANT")
 
