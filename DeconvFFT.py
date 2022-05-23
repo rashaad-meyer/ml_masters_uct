@@ -64,7 +64,6 @@ def forward_pass(xm, hrf):
     paddings = tf.constant([[0, xm.shape[-2] - hrf.shape[-2]], [0, xm.shape[-1] - hrf.shape[-1]]])
     hm1 = tf.pad(hrf, paddings, "CONSTANT")
 
-
     gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
     gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
     gm3f = tf.roll(tf.reverse(gm1f, [1]), shift=1, axis=1)
@@ -96,6 +95,25 @@ def back_prop(xm, hrf, ym, um):
     uypxm = np.fft.ifft2(gmf * umf)
 
     return uypxm
+
+
+def initialise_w(h_shape):
+    wf = tf.TensorArray(tf.float32, size=h_shape[-2], dynamic_size=False)
+    for i in range(h_shape[-2]):
+        wa = tf.TensorArray(tf.float32, size=h_shape[-1], dynamic_size=False)
+        for j in range(h_shape[-1]):
+            v = tf.Variable([0.0], trainable=True)
+
+            if i == 0 and j == 0:
+                v = tf.Variable([1.0], trainable=False)
+
+            wa = wa.write(j, v)
+
+        wa = wa.stack()
+        wf = wf.write(i, wa)
+    wf = wf.stack()
+    w = tf.reshape(wf, h_shape)
+    return w
 
 
 if __name__ == '__main__':
