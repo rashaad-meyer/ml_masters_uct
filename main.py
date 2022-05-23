@@ -154,7 +154,4 @@ def create_conv_mat(input_shape, kernel):
 
 
 if __name__ == '__main__':
-    k_s = 2
-    k = tf.reshape(tf.range(1, k_s ** 2 + 1), [k_s, k_s])
-    out = create_conv_mat([3, 3], k)
-    print(out)
+    print()
