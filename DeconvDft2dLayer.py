@@ -7,9 +7,21 @@ class DeconvDft2dLayer(layers.Layer):
     def __init__(self, h_shape):
         super(DeconvDft2dLayer, self).__init__()
         self.h_shape = h_shape
-        self.w = tf.Variable(name='w',
-                             initial_value=tf.random.uniform(h_shape, minval=0, maxval=0.1),
-                             trainable=True)
+        # self.w = tf.Variable(name='w',
+        #                      initial_value=tf.random.uniform(h_shape, minval=0, maxval=0.1),
+        #                      trainable=True)
+        # Initialise so that the first element of w is and 1 and not trainable
+        # and the rest is zero and trainable
+        wf = []
+        for i in range(h_shape[-2]):
+            wa = []
+            for j in range(h_shape[-1]):
+                if i == 0 and j == 0:
+                    wa.append(tf.Variable(1.0, trainable=False))
+                else:
+                    wa.append(tf.Variable(0.0, trainable=False))
+            wf.append(wa)
+        self.w = tf.Variable(wf)
 
     def custom_op(self, xm):
         padding = tf.constant(
