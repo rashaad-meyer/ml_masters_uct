@@ -9,10 +9,13 @@ from matplotlib import pyplot as plt
 
 def deconv_dft_2d_test():
     data_len = 2000
-    data_shape = (32, 32)
-    xm = tf.random.uniform((data_len, data_shape[-2], data_shape[-1]), minval=0, seed=1)
+    data_shape = (16, 16)
+    filter_shape = (3, 3)
 
-    hrf = tf.random.uniform((3, 3), minval=0, seed=2)
+    xm = tf.random.uniform((data_len, data_shape[-2], data_shape[-1]), minval=0)
+
+    hrf = tf.random.uniform(filter_shape, minval=0, seed=2)
+    hrf = tf.constant([[1, 0.1, 0.1], [0.5, 0, 0], [0.5, 0, 0]])
 
     ym = DeconvFFT.forward_pass(xm, hrf)
     print(tf.reduce_max(ym))
@@ -26,14 +29,17 @@ def deconv_dft_2d_test():
     model = tf.keras.Sequential(
         [
             tf.keras.layers.InputLayer(input_shape=data_shape),
-            DeconvDft2dLayer((3, 3))
+            DeconvDft2dLayer(filter_shape),
         ]
     )
 
     model.compile(
-        optimizer=tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.9),
+        optimizer=tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9),
         loss='mse'
     )
+
+    model.summary()
+
     w0 = model.layers[0].w
     w0_diff = tf.reduce_sum(tf.math.square(hrf - w0))
 
@@ -80,34 +86,37 @@ def deconv_2d_dft_mnist_test():
     model = tf.keras.Sequential(
         [
             tf.keras.layers.InputLayer(input_shape=(28, 28)),
-            # DeconvDft2dLayer((3, 3)),
+            DeconvDft2dLayer((3, 3)),
             layers.Flatten(),
             layers.Dense(10)
         ]
     )
 
-    # model.layers[2].trainable = False
+    model.layers[2].trainable = False
     model.summary()
 
     model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.01),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.1),
         metrics=["accuracy"],
     )
 
-    w0 = model.layers[1].kernel
+    w0 = model.layers[0].w
+    print("Weights before")
+    print(w0)
 
     model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
 
-    wf = model.layers[1].kernel
-    tf.print("Weights before")
-    tf.print(w0)
-    tf.print("Weights after")
-    tf.print(wf)
+    wf = model.layers[0].w
+
+    print("Weights after")
+    print(wf)
 
 
 if __name__ == '__main__':
-    deconv_dft_2d_test()
+    if 1:
+        deconv_dft_2d_test()
+    else:
+        deconv_2d_dft_mnist_test()
     # test()
-
