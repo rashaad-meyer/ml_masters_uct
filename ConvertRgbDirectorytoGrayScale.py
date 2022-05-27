@@ -22,7 +22,6 @@ for i in folders:
         
         if len(img.shape) == 3:
             img_grayscale = tf.image.rgb_to_grayscale(img)
-
             path_full = os.path.join(path_folder, j)
             tf.keras.utils.save_img(path_full, img_grayscale)
         else:
