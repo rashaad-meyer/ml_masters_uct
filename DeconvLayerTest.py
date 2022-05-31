@@ -10,12 +10,17 @@ from matplotlib import pyplot as plt
 def deconv_dft_2d_test():
     data_len = 2000
     data_shape = (16, 16)
-    filter_shape = (3, 3)
+    h_shape = (3, 3)
 
     xm = tf.random.uniform((data_len, data_shape[-2], data_shape[-1]), minval=0)
 
-    hrf = tf.random.uniform(filter_shape, minval=0, seed=2)
-    hrf = tf.constant([[1, 0.1, 0.1], [0.5, 0, 0], [0.5, 0, 0]])
+    one = tf.pad([[1.0]], [[0, h_shape[-2] - 1], [0, h_shape[-1] - 1]])
+    pad_w = tf.constant([[0, 0], [1, 0]])
+
+    hrf = tf.random.uniform((h_shape[-2], h_shape[-1] - 1), minval=0, maxval=0.5)
+    # hrf = tf.constant([[1, 0.3, 0.3], [0, 0.1, 0.2], [0, 0.2, 0.2]])
+    hrf = tf.pad(hrf, pad_w, mode='CONSTANT')
+    hrf = tf.add(hrf, one)
 
     ym = DeconvFFT.forward_pass(xm, hrf)
     print(tf.reduce_max(ym))
@@ -29,39 +34,48 @@ def deconv_dft_2d_test():
     model = tf.keras.Sequential(
         [
             tf.keras.layers.InputLayer(input_shape=data_shape),
-            DeconvDft2dLayer(filter_shape),
+            DeconvDft2dLayer(h_shape),
         ]
     )
 
     model.compile(
         optimizer=tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9),
-        loss='mse'
+        loss=tf.keras.losses.MeanAbsoluteError()
     )
 
     model.summary()
 
     w0 = model.layers[0].w
+    w0 = tf.pad(w0, pad_w, mode='CONSTANT')
+    w0 = tf.add(w0, one)
     w0_diff = tf.reduce_sum(tf.math.square(hrf - w0))
 
-    print("\n*******************************************")
+    print("\n-------------------------------------------")
     print("Total difference before")
     print(w0_diff)
     print("Weights before")
     print(w0)
-    print("*******************************************\n")
+    print("-------------------------------------------\n")
 
-    model.fit(x_train, y_train, batch_size=10, epochs=10, verbose=2)
+    model.fit(x_train, y_train, batch_size=10, epochs=20, verbose=2)
     model.evaluate(x_test, y_test, batch_size=10, verbose=2)
 
     wf = model.layers[0].w
+    wf = tf.pad(wf, pad_w, mode='CONSTANT')
+    wf = tf.add(wf, one)
     wf_diff = tf.reduce_sum(tf.math.square(hrf - wf))
 
-    print("\n*******************************************")
+    print("\n-------------------------------------------")
     print("Total difference after")
     print(wf_diff)
     print("Weights after")
     print(wf)
-    print("*******************************************\n")
+    print("-------------------------------------------\n")
+
+    print("\n-------------------------------------------")
+    print("Target filter")
+    print(hrf)
+    print("-------------------------------------------\n")
     """
     plt.subplot(211)
     plt.title('Loss')
@@ -115,8 +129,5 @@ def deconv_2d_dft_mnist_test():
 
 
 if __name__ == '__main__':
-    if 1:
-        deconv_dft_2d_test()
-    else:
-        deconv_2d_dft_mnist_test()
-    # test()
+    deconv_dft_2d_test()
+    # deconv_2d_dft_mnist_test()
