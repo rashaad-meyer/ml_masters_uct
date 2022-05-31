@@ -7,29 +7,25 @@ class DeconvDft2dLayer(layers.Layer):
     def __init__(self, h_shape):
         super(DeconvDft2dLayer, self).__init__()
         self.h_shape = h_shape
-        # self.w = tf.Variable(name='w',
-        #                      initial_value=tf.random.uniform(h_shape, minval=0, maxval=0.1),
-        #                      trainable=True)
-        # Initialise so that the first element of w is and 1 and not trainable
-        # and the rest is zero and trainable
-        wf = []
-        for i in range(h_shape[-2]):
-            wa = []
-            for j in range(h_shape[-1]):
-                if i == 0 and j == 0:
-                    wa.append(tf.Variable(1.0, trainable=False))
-                else:
-                    wa.append(tf.Variable(0.0, trainable=False))
-            wf.append(wa)
-        self.w = tf.Variable(wf)
+        # Initialise filter (w) except for the first column
+        # So that first column is not trainable
+        wf = tf.zeros((h_shape[-2], h_shape[-1] - 1))
+        self.w = tf.Variable(wf, trainable=True)
+        self.one = tf.pad([[1.0]], [[0, h_shape[-2] - 1], [0, h_shape[-1] - 1]])
+        self.one = tf.Variable(self.one, trainable=False)
 
     def custom_op(self, xm):
+        # makes first element of every row = 1 and not trainable
+        pad_w = tf.constant([[0, 0], [1, 0]])
+        w0 = tf.pad(self.w, pad_w, mode='CONSTANT')
+        w0 = tf.add(w0, self.one)
+
         padding = tf.constant(
             [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
         xm = tf.pad(xm, padding, "CONSTANT")
 
-        paddings = tf.constant([[0, xm.shape[-2] - self.w.shape[-2]], [0, xm.shape[-1] - self.w.shape[-1]]])
-        hm1 = tf.pad(self.w, paddings, "CONSTANT")
+        paddings = tf.constant([[0, xm.shape[-2] - w0.shape[-2]], [0, xm.shape[-1] - w0.shape[-1]]])
+        hm1 = tf.pad(w0, paddings, "CONSTANT")
 
         gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
         gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
