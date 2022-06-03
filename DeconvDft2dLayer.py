@@ -7,18 +7,17 @@ class DeconvDft2dLayer(layers.Layer):
     def __init__(self, h_shape):
         super(DeconvDft2dLayer, self).__init__()
         self.h_shape = h_shape
-        # Initialise filter (w) except for the first column
-        # So that first column is not trainable
-        wf = tf.zeros((h_shape[-2], h_shape[-1] - 1))
-        self.w = tf.Variable(wf, trainable=True)
-        self.one = tf.pad([[1.0]], [[0, h_shape[-2] - 1], [0, h_shape[-1] - 1]])
-        self.one = tf.Variable(self.one, trainable=False)
+
+        # Initialise filter (w) except for the first element
+        # So that first element is not trainable
+        self.w = tf.random.uniform((1, h_shape[-2] * h_shape[-1] - 1))
+        self.w = tf.Variable(self.w, trainable=True)
 
     def custom_op(self, xm):
-        # makes first element of every row = 1 and not trainable
         pad_w = tf.constant([[0, 0], [1, 0]])
-        w0 = tf.pad(self.w, pad_w, mode='CONSTANT')
-        w0 = tf.add(w0, self.one)
+        # Set first element to 1 then reshape into specified filter shape
+        w0 = tf.pad(self.w, pad_w, mode='CONSTANT', constant_values=1)
+        w0 = tf.reshape(w0, self.h_shape)
 
         padding = tf.constant(
             [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
