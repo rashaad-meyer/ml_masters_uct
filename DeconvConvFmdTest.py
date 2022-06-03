@@ -11,6 +11,7 @@ img_width = 512
 batch_size = 10
 input_shape = (img_height, img_width)
 
+# Initialise Deconvultional NN
 model = tf.keras.Sequential([
     layers.Input((img_height, img_width)),
     DeconvDft2dLayer((3, 3)),
@@ -21,6 +22,7 @@ model = tf.keras.Sequential([
 
 model.summary()
 
+# Initialise Convultional NN
 model1 = tf.keras.Sequential([
     layers.Input((img_height, img_width, 1)),
     layers.Conv2D(1, 3, padding='same'),
@@ -30,10 +32,7 @@ model1 = tf.keras.Sequential([
 
 model1.summary()
 
-#                  METHOD 1                  #
-# ========================================== #
-#       Using dataset_from_directory         #
-# ========================================== #
+# Import training data from local directory
 ds_train = tf.keras.preprocessing.image_dataset_from_directory(
     'C:/Users/Rashaad/Documents/Postgrad/Datasets/FlickrMaterialDatabase_grayscale/image/',
     labels='inferred',
@@ -47,6 +46,7 @@ ds_train = tf.keras.preprocessing.image_dataset_from_directory(
     subset='training'
 )
 
+# Import training data from local directory
 ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
     'C:/Users/Rashaad/Documents/Postgrad/Datasets/FlickrMaterialDatabase_grayscale/image/',
     labels='inferred',
@@ -62,7 +62,7 @@ ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
 
 print('=================================================================')
 print('=================================================================')
-print('                          Model 0                                ')
+print('                       Deconvolutional Model                     ')
 print('=================================================================')
 print('=================================================================')
 model.compile(
@@ -71,12 +71,13 @@ model.compile(
     metrics=['accuracy']
 )
 
+# Train DNN
 history = model.fit(ds_train, epochs=20, verbose=2)
 model.evaluate(ds_validation, batch_size=64, verbose=2)
 
 print('=================================================================')
 print('=================================================================')
-print('                          Model 1                                ')
+print('                        Convolutional Model                      ')
 print('=================================================================')
 print('=================================================================')
 
@@ -86,10 +87,10 @@ model1.compile(
     metrics=['accuracy']
 )
 
+# Train CNN
 history1 = model1.fit(ds_train, epochs=20, verbose=2)
 model1.evaluate(ds_validation, batch_size=64, verbose=2)
 
-print(history.history.keys())
 # Plot loss and accuracy
 fig, (ax1, ax2) = plt.subplots(1, 2)
 fig.suptitle('Accuracy and Loss plots')
