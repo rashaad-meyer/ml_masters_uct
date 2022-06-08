@@ -17,14 +17,14 @@ def deconv_dtd_test(batch_size=64, epochs=10, lr=0.1, validation_split=0.4, seed
 
     # Initialise Deconvultional NN
     model = tf.keras.Sequential([
-        layers.Input((img_height, img_width)),
+        layers.InputLayer((img_height, img_width)),
         DeconvDft2dLayer((3, 3)),
         # layers.MaxPooling2D(),
         layers.Flatten(),
         layers.Dense(47)
     ])
 
-    model1 = tf.keras.Sequential([
+    model = tf.keras.Sequential([
         layers.Input((img_height, img_width, 1)),
         layers.Conv2D(1, 3, padding='same'),
         layers.Flatten(),
@@ -67,7 +67,12 @@ def deconv_dtd_test(batch_size=64, epochs=10, lr=0.1, validation_split=0.4, seed
         metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
     )
 
-    history = model.fit(ds_train, epochs=epochs, verbose=2)
+    history = model.fit(ds_train,
+                        epochs=epochs,
+                        validation_data=ds_validation,
+                        validation_steps=1)
+
+    print("Evaluate")
     deconv_results = model.evaluate(ds_validation, batch_size=2*batch_size)
 
     if plot:
@@ -85,7 +90,7 @@ if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
     batch_size = 100
-    epochs = 5
+    epochs = 20
     lr = 0.001
     validation_split = 0.1
     deconv_dtd_test(batch_size=10, epochs=epochs, lr=lr, validation_split=validation_split, plot=True)
