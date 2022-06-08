@@ -5,33 +5,10 @@ from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 import time
 
+
 # To Avoid GPU errors. Turn off if you don't have a GPU
 # physical_devices = tf.config.list_physical_devices("GPU")
 # tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-
-def convolution_2d(inputs, filter):
-    return inputs
-
-
-# (x_train, y_train), (x_test, y_test) = mnist.load_data()
-# x_train = x_train.reshape(-1, 28 * 28).astype("float32")/255.0
-# x_test = x_test.reshape(-1, 28 * 28).astype("float32")/255.0
-# print(x_train.shape)
-#
-# A = tf.constant([[[3, 0, 1, 2, 7, 4],
-#                   [1, 5, 8, 9, 3, 1],
-#                   [2, 7, 2, 5, 1, 3],
-#                   [0, 1, 3, 1, 7, 8],
-#                   [4, 2, 1, 6, 2, 8],
-#                   [2, 4, 5, 2, 3, 9]]], dtype=tf.float32)
-# B = tf.concat([A, A], 0)
-#
-# f = tf.constant([[1, 0, -1],
-#                  [1, 0, -1],
-#                  [1, 0, -1]], dtype=tf.float32)
-#
-# out = convolution_2d(B, f)
 
 # populating 2d tensor
 def create_toeplitz():
