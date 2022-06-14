@@ -3,8 +3,9 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.datasets import cifar10
-
+import matplotlib.pyplot as plt
 from DeconvDft2dLayer import DeconvDft2dLayer
+import time
 
 
 def mnist_deconv_test():
@@ -12,7 +13,6 @@ def mnist_deconv_test():
     print('=================================================================')
     print('                       Deconvolutional Model                     ')
     print('=================================================================')
-    print('=================================================================\n')
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.astype("float32") / 255.0
@@ -26,7 +26,7 @@ def mnist_deconv_test():
     outputs = layers.Dense(10, activation="softmax")(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    train_and_evaluate(model, x_test, x_train, y_test, y_train)
+    return train_and_evaluate(model, x_test, x_train, y_test, y_train)
 
 
 def mnist_conv_test():
@@ -34,7 +34,6 @@ def mnist_conv_test():
     print('=================================================================')
     print('                      Convolution Model                          ')
     print('=================================================================')
-    print('=================================================================\n')
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.astype("float32") / 255.0
@@ -43,11 +42,12 @@ def mnist_conv_test():
     # Functional API for Dense layer
     inputs = tf.keras.Input(shape=(28, 28, 1))
     x = layers.Conv2D(1, (3, 3))(inputs)
+    x = layers.Flatten()(x)
     x = layers.Dense(256, activation="relu", name="second_layer")(x)
     outputs = layers.Dense(10, activation="softmax")(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    train_and_evaluate(model, x_test, x_train, y_test, y_train)
+    return train_and_evaluate(model, x_test, x_train, y_test, y_train)
 
 
 def mnist_dense_test():
@@ -55,7 +55,6 @@ def mnist_dense_test():
     print('=================================================================')
     print('                         Dense Model                             ')
     print('=================================================================')
-    print('=================================================================\n')
 
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.reshape(-1, 28 * 28).astype("float32") / 255.0
@@ -68,7 +67,7 @@ def mnist_dense_test():
     outputs = layers.Dense(10, activation="softmax")(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    train_and_evaluate(model, x_test, x_train, y_test, y_train)
+    return train_and_evaluate(model, x_test, x_train, y_test, y_train)
 
 
 def cifar10_dataset_test():
@@ -112,18 +111,38 @@ def cifar10_dataset_test():
 def train_and_evaluate(model, x_test, x_train, y_test, y_train):
     model.summary()
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-                  optimizer=tf.keras.optimizers.Adam(lr=0.001),
+                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                   metrics=['accuracy'])
-    history = model.fit(x_train, y_train, batch_size=32, epochs=5, verbose=2)
+    t0 = time.time()
+    history = model.fit(x_train, y_train, batch_size=32, epochs=10, verbose=2)
     results = model.evaluate(x_test, y_test, batch_size=32, verbose=2)
+    t1 = time.time()
+    td = t1 - t0
 
-    return history, results
+    return history, results, td
 
 
 def mnist_test_comparison():
-    mnist_dense_test()
-    mnist_deconv_test()
-    mnist_conv_test()
+    results = {'dense': mnist_dense_test(),
+               'deconv': mnist_deconv_test(),
+               'conv': mnist_conv_test()}
+    return results
+
+
+def plot_results(results):
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle('Accuracy and Loss plots')
+
+    for i in results.keys():
+        ax1.plot(results[i][0].history['accuracy'])
+        ax2.plot(results[i][0].history['loss'])
+
+    ax1.set(xlabel='Epochs', ylabel='Accuracy')
+    ax1.legend(results.keys(), loc='lower right')
+    ax2.set(xlabel='Epochs', ylabel='Loss')
+    ax2.legend(results.keys(), loc='upper right')
+
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -131,4 +150,13 @@ if __name__ == '__main__':
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
     # cifar10_dataset_test()
-    mnist_test_comparison()
+    results = mnist_test_comparison()
+
+    # Output time taken for results
+    for i in results.keys():
+        t = round(results[i][2], 3)
+        print('Time taken for ' + i + ': ' + str(t) + ' seconds')
+
+    plot_results(results)
+
+
