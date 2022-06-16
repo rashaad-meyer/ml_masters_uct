@@ -5,6 +5,7 @@ from tensorflow.keras.datasets import mnist
 from tensorflow.keras.datasets import cifar10
 import matplotlib.pyplot as plt
 from DeconvDft2dLayer import DeconvDft2dLayer
+from DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 import time
 
 
@@ -79,7 +80,7 @@ def cifar10_dataset_test():
 
     def my_model():
         inputs = tf.keras.Input(shape=(32, 32, 3))
-        x = layers.Conv2D(32, 3)(inputs)
+        x = DeconvDft2dRgbLayer((3, 3, 3))(inputs)
         x = layers.BatchNormalization()(x)
         x = tf.keras.activations.relu(x)
         x = layers.MaxPooling2D()(x)
@@ -95,9 +96,6 @@ def cifar10_dataset_test():
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         return model
 
-    def my_model_deconv():
-        inputs = tf.keras.Inpput(shape=(32, 32, 3))
-
     model = my_model()
     model.compile(
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -108,6 +106,7 @@ def cifar10_dataset_test():
     model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
     print("Evaluate")
     model.evaluate(x_test, y_test, batch_size=64, verbose=2)
+    print(model.layers[1].w)
 
 
 def gcifar10_conv_test():
@@ -129,8 +128,9 @@ def gcifar10_conv_test():
     x = layers.Flatten()(x)
     outputs = layers.Dense(10, activation='relu')(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
+    results = train_and_evaluate_ds(model, ds_train, ds_test)
 
-    return train_and_evaluate_ds(model, ds_train, ds_test)
+    return results
 
 
 def gcifar10_from_directory():
@@ -217,7 +217,7 @@ if __name__ == '__main__':
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
     # results = gcifar10_conv_test()
-    # cifar10_dataset_test()
+    cifar10_dataset_test()
 
     results = mnist_test_comparison()
     # Output time taken for results
