@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from keras.datasets import cifar10
 
 
 def np_tf_fft_test():
@@ -56,6 +57,12 @@ def np_tf_fft_test():
 
 def forward_pass(xm, hrf):
     # pad input
+
+    pad_w = tf.constant([[0, 0], [1, 0]])
+    # Set first element to 1 then reshape into specified filter shape
+    hrf = tf.pad(hrf, pad_w, mode='CONSTANT', constant_values=1)
+    hrf = tf.reshape(hrf, (h_shape[-2], h_shape[-1]))
+
     padding = tf.constant(
         [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
     xm = tf.pad(xm, padding, "CONSTANT")
@@ -116,14 +123,47 @@ def initialise_w(h_shape):
     return w
 
 
+def forward_pass_multichannel(xm, w):
+    xm = tf.transpose(xm, perm=[0, 3, 1, 2])
+
+    # Transform filter into right shape
+    pad_w = tf.constant([[0, 0], [1, 0], [0, 0]])
+    w0 = tf.pad(w, pad_w, mode='CONSTANT', constant_values=1)
+    w0 = tf.reshape(w0, h_shape)
+
+    padding = tf.constant(
+        [[0, 0], [0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)],
+         [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
+    xm = tf.pad(xm, padding, "CONSTANT")
+
+    paddings = tf.constant([[0, 0], [0, xm.shape[-2] - w0.shape[-2]], [0, xm.shape[-1] - w0.shape[-1]]])
+    hm1 = tf.pad(w0, paddings, "CONSTANT")
+
+    gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
+    gm2f = tf.roll(tf.reverse(gm1f, [-2]), shift=1, axis=-2)
+    gm3f = tf.roll(tf.reverse(gm1f, [-1]), shift=1, axis=-1)
+    gm4f = tf.roll(tf.reverse(gm3f, [-2]), shift=1, axis=-2)
+
+    gmf1 = tf.multiply(gm1f, gm2f)
+    gmf2 = tf.multiply(gm3f, gm4f)
+    gmf = tf.multiply(gmf1, gmf2)
+
+    ymf = tf.multiply(gmf, tf.signal.rfft2d(xm))
+    ym = tf.signal.irfft2d(ymf)
+
+    ym = tf.transpose(ym, perm=[0, 2, 3, 1])
+    return ym
+
+
 if __name__ == '__main__':
-    # random uniform can't be the issue
-    x = tf.random.uniform([6, 6], minval=0)
-    # hrf = tf.constant([[0.01, 0.02, 0.03], [0.04, 0.05, 0.06], [0.07, 0.08, 0.09]])
-    hrf = tf.random.uniform((3, 3), minval=0)
-    h = tf.constant([[1, 2, 3], [4, 5, 6]], dtype=tf.float32)
+    # Define filter size and initialise trainable parameters
+    h_shape = (3, 3, 3)
+    w = tf.zeros((h_shape[-1], h_shape[-3] * h_shape[-2] - 1, 1))
 
-    X = tf.signal.rfft2d(x)
-    x1 = tf.signal.irfft2d(X)
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    x_train = x_train.astype("float32") / 255.0
+    x_test = x_test.astype("float32") / 255.0
+    x_train = np.moveaxis(x_train, -1, 1)
+    x_test = np.moveaxis(x_test, -1, 1)
+    ym = forward_pass_multichannel(x_test[:100], w)
 
-    y = forward_pass(x, hrf)
