@@ -1,3 +1,5 @@
+import random
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -189,6 +191,11 @@ def train_and_evaluate_ds(model, ds_train, ds_test):
     return history, results, td
 
 
+def save_data_dict(data, name):
+    with open('saved_data/' + name + '.npy', 'wb') as f:
+        np.save(f, data)
+
+
 def mnist_test_comparison():
     results = {'dense': mnist_dense_test(),
                'deconv': mnist_deconv_test(),
@@ -212,23 +219,87 @@ def plot_results(results):
     plt.show()
 
 
+def plot_images(imgs, shape):
+    assert len(imgs) <= shape[0] * shape[1]
+    fig, ax = plt.subplots(shape[0], shape[1])
+    for i in range(len(ax)):
+        ax[i].imshow(imgs[i], cmap='gray')
+    plt.show()
+
+
+def conv_deconv_mnist_response(c_k, d_k):
+    # Download mnist data
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    x_train = x_train.astype("float32") / 255.0
+    x_test = x_test.astype("float32") / 255.0
+
+    # Prepare impulse response with right dimension
+    i = random.randint(0, 1000)
+    xmd = tf.reshape(x_train[i], (1, x_train.shape[-2], x_train.shape[-1]))
+    xmc = tf.reshape(xmd, (1, x_train.shape[-2], x_train.shape[-1], 1))
+
+    # Initialise layers
+    convfn = layers.Conv2D(1, (3, 3), padding='same')
+    deconvfn = DeconvDft2dLayer((3, 3))
+
+    # Set layer filters
+    convfn.kernel = c_k
+    deconvfn.w = d_k
+
+    # Calculate responses
+    ymc = convfn(xmc)
+    ymd = deconvfn(xmd)
+
+    # Reshape so that it can be plotted
+    ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
+    ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
+
+    plot_images([ymc, ymd], (1, 2))
+
+
+def conv_deconv_impulse_response(c_k, d_k):
+    # Prepare impulse response with right dimension
+    xmd = tf.pad([[[1.0]]], [[0, 0], [0, 9], [0, 9]])
+    xmc = tf.reshape(xmd, (1, xmd.shape[-2], xmd.shape[-1], 1))
+
+    # Initialise layers
+    convfn = layers.Conv2D(1, (3, 3), padding='same')
+    deconvfn = DeconvDft2dLayer((3, 3))
+
+    # Set layer filters
+    convfn.kernel = c_k
+    deconvfn.w = d_k
+
+    # Calcualte response
+    ymc = convfn(xmc)
+    ymd = deconvfn(xmd)
+
+    # Reshape output so it can be plotted
+    ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
+    ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
+
+    plot_images([ymc, ymd], (1, 2))
+
+
 if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-    # results = gcifar10_conv_test()
-    cifar10_dataset_test()
+    # results = mnist_test_comparison()
+    # for i in results.keys():
+    #     t = round(results[i][0][2], 3)
+    #     print('Time taken for ' + i + ': ' + str(t) + ' seconds')
+    # for i in results.keys():
+    #     print('Weights for ' + i)
+    #     print(results[i][-1])
+    # plot_results(results)
 
-    results = mnist_test_comparison()
-    # Output time taken for results
-    for i in results.keys():
-        t = round(results[i][0][2], 3)
-        print('Time taken for ' + i + ': ' + str(t) + ' seconds')
+    with open('saved_data/conv.npy', 'rb') as f:
+        c_kernel = np.load(f)
+    with open('saved_data/deconv.npy', 'rb') as f:
+        d_kernel = np.load(f)
 
-    for i in results.keys():
-        print('Weights for ' + i)
-        print(results[i][-1])
+    c_k = tf.constant(c_kernel)
+    d_k = tf.constant(d_kernel)
 
-    plot_results(results)
-
-
+    conv_deconv_mnist_response(c_k, d_k)
