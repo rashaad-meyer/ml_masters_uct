@@ -10,7 +10,7 @@ class DeconvDft2dRgbLayer(layers.Layer):
         # TODO make more robust by inferring num_channels from input (can use __build__)
         # Initialise filter (w) except for the first element
         # So that first element is not trainable
-        self.w = tf.random.uniform((h_shape[-1], h_shape[-3] * h_shape[-2] - 1, 1), maxval=0.1)
+        self.w = tf.random.uniform((h_shape[-1], h_shape[-3] * h_shape[-2] - 1, 1))
         self.w = tf.Variable(self.w, trainable=True)
 
     def custom_op(self, xm):
