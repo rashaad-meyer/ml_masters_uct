@@ -30,7 +30,7 @@ def mnist_deconv_test():
         layers.Dense(10, activation="softmax"),
     ])
 
-    return train_and_evaluate(model, x_test, x_train, y_test, y_train), model.layers[0].w
+    return train_and_evaluate(model, x_test, x_train, y_test, y_train, 10), model.layers[0].w
 
 
 def mnist_conv_test():
@@ -51,7 +51,7 @@ def mnist_conv_test():
     outputs = layers.Dense(10, activation="softmax")(x)
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
 
-    return train_and_evaluate(model, x_test, x_train, y_test, y_train), tf.reshape(model.layers[1].kernel, (3, 3))
+    return train_and_evaluate(model, x_test, x_train, y_test, y_train, 10), tf.reshape(model.layers[1].kernel, (3, 3))
 
 
 def mnist_dense_test():
@@ -72,7 +72,7 @@ def mnist_dense_test():
         layers.Dense(10, activation="softmax"),
     ])
 
-    return train_and_evaluate(model, x_test, x_train, y_test, y_train), None
+    return train_and_evaluate(model, x_test, x_train, y_test, y_train, 10), None
 
 
 def cifar10_dataset_test():
@@ -105,10 +105,8 @@ def cifar10_dataset_test():
         metrics=['accuracy'],
     )
 
-    model.fit(x_train, y_train, batch_size=64, epochs=10, verbose=2)
-    print("Evaluate")
-    model.evaluate(x_test, y_test, batch_size=64, verbose=2)
-    print(model.layers[1].w)
+    results = train_and_evaluate(model, x_train, x_test, y_train, y_test, 20)
+    return results, model.layers[1].w
 
 
 def gcifar10_conv_test():
@@ -163,13 +161,13 @@ def gcifar10_from_directory():
     return ds_train, ds_test
 
 
-def train_and_evaluate(model, x_test, x_train, y_test, y_train):
+def train_and_evaluate(model, x_test, x_train, y_test, y_train, epochs):
     model.summary()
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                   optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                   metrics=['accuracy'])
     t0 = time.time()
-    history = model.fit(x_train, y_train, batch_size=32, epochs=10, verbose=2)
+    history = model.fit(x_train, y_train, batch_size=32, epochs=epochs, verbose=2)
     results = model.evaluate(x_test, y_test, batch_size=32, verbose=2)
     t1 = time.time()
     td = t1 - t0
@@ -191,9 +189,14 @@ def train_and_evaluate_ds(model, ds_train, ds_test):
     return history, results, td
 
 
-def save_data_dict(data, name):
+def save_data(data, name):
     with open('saved_data/' + name + '.npy', 'wb') as f:
         np.save(f, data)
+
+
+def load_data(name):
+    with open('saved_data/' + name + '.npy', 'rb') as f:
+        return np.load(f)
 
 
 def mnist_test_comparison():
@@ -257,6 +260,35 @@ def conv_deconv_mnist_response(c_k, d_k):
     plot_images([ymc, ymd], (1, 2))
 
 
+def deconv_cifar10_response(k):
+    # Download cifar10 data
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    x_train = x_train.astype("float32") / 255.0
+    x_test = x_test.astype("float32") / 255.0
+
+    # Prepare impulse response with right dimension
+    i = random.randint(0, 1000)
+
+    xm = tf.reshape(x_train[i], (1, x_train[i].shape[-3], x_train[i].shape[-2], x_train[i].shape[-1]))
+    print(xm.shape)
+
+    # Initialise layers
+    deconvfn = DeconvDft2dRgbLayer((3, 3, 3))
+    batchNorm = layers.BatchNormalization()
+
+    # Set layer filters
+    deconvfn.w = k
+
+    # Calculate responses
+    ym = deconvfn(xm)
+    ym = batchNorm(ym)
+
+    fig, ax = plt.subplots(1, 2)
+    ax[0].imshow(xm[0])
+    ax[1].imshow(ym[0])
+    plt.show()
+
+
 def conv_deconv_impulse_response(c_k, d_k):
     # Prepare impulse response with right dimension
     xmd = tf.pad([[[1.0]]], [[0, 0], [0, 9], [0, 9]])
@@ -281,25 +313,27 @@ def conv_deconv_impulse_response(c_k, d_k):
     plot_images([ymc, ymd], (1, 2))
 
 
+def check_fft(x, h_shape, xm_shape):
+    pad_w = tf.constant([[0, 0], [1, 0], [0, 0]])
+    w0 = tf.pad(x, pad_w, mode='CONSTANT', constant_values=1)
+    w0 = tf.reshape(w0, h_shape)
+    paddings = tf.constant([[0, 0], [0, xm_shape[-2] - h_shape[-2]], [0, xm_shape[-1] - h_shape[-1]]])
+    w0 = tf.pad(w0, paddings, "CONSTANT")
+    return tf.divide(1, tf.signal.rfft2d(w0))
+
+
+def mnist_test_and_plot():
+    results = mnist_test_comparison()
+    for i in results.keys():
+        t = round(results[i][0][2], 3)
+        print('Time taken for ' + i + ': ' + str(t) + ' seconds')
+    for i in results.keys():
+        print('Weights for ' + i)
+        print(results[i][-1])
+    plot_results(results)
+    return results
+
+
 if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-    # results = mnist_test_comparison()
-    # for i in results.keys():
-    #     t = round(results[i][0][2], 3)
-    #     print('Time taken for ' + i + ': ' + str(t) + ' seconds')
-    # for i in results.keys():
-    #     print('Weights for ' + i)
-    #     print(results[i][-1])
-    # plot_results(results)
-
-    with open('saved_data/conv.npy', 'rb') as f:
-        c_kernel = np.load(f)
-    with open('saved_data/deconv.npy', 'rb') as f:
-        d_kernel = np.load(f)
-
-    c_k = tf.constant(c_kernel)
-    d_k = tf.constant(d_kernel)
-
-    conv_deconv_mnist_response(c_k, d_k)
