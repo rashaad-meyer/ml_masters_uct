@@ -190,13 +190,18 @@ def train_and_evaluate_ds(model, ds_train, ds_test):
 
 
 def save_data(data, name):
-    with open('saved_data/' + name + '.npy', 'wb') as f:
+    filename = 'saved_data/' + name + '.npy'
+    with open(filename, 'wb') as f:
         np.save(f, data)
+    print('Data saved successfully (' + filename + ')')
 
 
 def load_data(name):
-    with open('saved_data/' + name + '.npy', 'rb') as f:
-        return np.load(f)
+    filename = 'saved_data/' + name + '.npy'
+    with open(filename, 'rb') as f:
+        data = np.load(f)
+    print('Data loaded successfully (' + filename + ')')
+    return data
 
 
 def mnist_test_comparison():
