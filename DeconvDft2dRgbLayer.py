@@ -5,19 +5,24 @@ from tensorflow.keras import layers
 class DeconvDft2dRgbLayer(layers.Layer):
 
     def __init__(self, h_shape):
+        """
+        :param h_shape: Tuple(int)
+            h_shape must be of length 3
+            h_shape[0] = num channels, h_shape[1] = filter height, h_shape[2] = filter width
+        """
         super(DeconvDft2dRgbLayer, self).__init__()
         self.h_shape = h_shape
         # TODO make more robust by inferring num_channels from input (can use __build__)
         # Initialise filter (w) except for the first element
         # So that first element is not trainable
-        self.w = tf.random.uniform((h_shape[-1], h_shape[-3] * h_shape[-2] - 1, 1))
+        self.w = tf.random.uniform((h_shape[0], h_shape[-2] * h_shape[-1] - 1))
         self.w = tf.Variable(self.w, trainable=True)
 
     def custom_op(self, xm):
         # put RGB dimensions after batch_size
         xm = tf.transpose(xm, perm=[0, 3, 1, 2])
 
-        pad_w = tf.constant([[0, 0], [1, 0], [0, 0]])
+        pad_w = tf.constant([[0, 0], [1, 0]])
         w0 = tf.pad(self.w, pad_w, mode='CONSTANT', constant_values=1)
         w0 = tf.reshape(w0, self.h_shape)
 
