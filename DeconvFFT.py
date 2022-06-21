@@ -123,13 +123,14 @@ def initialise_w(h_shape):
     return w
 
 
-def forward_pass_multichannel(xm, w):
+def forward_pass_multichannel(xm, w, h_shape):
     xm = tf.transpose(xm, perm=[0, 3, 1, 2])
 
     # Transform filter into right shape
-    pad_w = tf.constant([[0, 0], [1, 0], [0, 0]])
+    pad_w = tf.constant([[0, 0], [1, 0]])
     w0 = tf.pad(w, pad_w, mode='CONSTANT', constant_values=1)
     w0 = tf.reshape(w0, h_shape)
+    print(w0)
 
     padding = tf.constant(
         [[0, 0], [0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)],
@@ -158,12 +159,13 @@ def forward_pass_multichannel(xm, w):
 if __name__ == '__main__':
     # Define filter size and initialise trainable parameters
     h_shape = (3, 3, 3)
-    w = tf.zeros((h_shape[-1], h_shape[-3] * h_shape[-2] - 1, 1))
+    w = tf.random.uniform((h_shape[-1], h_shape[-3] * h_shape[-2] - 1))
+    print(w)
 
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train = x_train.astype("float32") / 255.0
     x_test = x_test.astype("float32") / 255.0
     x_train = np.moveaxis(x_train, -1, 1)
     x_test = np.moveaxis(x_test, -1, 1)
-    ym = forward_pass_multichannel(x_test[:100], w)
+    ym = forward_pass_multichannel(x_test[:2], w, h_shape)
 
