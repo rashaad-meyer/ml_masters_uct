@@ -37,6 +37,30 @@ def convert_directory_to_grayscale(database_path, output_path):
                 tf.keras.utils.save_img(path_full, img)
 
 
+def resize_images_in_directory(database_path, output_path):
+    folders = os.listdir(database_path)
+    img_size = [231, 271]
+    for i in folders:
+        img_base_path = os.path.join(database_path, i)
+        img_names = os.listdir(img_base_path)
+        path_folder = os.path.join(output_path, i)
+        if not os.path.exists(path_folder):
+            os.makedirs(path_folder)
+        print(i)
+
+        for j in img_names:
+            if j[-4:] != '.png' and j[-4:] != '.jpg':
+                print(j[-4:])
+                continue
+
+            img_path = os.path.join(img_base_path, j)
+            img = mpimg.imread(img_path)
+
+            path_full = os.path.join(path_folder, j)
+            img = tf.image.resize(img, img_size)
+            tf.keras.utils.save_img(path_full, img)
+
+
 def convert_data_to_grayscale(x_train, y_train, labels, output_path, x_test=None, y_test=None):
     # Create directories
     if x_test is None:
@@ -69,11 +93,6 @@ def convert_data_to_grayscale(x_train, y_train, labels, output_path, x_test=None
 
 
 if __name__ == '__main__':
-    # database_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\dtd\\images'
-    # output_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\dtd_grayscale\\images'
-    # convert_directory_to_grayscale(database_path, output_path)
-
-    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
-    output_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\cifar10_grayscale\\images'
-    convert_data_to_grayscale(x_train, y_train, labels, output_path, x_test, y_test)
+    database_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\dtd_copy\\images'
+    output_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\dtd_copy\\images_resized'
+    resize_images_in_directory(database_path, output_path)
