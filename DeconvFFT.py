@@ -87,7 +87,6 @@ def forward_pass(xm, hrf):
 
 
 def back_prop(xm, hrf, ym, um):
-    # FIXME shouldn't have to calculate G again
     paddings = tf.constant([[0, xm.shape[-2] - hrf.shape[-2]], [0, xm.shape[-1] - hrf.shape[-1]]])
     hm1 = tf.pad(hrf, paddings, "CONSTANT")
 
