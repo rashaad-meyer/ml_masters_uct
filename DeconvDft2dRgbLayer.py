@@ -47,6 +47,8 @@ class DeconvDft2dRgbLayer(layers.Layer):
         ym = tf.signal.irfft2d(ymf)
 
         ym = tf.transpose(ym, perm=[0, 2, 3, 1])
+        ym = tf.image.central_crop(ym, 0.67)
+
         return ym
 
     def call(self, inputs):
