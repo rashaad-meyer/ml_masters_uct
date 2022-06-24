@@ -319,6 +319,33 @@ def conv_deconv_impulse_response(c_k, d_k):
     plot_images([ymc, ymd], (1, 2))
 
 
+def conv_deconv_impulse_freq_response(c_k, d_k):
+    # Prepare impulse response with right dimension
+    xmd = tf.pad([[[1.0]]], [[0, 0], [0, 9], [0, 9]])
+    xmc = tf.reshape(xmd, (1, xmd.shape[-2], xmd.shape[-1], 1))
+
+    # Initialise layers
+    convfn = layers.Conv2D(1, (3, 3), padding='same')
+    deconvfn = DeconvDft2dLayer((3, 3))
+
+    # Set layer filters
+    convfn.kernel = c_k
+    deconvfn.w = d_k
+
+    # Calcualte response
+    ymc = convfn(xmc)
+    ymd = deconvfn(xmd)
+
+    # Reshape output so it can be plotted
+    ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
+    ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
+
+    ymcf = tf.math.abs(tf.signal.rfft2d(ymc))
+    ymdf = tf.math.abs(tf.signal.rfft2d(ymd))
+
+    plot_images([ymcf, ymdf], (1, 2))
+
+
 def check_fft(x, h_shape, xm_shape):
     pad_w = tf.constant([[0, 0], [1, 0], [0, 0]])
     w0 = tf.pad(x, pad_w, mode='CONSTANT', constant_values=1)
@@ -343,3 +370,7 @@ def mnist_test_and_plot():
 if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
+    c_k = load_data('conv')
+    d_k = load_data('deconv')
+
+    conv_deconv_impulse_freq_response(c_k, d_k)
