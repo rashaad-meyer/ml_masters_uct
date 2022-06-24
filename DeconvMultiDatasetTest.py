@@ -257,10 +257,11 @@ def conv_deconv_mnist_response(c_k, d_k):
     # Calculate responses
     ymc = convfn(xmc)
     ymd = deconvfn(xmd)
+    ymd = tf.reshape(ymd, (1, ymd.shape[-2], ymd.shape[-1], 1))
 
     # Reshape so that it can be plotted
     ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
-    ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
+    ymd = tf.reshape(ymd, (ymd.shape[-3], ymd.shape[-2]))
 
     plot_images([ymc, ymd], (1, 2))
 
