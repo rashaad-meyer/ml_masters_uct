@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
-from DeconvDft2dLayer import DeconvDft2dLayer
+from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 import DeconvFFT
 
 

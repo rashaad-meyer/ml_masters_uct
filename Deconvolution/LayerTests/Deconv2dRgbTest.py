@@ -1,13 +1,11 @@
 import random
-import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers
-from tensorflow.keras.datasets import cifar10
 from tensorflow.keras.datasets import mnist
 import matplotlib.pyplot as plt
 import DeconvMultiDatasetTest as useful
-from DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
-from DeconvDft2dLayer import DeconvDft2dLayer
+from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
+from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 
 
 def deconv_rgb_forward_pass_test():

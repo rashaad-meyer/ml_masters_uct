@@ -6,8 +6,8 @@ from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.datasets import cifar10
 import matplotlib.pyplot as plt
-from DeconvDft2dLayer import DeconvDft2dLayer
-from DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
+from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
+from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 import time
 
 
