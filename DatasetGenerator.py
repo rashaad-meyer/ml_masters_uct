@@ -1,5 +1,5 @@
 import tensorflow as tf
-import DeconvPrototype
+from Deconvolution import DeconvPrototype
 
 
 def generate_deconv_dataset(h, input_shape):

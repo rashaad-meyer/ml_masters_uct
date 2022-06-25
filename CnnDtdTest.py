@@ -1,11 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-from DeconvDft2dLayer import DeconvDft2dLayer
-import csv
-from csv import DictWriter
-import random
 
 
 # download dataset from this link https://www.robots.ox.ac.uk/~vgg/data/dtd/index.html

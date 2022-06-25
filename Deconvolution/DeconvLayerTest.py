@@ -1,10 +1,8 @@
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 from DeconvDft2dLayer import DeconvDft2dLayer
 import DeconvFFT
-from matplotlib import pyplot as plt
 
 
 def deconv_dft_2d_test():

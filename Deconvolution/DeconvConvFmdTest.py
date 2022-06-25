@@ -99,7 +99,7 @@ def deconv_conv_comparison(batch_size=64, epochs=10, lr=0.1, validation_split=0.
            'Deconv Loss': round(deconv_results[0]), 'Conv Loss': round(conv_results[0]), 'Epochs': epochs,
            'Batch size': batch_size, 'Learning rate': lr, 'Split': validation_split, 'Seed': seed}
 
-    with open('Fmd_DeconvAndConvResults.csv', 'a', encoding='UTF8', newline='') as f:
+    with open('../Fmd_DeconvAndConvResults.csv', 'a', encoding='UTF8', newline='') as f:
         writer = DictWriter(f, fieldnames=row.keys())
         writer.writerow(row)
         f.close()
@@ -218,7 +218,7 @@ def deconv_conv_comparison_validation(batch_size=64, epochs=10, lr=0.1, validati
 def analyze_csv():
     fields = []
     rows = []
-    with open('Fmd_DeconvAndConvResults.csv', 'r') as f:
+    with open('../Fmd_DeconvAndConvResults.csv', 'r') as f:
         csvreader = csv.reader(f)
 
         fields = next(csvreader)
