@@ -12,6 +12,11 @@ import time
 
 
 def mnist_deconv_test():
+    """
+    This function tests the deconvolutional layer on the MNIST dataset
+    :return:
+    Results tuple (check train_and_evaluate() documentation) and kernel of the convolution layer
+    """
     print('\n=================================================================')
     print('=================================================================')
     print('                       Deconvolutional Model                     ')
@@ -34,6 +39,11 @@ def mnist_deconv_test():
 
 
 def mnist_conv_test():
+    """
+    This function tests the convolutional layer on the MNIST dataset
+    :return:
+    Results tuple (check train_and_evaluate() documentation) and kernel of the convolution layer
+    """
     print('\n=================================================================')
     print('=================================================================')
     print('                      Convolution Model                          ')
@@ -55,6 +65,11 @@ def mnist_conv_test():
 
 
 def mnist_dense_test():
+    """
+    This function tests NN containing dense layers on the MNIST dataset
+    :return:
+    Results tuple (check train_and_evaluate() documentation)
+    """
     print('\n=================================================================')
     print('=================================================================')
     print('                         Dense Model                             ')
@@ -76,6 +91,11 @@ def mnist_dense_test():
 
 
 def cifar10_dataset_test():
+    """
+    Testing NN with deconvolutional layer on cifar10 dataset
+    :return:
+    Results tuple (check train_and_evaluate() documentation) and kernel of the deconvolution layer
+    """
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train = x_train.astype("float32") / 255.0
     x_test = x_test.astype("float32") / 255.0
@@ -109,59 +129,21 @@ def cifar10_dataset_test():
     return results, model.layers[1].w
 
 
-def gcifar10_conv_test():
-    ds_train, ds_test = gcifar10_from_directory()
-
-    # Define NN
-    inputs = tf.keras.Input(shape=(32, 32, 1))
-    x = layers.Conv2D(32, 3)(inputs)
-    x = layers.BatchNormalization()(x)
-    x = tf.keras.activations.relu(x)
-    x = layers.MaxPooling2D()(x)
-    x = layers.Conv2D(64, 3)(x)
-    x = layers.BatchNormalization()(x)
-    x = tf.keras.activations.relu(x)
-    x = layers.MaxPooling2D()(x)
-    x = layers.Conv2D(128, 3)(x)
-    x = layers.BatchNormalization()(x)
-    x = tf.keras.activations.relu(x)
-    x = layers.Flatten()(x)
-    outputs = layers.Dense(10, activation='relu')(x)
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    results = train_and_evaluate_ds(model, ds_train, ds_test)
-
-    return results
-
-
-def gcifar10_from_directory():
-    ds_train = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/Rashaad/Documents/Postgrad/Datasets/cifar10_grayscale/images/',
-        labels='inferred',
-        label_mode='int',  # categorical binary
-        color_mode='grayscale',
-        batch_size=64,
-        image_size=(32, 32),
-        shuffle=True,
-        seed=123,
-        validation_split=0.2,
-        subset='training'
-    )
-    ds_test = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/Rashaad/Documents/Postgrad/Datasets/cifar10_grayscale/images/',
-        labels='inferred',
-        label_mode='int',  # categorical binary
-        color_mode='grayscale',
-        batch_size=64,
-        image_size=(32, 32),
-        shuffle=True,
-        seed=123,
-        validation_split=0.2,
-        subset='validation'
-    )
-    return ds_train, ds_test
-
-
 def train_and_evaluate(model, x_test, x_train, y_test, y_train, epochs):
+    """
+    Function to train and evaluate classification model with training data
+    that has features and data split up into separate variables
+    :param model: model that you want to train
+    :param x_test: test data
+    :param x_train: training data
+    :param y_test: test features
+    :param y_train: training features
+    :param epochs: number of epochs you'd like to train the NN over
+    :return: Results tuple:
+                - history: dictionary containing accuracy and loss for each training epoch
+                - results: accuracy and loss on training data
+                - td: time taken to train the NN
+    """
     model.summary()
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                   optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
@@ -175,14 +157,25 @@ def train_and_evaluate(model, x_test, x_train, y_test, y_train, epochs):
     return history, results, td
 
 
-def train_and_evaluate_ds(model, ds_train, ds_test):
+def train_and_evaluate_ds(model, ds_train, ds_validation):
+    """
+    Function to train and evaluate classification model with training data
+    that has imported from the local directory
+    :param model: model to be trained
+    :param ds_train: training data imported from directory
+    :param ds_validation:validation data imported from directory
+    :return: Results tuple:
+                - history: dictionary containing accuracy and loss for each training epoch
+                - results: accuracy and loss on training data
+                - td: time taken to train the NN
+    """
     model.summary()
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                   optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
                   metrics=['accuracy'])
     t0 = time.time()
     history = model.fit(ds_train, batch_size=64, epochs=10, verbose=2)
-    results = model.evaluate(ds_test, batch_size=64, verbose=2)
+    results = model.evaluate(ds_validation, batch_size=64, verbose=2)
     t1 = time.time()
     td = t1 - t0
 
@@ -190,6 +183,12 @@ def train_and_evaluate_ds(model, ds_train, ds_test):
 
 
 def save_data(data, name):
+    """
+    Save variable in ../saved_data/ directory with given name
+    :param data: variable that will be saved
+    :param name: name of the file
+    :return:
+    """
     filename = 'saved_data/' + name + '.npy'
     with open(filename, 'wb') as f:
         np.save(f, data)
@@ -197,6 +196,11 @@ def save_data(data, name):
 
 
 def load_data(name):
+    """
+    Load data saved in folder into a variable
+    :param name: Name of file that will be loaded
+    :return: data: return the data that is loaded
+    """
     filename = 'saved_data/' + name + '.npy'
     with open(filename, 'rb') as f:
         data = np.load(f)
@@ -205,6 +209,10 @@ def load_data(name):
 
 
 def mnist_test_comparison():
+    """
+    Train deconv, conv, dense NN on MNIST datasets and return results tuple
+    :return: dictionary containing results tuple from each NN
+    """
     results = {'dense': mnist_dense_test(),
                'deconv': mnist_deconv_test(),
                'conv': mnist_conv_test()}
@@ -212,6 +220,11 @@ def mnist_test_comparison():
 
 
 def plot_results(results):
+    """
+    Plots loss and accuracy from mnist_data_comparison()
+    :param results: Results from mnist_test_comparison()
+    :return:
+    """
     fig, (ax1, ax2) = plt.subplots(1, 2)
     fig.suptitle('Accuracy and Loss plots')
 
@@ -228,6 +241,12 @@ def plot_results(results):
 
 
 def plot_images(imgs, shape):
+    """
+    Plot list of images in given shape
+    :param imgs: List of images that will be plotted
+    :param shape: List of length 2 that contains the number of rows and columns that will be plotted in
+    :return:
+    """
     assert len(imgs) <= shape[0] * shape[1]
     fig, ax = plt.subplots(shape[0], shape[1])
     for i in range(len(ax)):
@@ -236,6 +255,13 @@ def plot_images(imgs, shape):
 
 
 def conv_deconv_mnist_response(c_k, d_k):
+    """
+    Plots an image of the output of a convolutional and deconvolutional layer
+    when an image from the MNIST dataset is used as an input
+    :param c_k: Convolutional kernel
+    :param d_k: Deconvolutional kernel
+    :return:
+    """
     # Download mnist data
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = x_train.astype("float32") / 255.0
@@ -267,6 +293,12 @@ def conv_deconv_mnist_response(c_k, d_k):
 
 
 def deconv_cifar10_response(k):
+    """
+    Plots an image of the output of a deconvolutional layer
+    when an image from the CIFAR10 dataset is used as an input
+    :param k: Deconvolutional kernel
+    :return:
+    """
     # Download cifar10 data
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train = x_train.astype("float32") / 255.0
@@ -296,6 +328,13 @@ def deconv_cifar10_response(k):
 
 
 def conv_deconv_impulse_response(c_k, d_k):
+    """
+    Plots an image of the output of a convolutional and deconvolutional layer
+    when 2D impulse response is used as an input
+    :param c_k: Convolutional kernel
+    :param d_k: Deconvolutional kernel
+    :return:
+    """
     # Prepare impulse response with right dimension
     xmd = tf.pad([[[1.0]]], [[0, 0], [0, 9], [0, 9]])
     xmc = tf.reshape(xmd, (1, xmd.shape[-2], xmd.shape[-1], 1))
@@ -320,6 +359,13 @@ def conv_deconv_impulse_response(c_k, d_k):
 
 
 def conv_deconv_impulse_freq_response(c_k, d_k):
+    """
+    Plots an image frequency response of the output of a convolutional and deconvolutional layer
+    when 2D impulse response is used as an input
+    :param c_k: Convolutional kernel
+    :param d_k: Deconvolutional kernel
+    :return:
+    """
     # Prepare impulse response with right dimension
     xmd = tf.pad([[[1.0]]], [[0, 0], [0, 9], [0, 9]])
     xmc = tf.reshape(xmd, (1, xmd.shape[-2], xmd.shape[-1], 1))
