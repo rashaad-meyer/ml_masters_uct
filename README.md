@@ -1,6 +1,6 @@
 # ml_masters_uct
 
-## Most relevant files
+## Deconvolution Folder
 
 ### Custom Layers
 
