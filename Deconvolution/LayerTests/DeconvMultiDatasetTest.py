@@ -191,7 +191,7 @@ def save_data(data, name):
     """
     filename = 'saved_data/' + name + '.npy'
     with open(filename, 'wb') as f:
-        np.save(f, data)
+        np.save(f, data.numpy())
     print('Data saved successfully (' + filename + ')')
 
 
@@ -419,4 +419,4 @@ if __name__ == '__main__':
     c_k = load_data('conv')
     d_k = load_data('deconv')
 
-    conv_deconv_impulse_freq_response(c_k, d_k)
+    save_data(c_k, 'test')
