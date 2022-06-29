@@ -1,9 +1,13 @@
 import random
 import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras.datasets import mnist
 import matplotlib.pyplot as plt
 import DeconvMultiDatasetTest as useful
+import numpy as np
+
+from keras.datasets import cifar10
+from tensorflow.keras import layers
+from tensorflow.keras.datasets import mnist
+
 from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 
@@ -124,10 +128,51 @@ def get_local_dataset(path, split=0.2, seed=123):
     return ds_train, ds_test
 
 
+def cifar10_deconv_test():
+    """
+    Testing NN with deconvolutional layer on cifar10 dataset
+    :return:
+    Results tuple (check train_and_evaluate() documentation) and kernel of the deconvolution layer
+    """
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    x_train = x_train.astype("float32") / 255.0
+    x_test = x_test.astype("float32") / 255.0
+
+    model = tf.keras.Sequential(
+        [
+            tf.keras.Input(shape=(32, 32, 3)),
+            DeconvDft2dRgbLayer((3, 3, 3)),
+            layers.Flatten(),
+            layers.Dense(512, activation="relu"),
+            layers.Dense(256, activation="relu"),
+            layers.Dense(128, activation="relu"),
+            layers.Dense(10),
+        ]
+    )
+
+    model.compile(
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=3e-4),
+        metrics=['accuracy'],
+    )
+
+    # print('Weights before')
+    # print(model.layers[1].w)
+
+    history = model.fit(x_train, y_train, batch_size=32, epochs=10, verbose=2)
+    results = model.evaluate(x_test, y_test, batch_size=32, verbose=2)
+
+    # print('Weights after')
+    # print(model.layers[1].w)
+
+    return history, results, model.layers[0].w
+
+
 if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-    mnist_deconvrgb_test()
-    w = useful.load_data('deconvrgb_mnist')
-    deconvrgb_mnist_response(w)
+    results = cifar10_deconv_test()
+    useful.save_data(results[2].numpy(), 'cifar_deconv_w')
+    w = useful.load_data('cifar_deconv_w')
+    useful.cifar10_deconv_response(w)
