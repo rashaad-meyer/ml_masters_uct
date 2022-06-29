@@ -292,7 +292,7 @@ def conv_deconv_mnist_response(c_k, d_k):
     plot_images([ymc, ymd], (1, 2))
 
 
-def deconv_cifar10_response(k):
+def cifar10_deconv_response(k):
     """
     Plots an image of the output of a deconvolutional layer
     when an image from the CIFAR10 dataset is used as an input
@@ -308,7 +308,6 @@ def deconv_cifar10_response(k):
     i = random.randint(0, 1000)
 
     xm = tf.reshape(x_train[i], (1, x_train[i].shape[-3], x_train[i].shape[-2], x_train[i].shape[-1]))
-    print(xm.shape)
 
     # Initialise layers
     deconvfn = DeconvDft2dRgbLayer((3, 3, 3))
@@ -336,7 +335,7 @@ def conv_deconv_impulse_response(c_k, d_k):
     :return:
     """
     # Prepare impulse response with right dimension
-    xmd = tf.pad([[[1.0]]], [[0, 0], [0, 9], [0, 9]])
+    xmd = tf.pad([[[1.0]]], [[0, 0], [9, 9], [9, 9]])
     xmc = tf.reshape(xmd, (1, xmd.shape[-2], xmd.shape[-1], 1))
 
     # Initialise layers
@@ -419,4 +418,4 @@ if __name__ == '__main__':
     c_k = load_data('conv')
     d_k = load_data('deconv')
 
-    conv_deconv_impulse_freq_response(c_k, d_k)
+    conv_deconv_impulse_response(c_k, d_k)
