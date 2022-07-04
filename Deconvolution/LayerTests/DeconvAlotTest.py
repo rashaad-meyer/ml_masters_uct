@@ -4,6 +4,7 @@ import DeconvMultiDatasetTest as useful
 from tensorflow.keras import layers
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
+import matplotlib.pyplot as plt
 
 
 def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
@@ -115,6 +116,39 @@ def alot_conv_test():
     return history, results
 
 
+def alot_test_comparison():
+    """
+    Train deconv, conv, dense NN on MNIST datasets and return results tuple
+    :return: dictionary containing results tuple from each NN
+    """
+    results = {'deconv': alot_deconvrgb_test(),
+               'conv': alot_conv_test()}
+    return results
+
+
+def plot_results(trains_results):
+    """
+    Plots loss and accuracy from mnist_data_comparison()
+    :param trains_results: Results from mnist_test_comparison()
+    :return:
+    """
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig.suptitle('Accuracy and Loss plots')
+
+    for i in trains_results.keys():
+        ax1.plot(trains_results[i].history['accuracy'])
+        ax2.plot(trains_results[i].history['loss'])
+
+    ax1.set(xlabel='Epochs', ylabel='Accuracy')
+    ax1.legend(trains_results.keys(), loc='lower right')
+    ax2.set(xlabel='Epochs', ylabel='Loss')
+    ax2.legend(trains_results.keys(), loc='upper right')
+
+    plt.show()
+
+
 if __name__ == '__main__':
-    alot_deconvrgb_test()
-    alot_deconv_test()
+    results = alot_test_comparison()
+    train_results = {'deconv': results['deconv'][0],
+                     'conv': results['conv'][0]}
+    plot_results(train_results)
