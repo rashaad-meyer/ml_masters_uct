@@ -5,14 +5,13 @@ from tensorflow.keras import layers
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 
 
-def get_grayscale_alot_ds(seed=100, validation_split=0.1):
-    image_size = (256, 256)
+def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.1):
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/Rashaad/Documents/Postgrad/Datasets/alot_grey/grey/',
+        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
         labels='inferred',
         label_mode='int',  # categorical binary
         color_mode='grayscale',
-        batch_size=100,
+        batch_size=32,
         image_size=image_size,
         shuffle=True,
         seed=123,
@@ -20,11 +19,11 @@ def get_grayscale_alot_ds(seed=100, validation_split=0.1):
         subset='training'
     )
     ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/Rashaad/Documents/Postgrad/Datasets/alot_grey/grey/',
+        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
         labels='inferred',
         label_mode='int',  # categorical binary
         color_mode='grayscale',
-        batch_size=100,
+        batch_size=32,
         image_size=image_size,
         shuffle=True,
         seed=123,
@@ -35,20 +34,15 @@ def get_grayscale_alot_ds(seed=100, validation_split=0.1):
 
 
 def alot_deconv_test():
-    (ds_train, ds_validation) = get_grayscale_alot_ds()
-
-    # def augment(x, y):
-    #     seed = (random.randint(1, 1000), random.randint(1, 1000))
-    #     image = tf.image.stateless_random_crop(x, size=(-1, 256, 256, 1), seed=seed)
-    #     return image, y
-    # ds_train = ds_train.map(augment)
+    img_shape = (256, 256)
+    (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
+    print(tf.__version__)
 
     model = tf.keras.Sequential(
         [
-            layers.Input((256, 256, 1)),
-            layers.Conv2D(1, 3, padding='same'),
-            layers.Conv2D(1, 3, padding='same'),
-            layers.MaxPooling2D(),
+            layers.Input((256, 256)),
+            # layers.Rand
+            DeconvDft2dLayer((3, 3)),
             layers.Flatten(),
             layers.Dense(250),
         ]
