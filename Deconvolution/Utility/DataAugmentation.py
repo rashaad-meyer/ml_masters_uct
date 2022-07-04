@@ -1,4 +1,6 @@
 import os
+import random
+
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.image as mpimg
@@ -61,6 +63,32 @@ def resize_images_in_directory(database_path, output_path):
             tf.keras.utils.save_img(path_full, img)
 
 
+def random_crop_augmentation(database_path, output_path):
+    folders = os.listdir(database_path)
+    img_size = [231, 271]
+    for i in folders:
+        img_base_path = os.path.join(database_path, i)
+        img_names = os.listdir(img_base_path)
+        path_folder = os.path.join(output_path, i)
+        if not os.path.exists(path_folder):
+            os.makedirs(path_folder)
+        print(i)
+
+        for j in img_names:
+            if j[-4:] != '.png' and j[-4:] != '.jpg':
+                continue
+
+            img_path = os.path.join(img_base_path, j)
+            img = mpimg.imread(img_path)
+
+            for k in range(10):
+                img_name = j[:-4] + str(k) + j[-4:]
+                path_full = os.path.join(path_folder, img_name)
+                r = (random.randint(1, 1000), random.randint(1, 1000), 1)
+                img1 = tf.reshape(tf.image.random_crop(img, (256, 256)), (256, 256, 1))
+                tf.keras.utils.save_img(path_full, img1)
+
+
 def convert_data_to_grayscale(x_train, y_train, labels, output_path, x_test=None, y_test=None):
     # Create directories
     if x_test is None:
@@ -93,6 +121,6 @@ def convert_data_to_grayscale(x_train, y_train, labels, output_path, x_test=None
 
 
 if __name__ == '__main__':
-    database_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\dtd_copy\\images'
-    output_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\dtd_copy\\images_resized'
-    resize_images_in_directory(database_path, output_path)
+    database_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\alot_grey\\grey'
+    output_path = 'C:\\Users\\Rashaad\\Documents\\Postgrad\\Datasets\\alot_grey\\grey_aug'
+    random_crop_augmentation(database_path, output_path)
