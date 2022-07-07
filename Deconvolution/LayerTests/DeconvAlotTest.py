@@ -14,7 +14,7 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
         label_mode='int',  # categorical binary
         color_mode='grayscale',
         batch_size=32,
-        image_size=image_size,
+        image_size=image_size[:-1],
         shuffle=True,
         seed=seed,
         validation_split=validation_split,
@@ -26,7 +26,7 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
         label_mode='int',  # categorical binary
         color_mode='grayscale',
         batch_size=32,
-        image_size=image_size,
+        image_size=image_size[:-1],
         shuffle=True,
         seed=seed,
         validation_split=validation_split,
@@ -36,9 +36,11 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
 
 
 def alot_deconv_test():
-    img_shape = (256, 256)
     (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
-    print(tf.__version__)
+
+    # TODO data augmentation
+    def augment(image_label, seed):
+        image, label = image_label
 
     model = tf.keras.Sequential(
         [
@@ -62,14 +64,12 @@ def alot_deconv_test():
     return history, results
 
 
-def alot_deconvrgb_test():
-    img_shape = (256, 256)
+def alot_deconvrgb_test(img_shape):
     (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
-    print(tf.__version__)
 
     model = tf.keras.Sequential(
         [
-            layers.Input((256, 256, 1)),
+            layers.Input(img_shape),
             # layers.Rand
             DeconvDft2dRgbLayer((1, 3, 3)),
             layers.Flatten(),
@@ -86,19 +86,17 @@ def alot_deconvrgb_test():
     history = model.fit(ds_train, epochs=10, verbose=2)
     results = model.evaluate(ds_validation)
 
-    return history, results
+    return history, results, model.layers[0].w
 
 
-def alot_conv_test():
-    img_shape = (256, 256)
+def alot_conv_test(img_shape):
     (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
-    print(tf.__version__)
 
     model = tf.keras.Sequential(
         [
-            layers.Input((256, 256, 1)),
+            layers.Input(img_shape),
             # layers.Rand
-            layers.Conv2D(1, (3, 3)),
+            layers.Conv2D(1, 3),
             layers.Flatten(),
             layers.Dense(250),
         ]
@@ -113,16 +111,16 @@ def alot_conv_test():
     history = model.fit(ds_train, epochs=10, verbose=2)
     results = model.evaluate(ds_validation)
 
-    return history, results
+    return history, results, model.layers[0].kernel
 
 
-def alot_test_comparison():
+def alot_test_comparison(img_shape):
     """
     Train deconv, conv, dense NN on MNIST datasets and return results tuple
     :return: dictionary containing results tuple from each NN
     """
-    results = {'deconv': alot_deconvrgb_test(),
-               'conv': alot_conv_test()}
+    results = {'deconv': alot_deconvrgb_test(img_shape),
+               'conv': alot_conv_test(img_shape)}
     return results
 
 
@@ -147,8 +145,49 @@ def plot_results(trains_results):
     plt.show()
 
 
+def alot_deconv_conv_response(c_k, d_k, img_shape):
+    i = random.randint(0, 10000)
+    (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape, seed=100)
+
+    class_names = ds_train.class_names
+
+    deconv = DeconvDft2dRgbLayer((1, 3, 3))
+    conv = layers.Conv2D(1, 5)
+
+    deconv.w = d_k
+    conv.kernel = c_k
+
+    plt.figure(figsize=(10, 10))
+    for images, labels in ds_train.take(1):
+        for i in range(3):
+            img = tf.reshape(images[i], (1, 512, 512, 1))
+            deconv_out = deconv(img)
+            conv_out = conv(img)
+
+            ax = plt.subplot(3, 3, i * 3 + 1)
+            plt.imshow(images[i].numpy().astype("uint8"), cmap='gray')
+            plt.title(class_names[labels[i]])
+            plt.axis("off")
+
+            ax = plt.subplot(3, 3, i * 3 + 2)
+            plt.imshow(deconv_out[0].numpy().astype("uint8"), cmap='gray')
+            plt.title('Deconv 3x3')
+            plt.axis("off")
+
+            ax = plt.subplot(3, 3, i * 3 + 3)
+            plt.imshow(conv_out[0].numpy().astype("uint8"), cmap='gray')
+            plt.title('Conv 3x3')
+            plt.axis("off")
+
+    plt.show()
+
+
 if __name__ == '__main__':
-    results = alot_test_comparison()
-    train_results = {'deconv': results['deconv'][0],
-                     'conv': results['conv'][0]}
-    plot_results(train_results)
+    img_shape = (512, 512, 1)
+    results = alot_test_comparison(img_shape)
+    useful.save_data(results['deconv'][2], 'alot_deconv_w')
+    useful.save_data(results['conv'][2], 'alot_conv_kernel')
+
+    c_k = useful.load_data('alot_conv_kernel')
+    d_k = useful.load_data('alot_deconv_w')
+    alot_deconv_conv_response(c_k, d_k, img_shape)
