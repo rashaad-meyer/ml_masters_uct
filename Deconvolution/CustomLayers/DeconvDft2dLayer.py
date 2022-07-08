@@ -14,6 +14,8 @@ class DeconvDft2dLayer(layers.Layer):
         self.w = tf.Variable(self.w, trainable=True)
 
     def custom_op(self, xm):
+        xm = tf.reshape(xm, (-1, xm.shape[-3], xm.shape[-2]))
+
         pad_w = tf.constant([[0, 0], [1, 0]])
         # Set first element to 1 then reshape into specified filter shape
         w0 = tf.pad(self.w, pad_w, mode='CONSTANT', constant_values=1)
@@ -37,6 +39,9 @@ class DeconvDft2dLayer(layers.Layer):
 
         ymf = tf.multiply(gmf, tf.signal.rfft2d(xm))
         ym = tf.signal.irfft2d(ymf)
+
+        ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
+        ym = tf.image.central_crop(ym, 0.67)
 
         return ym
 
