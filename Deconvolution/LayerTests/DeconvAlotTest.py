@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
+        'C:/Users/rasha/Documents/MastersUCT/Dataset/ALOT/grey',
         labels='inferred',
         label_mode='int',  # categorical binary
         color_mode='grayscale',
@@ -21,7 +21,7 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
         subset='training'
     )
     ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
+        'C:/Users/rasha/Documents/MastersUCT/Dataset/ALOT/grey',
         labels='inferred',
         label_mode='int',  # categorical binary
         color_mode='grayscale',
@@ -35,16 +35,34 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
     return ds_train, ds_validation
 
 
-def alot_deconv_test():
+def alot_deconv_test(img_shape):
     (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
 
-    # TODO data augmentation
     def augment(image_label, seed):
         image, label = image_label
+        image = tf.image.central_crop(image, 0.7)
+        img_size = image.shape[-2]
+        image = tf.image.stateless_random_crop(image, size=[img_size, img_size, 1], seed=seed)
+        return image, label
+
+    ds_train = (
+        ds_train
+        .shuffle(1000)
+        .map(augment, num_parallel_calls=AUTOTUNE)
+        .batch(batch_size)
+        .prefetch(AUTOTUNE)
+    )
+
+    ds_validation = (
+        ds_validation
+        .map(resize_and_rescale, num_parallel_calls=AUTOTUNE)
+        .batch(batch_size)
+        .prefetch(AUTOTUNE)
+    )
 
     model = tf.keras.Sequential(
         [
-            layers.Input((256, 256)),
+            layers.Input((256, 256, 1)),
             # layers.Rand
             DeconvDft2dLayer((3, 3)),
             layers.Flatten(),
@@ -71,7 +89,7 @@ def alot_deconvrgb_test(img_shape):
         [
             layers.Input(img_shape),
             # layers.Rand
-            DeconvDft2dRgbLayer((1, 3, 3)),
+            DeconvDft2dLayer((3, 3)),
             layers.Flatten(),
             layers.Dense(250),
         ]
@@ -83,7 +101,7 @@ def alot_deconvrgb_test(img_shape):
         metrics=["accuracy"],
     )
 
-    history = model.fit(ds_train, epochs=10, verbose=2)
+    history = model.fit(ds_train, epochs=5, verbose=2)
     results = model.evaluate(ds_validation)
 
     return history, results, model.layers[0].w
@@ -183,11 +201,5 @@ def alot_deconv_conv_response(c_k, d_k, img_shape):
 
 
 if __name__ == '__main__':
-    img_shape = (512, 512, 1)
-    results = alot_test_comparison(img_shape)
-    useful.save_data(results['deconv'][2], 'alot_deconv_w')
-    useful.save_data(results['conv'][2], 'alot_conv_kernel')
-
-    c_k = useful.load_data('alot_conv_kernel')
-    d_k = useful.load_data('alot_deconv_w')
-    alot_deconv_conv_response(c_k, d_k, img_shape)
+    img_shape = (600, 600, 1)
+    results = alot_deconvrgb_test(img_shape)
