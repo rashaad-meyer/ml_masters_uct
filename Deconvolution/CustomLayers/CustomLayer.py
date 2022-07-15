@@ -37,18 +37,3 @@ class CustomLayer(layers.Layer):
 
     def call(self, inputs):
         return self.custom_op(inputs)
-
-
-if __name__ == '__main__':
-    x = tf.constant([[[1, 1, 1],
-                      [1, 1, 1],
-                      [1, 1, 1]],
-                     [[2, 2, 2],
-                      [2, 2, 2],
-                      [2, 2, 2]]])
-    x = tf.reshape(x, (2, 3, 3, 1))
-    print(x)
-    x = tf.reduce_mean(x, -2)
-    print(x)
-
-    print(x)
