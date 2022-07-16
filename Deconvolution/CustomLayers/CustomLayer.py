@@ -28,6 +28,7 @@ class CustomLayer(layers.Layer):
         w0 = tf.reshape(w0, filter_shape)
 
         ym = tf.nn.conv2d(xm, w0, strides=[1, 1, 1, 1], padding='same')
+        ym = tf.multiply(ym, ym)
 
         # Get mean value for pixels
         ymean = tf.reduce_mean(ym, -2)
