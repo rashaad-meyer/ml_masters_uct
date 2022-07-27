@@ -10,17 +10,12 @@ def deconv_dft_2d_test():
     data_shape = (16, 16)
     h_shape = (3, 3)
 
-    xm = tf.random.uniform((data_len, data_shape[-2], data_shape[-1]), minval=0)
-
-    one = tf.pad([[1.0]], [[0, h_shape[-2] - 1], [0, h_shape[-1] - 1]])
+    xm = tf.random.uniform((data_len, data_shape[-2], data_shape[-1], 1), minval=0)
     pad_w = tf.constant([[0, 0], [1, 0]])
 
-    hrf = tf.random.uniform((h_shape[-2], h_shape[-1] - 1), minval=0, maxval=0.5)
-    # hrf = tf.constant([[1, 0.3, 0.3], [0, 0.1, 0.2], [0, 0.2, 0.2]])
-    hrf = tf.pad(hrf, pad_w, mode='CONSTANT')
-    hrf = tf.add(hrf, one)
+    hrf = tf.random.uniform((1, h_shape[-2] * h_shape[-1] - 1), minval=0, maxval=0.5)
 
-    ym = DeconvFFT.forward_pass(xm, hrf)
+    ym = DeconvFFT.forward_pass(xm, hrf, (3, 3))
     print(tf.reduce_max(ym))
 
     x_train = xm[:int(data_len / 2)]
@@ -29,9 +24,12 @@ def deconv_dft_2d_test():
     x_test = xm[int(data_len / 2):]
     y_test = ym[int(data_len / 2):]
 
+    nn_input_shape = list(data_shape)
+    nn_input_shape.append(1)
+
     model = tf.keras.Sequential(
         [
-            tf.keras.layers.InputLayer(input_shape=data_shape),
+            tf.keras.layers.InputLayer(input_shape=nn_input_shape),
             DeconvDft2dLayer(h_shape),
         ]
     )
@@ -44,8 +42,6 @@ def deconv_dft_2d_test():
     model.summary()
 
     w0 = model.layers[0].w
-    w0 = tf.pad(w0, pad_w, mode='CONSTANT')
-    w0 = tf.add(w0, one)
     w0_diff = tf.reduce_sum(tf.math.square(hrf - w0))
 
     print("\n-------------------------------------------")
@@ -59,8 +55,6 @@ def deconv_dft_2d_test():
     model.evaluate(x_test, y_test, batch_size=10, verbose=2)
 
     wf = model.layers[0].w
-    wf = tf.pad(wf, pad_w, mode='CONSTANT')
-    wf = tf.add(wf, one)
     wf_diff = tf.reduce_sum(tf.math.square(hrf - wf))
 
     print("\n-------------------------------------------")

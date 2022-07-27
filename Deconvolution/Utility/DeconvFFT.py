@@ -55,21 +55,22 @@ def np_tf_fft_test():
     plt.show()
 
 
-def forward_pass(xm, hrf):
+def forward_pass(xm, hrf, h_shape):
     # pad input
+
+    xm = tf.reshape(xm, (-1, xm.shape[-3], xm.shape[-2]))
 
     pad_w = tf.constant([[0, 0], [1, 0]])
     # Set first element to 1 then reshape into specified filter shape
-    hrf = tf.pad(hrf, pad_w, mode='CONSTANT', constant_values=1)
-    hrf = tf.reshape(hrf, (h_shape[-2], h_shape[-1]))
+    w0 = tf.pad(hrf, pad_w, mode='CONSTANT', constant_values=1)
+    w0 = tf.reshape(w0, h_shape)
 
     padding = tf.constant(
         [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
     xm = tf.pad(xm, padding, "CONSTANT")
 
-    # pad filter to input size
-    paddings = tf.constant([[0, xm.shape[-2] - hrf.shape[-2]], [0, xm.shape[-1] - hrf.shape[-1]]])
-    hm1 = tf.pad(hrf, paddings, "CONSTANT")
+    paddings = tf.constant([[0, xm.shape[-2] - w0.shape[-2]], [0, xm.shape[-1] - w0.shape[-1]]])
+    hm1 = tf.pad(w0, paddings, "CONSTANT")
 
     gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
     gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
@@ -82,6 +83,9 @@ def forward_pass(xm, hrf):
 
     ymf = tf.multiply(gmf, tf.signal.rfft2d(xm))
     ym = tf.signal.irfft2d(ymf)
+
+    ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
+    ym = tf.image.central_crop(ym, 0.67)
 
     return ym
 
