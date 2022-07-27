@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
-import DeconvFFT
+from Deconvolution.Utility import DeconvFFT
 
 
 def deconv_dft_2d_test():
