@@ -2,10 +2,10 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 
-class CustomLayer(layers.Layer):
+class CausalConvLayer(layers.Layer):
 
     def __init__(self, h_shape, in_channels, out_channels):
-        super(CustomLayer, self).__init__()
+        super(CausalConvLayer, self).__init__()
         self.h_shape = list(h_shape)
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -28,13 +28,9 @@ class CustomLayer(layers.Layer):
         w0 = tf.reshape(w0, filter_shape)
 
         ym = tf.nn.conv2d(xm, w0, strides=[1, 1, 1, 1], padding='same')
-        ym = tf.multiply(ym, ym)
+        # square convolution output
 
-        # Get mean value for pixels
-        ymean = tf.reduce_mean(ym, -2)
-        ymean = tf.reduce_mean(ymean, -2)
-
-        return ymean
+        return ym
 
     def call(self, inputs):
         return self.custom_op(inputs)
