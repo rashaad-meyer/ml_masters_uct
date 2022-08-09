@@ -28,7 +28,7 @@ def mnist_deconv_test():
 
     # Functional API for Deconv Layer
     model = keras.Sequential([
-        layers.Input(shape=(28, 28)),
+        layers.Input(shape=(28, 28, 1)),
         DeconvDft2dLayer((3, 3)),
         layers.Flatten(),
         layers.Dense(256, activation="relu", name="second_layer"),
@@ -240,16 +240,23 @@ def plot_results(results):
     plt.show()
 
 
-def plot_images(imgs, shape):
+def plot_images(imgs, shape, titles=None):
     """
     Plot list of images in given shape
     :param imgs: List of images that will be plotted
     :param shape: List of length 2 that contains the number of rows and columns that will be plotted in
+    :param titles: List of titles of each image
     :return:
     """
+
     assert len(imgs) <= shape[0] * shape[1]
     fig, ax = plt.subplots(shape[0], shape[1])
+
+    if titles is None:
+        titles = [''] * len(ax)
+
     for i in range(len(ax)):
+        plt.title(titles[i])
         ax[i].imshow(imgs[i], cmap='gray')
     plt.show()
 
@@ -282,8 +289,7 @@ def conv_deconv_mnist_response(c_k, d_k):
 
     # Calculate responses
     ymc = convfn(xmc)
-    ymd = deconvfn(xmd)
-    ymd = tf.reshape(ymd, (1, ymd.shape[-2], ymd.shape[-1], 1))
+    ymd = deconvfn(xmc)
 
     # Reshape so that it can be plotted
     ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
@@ -348,11 +354,11 @@ def conv_deconv_impulse_response(c_k, d_k):
 
     # Calcualte response
     ymc = convfn(xmc)
-    ymd = deconvfn(xmd)
+    ymd = deconvfn(xmc)
 
     # Reshape output so it can be plotted
     ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
-    ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
+    ymd = tf.reshape(ymd, (ymd.shape[-3], ymd.shape[-2]))
 
     plot_images([ymc, ymd], (1, 2))
 
@@ -415,7 +421,10 @@ def mnist_test_and_plot():
 if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices("GPU")
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
-    c_k = load_data('conv')
-    d_k = load_data('deconv')
 
+    # results, d_k = mnist_deconv_test()
+    # save_data(d_k, 'mnist_deconv_w')
+
+    c_k = load_data('conv')
+    d_k = load_data('mnist_deconv_w')
     conv_deconv_impulse_response(c_k, d_k)
