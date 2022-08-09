@@ -28,7 +28,10 @@ class DeconvDft2dLayer(layers.Layer):
         paddings = tf.constant([[0, xm.shape[-2] - w0.shape[-2]], [0, xm.shape[-1] - w0.shape[-1]]])
         hm1 = tf.pad(w0, paddings, "CONSTANT")
 
-        gm1f = tf.divide(1, tf.signal.rfft2d(hm1))
+        xm = tf.cast(xm, dtype=tf.complex64)
+        hm1 = tf.cast(hm1, dtype=tf.complex64)
+
+        gm1f = tf.divide(1, tf.signal.fft2d(hm1))
         gm2f = tf.roll(tf.reverse(gm1f, [0]), shift=1, axis=0)
         gm3f = tf.roll(tf.reverse(gm1f, [1]), shift=1, axis=1)
         gm4f = tf.roll(tf.reverse(gm3f, [0]), shift=1, axis=0)
@@ -37,8 +40,9 @@ class DeconvDft2dLayer(layers.Layer):
         gmf2 = tf.multiply(gm3f, gm4f)
         gmf = tf.multiply(gmf1, gmf2)
 
-        ymf = tf.multiply(gmf, tf.signal.rfft2d(xm))
-        ym = tf.signal.irfft2d(ymf)
+        ymf = tf.multiply(gmf, tf.signal.fft2d(xm))
+        ym = tf.signal.ifft2d(ymf)
+        ym = tf.cast(ym, dtype=tf.float32)
 
         ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
         ym = tf.image.central_crop(ym, 0.67)
