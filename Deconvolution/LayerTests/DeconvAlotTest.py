@@ -1,15 +1,19 @@
 import tensorflow as tf
 import random
-import DeconvMultiDatasetTest as useful
+
+from keras_preprocessing.image import ImageDataGenerator
+
 from tensorflow.keras import layers
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 import matplotlib.pyplot as plt
+from Augmentation.RandomCropLayer import RandomCrop
+import DeconvMultiDatasetTest as useful
 
 
 def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/rasha/Documents/MastersUCT/Dataset/ALOT/grey',
+        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
         labels='inferred',
         label_mode='int',  # categorical binary
         color_mode='grayscale',
@@ -21,7 +25,7 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
         subset='training'
     )
     ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
-        'C:/Users/rasha/Documents/MastersUCT/Dataset/ALOT/grey',
+        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
         labels='inferred',
         label_mode='int',  # categorical binary
         color_mode='grayscale',
@@ -38,32 +42,66 @@ def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
 def alot_deconv_test(img_shape):
     (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
 
-    def augment(image_label, seed):
-        image, label = image_label
-        image = tf.image.central_crop(image, 0.7)
-        img_size = image.shape[-2]
-        image = tf.image.stateless_random_crop(image, size=[img_size, img_size, 1], seed=seed)
-        return image, label
-
-    ds_train = (
-        ds_train
-        .shuffle(1000)
-        .map(augment, num_parallel_calls=AUTOTUNE)
-        .batch(batch_size)
-        .prefetch(AUTOTUNE)
+    model = tf.keras.Sequential(
+        [
+            layers.Input(img_shape),
+            DeconvDft2dLayer((3, 3)),
+            layers.Flatten(),
+            layers.Dense(250),
+        ]
     )
 
-    ds_validation = (
-        ds_validation
-        .map(resize_and_rescale, num_parallel_calls=AUTOTUNE)
-        .batch(batch_size)
-        .prefetch(AUTOTUNE)
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(),
+        loss=[tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)],
+        metrics=["accuracy"],
     )
+
+    history = model.fit(ds_train, epochs=10, verbose=2)
+    results = model.evaluate(ds_validation)
+
+    return history, results
+
+
+def alot_deconv_with_augmentation_test(img_shape):
+    aug_shape = [460, 460, 1]
+    # aug_shape = list(img_shape)
+
+    ds_train = tf.keras.preprocessing.image_dataset_from_directory(
+        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
+        labels='inferred',
+        label_mode='int',  # categorical binary
+        color_mode='grayscale',
+        batch_size=32,
+        image_size=img_shape[:-1],
+        shuffle=True,
+        seed=123,
+        validation_split=0.2,
+        subset='training'
+    )
+    ds_validation = tf.keras.preprocessing.image_dataset_from_directory(
+        'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
+        labels='inferred',
+        label_mode='int',  # categorical binary
+        color_mode='grayscale',
+        batch_size=32,
+        image_size=aug_shape[:-1],
+        shuffle=True,
+        seed=123,
+        validation_split=0.2,
+        subset='validation'
+    )
+
+    def augment(img, label):
+        aug_shape1 = aug_shape
+        img = random_central_crop(img, aug_shape1)
+        return img, label
+
+    ds_train = ds_train.map(augment)
 
     model = tf.keras.Sequential(
         [
-            layers.Input((256, 256, 1)),
-            # layers.Rand
+            layers.Input(aug_shape),
             DeconvDft2dLayer((3, 3)),
             layers.Flatten(),
             layers.Dense(250),
@@ -200,6 +238,96 @@ def alot_deconv_conv_response(c_k, d_k, img_shape):
     plt.show()
 
 
+def random_central_crop(img, crop_size):
+    y0 = int((img.shape[-3] - crop_size[-3]) / 2)
+    x0 = int((img.shape[-2] - crop_size[-2]) / 2)
+    rand_xy = tf.random.uniform((2,), minval=-20, maxval=20, dtype=tf.int32)
+    img = tf.image.crop_to_bounding_box(img, y0 + rand_xy[0], x0 + rand_xy[1], crop_size[-3], crop_size[-2])
+    return img
+
+
+def random_crop_test(img_shape):
+    i = random.randint(0, 10000)
+    (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape, seed=100)
+
+    class_names = ds_train.class_names
+
+    img_shape = list(img_shape).insert(0, 1)
+
+    plt.figure(figsize=(10, 10))
+    for images, labels in ds_train.take(1):
+        for i in range(3):
+            rcrop_out1 = random_central_crop(images[i], (100, 100, 1))
+            rcrop_out2 = random_central_crop(images[i], (100, 100, 1))
+
+            ax = plt.subplot(3, 3, i * 3 + 1)
+            plt.imshow(images[i].numpy().astype("uint8"), cmap='gray')
+            plt.title(class_names[labels[i]])
+            plt.axis("off")
+
+            ax = plt.subplot(3, 3, i * 3 + 2)
+            plt.imshow(rcrop_out1.numpy().astype("uint8"), cmap='gray')
+            plt.title('Deconv 3x3')
+            plt.axis("off")
+
+            ax = plt.subplot(3, 3, i * 3 + 3)
+            plt.imshow(rcrop_out2.numpy().astype("uint8"), cmap='gray')
+            plt.title('Conv 3x3')
+            plt.axis("off")
+
+    plt.show()
+
+
+def deconv_alot_impulse_response(c_k, d_k):
+    """
+    Plots an image frequency response of the output of a convolutional and deconvolutional layer
+    when 2D impulse response is used as an input
+    :param c_k: Convolutional kernel
+    :param d_k: Deconvolutional kernel
+    :return:
+    """
+    # Prepare impulse response with right dimension
+    xmd = tf.pad([[[1.0]]], [[0, 0], [0, 127], [0, 256]])
+    xmd = tf.reshape(xmd, (1, xmd.shape[-2], xmd.shape[-1], 1))
+
+    xmc = tf.pad([[[1.0]]], [[0, 0], [0, 20], [0, 127]])
+    xmc = tf.reshape(xmc, (1, xmc.shape[-2], xmc.shape[-1], 1))
+    # Initialise layers
+    convfn = layers.Conv2D(1, (3, 3), padding='same')
+    deconvfn = DeconvDft2dLayer((3, 3))
+
+    # Set layer filters
+    convfn.kernel = c_k
+    deconvfn.w = d_k
+
+    # Calcualte response
+    ymc = convfn(xmc)
+    ymd = deconvfn(xmd)
+
+    # Reshape output so it can be plotted
+    # ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
+    # ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
+
+    ymcf = tf.math.abs(tf.signal.rfft2d(ymc))
+    ymdf = tf.math.abs(tf.signal.rfft2d(ymd))
+
+    ax = plt.subplot(2, 1, 1)
+    plt.imshow(ymcf[0], cmap='gray')
+    plt.title('Conv 3x3')
+
+    ax = plt.subplot(2, 1, 2)
+    plt.imshow(ymdf[0], cmap='gray')
+    plt.title('Deconv 3x3')
+
+    plt.show()
+
+
 if __name__ == '__main__':
-    img_shape = (600, 600, 1)
-    results = alot_deconvrgb_test(img_shape)
+    img_shape = (512, 512, 1)
+    print(tf.__version__)
+    # results = alot_deconv_test(img_shape)
+    # alot_deconv_with_augmentation_test(img_shape)
+    # alot_deconv_test((400, 400, 1))
+    c_k = useful.load_data('alot_conv_kernel')
+    d_k = useful.load_data('alot_deconv_w')
+    deconv_alot_impulse_response(c_k, d_k)
