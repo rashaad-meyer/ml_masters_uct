@@ -22,7 +22,7 @@ class DeconvDft2dLayer(layers.Layer):
         w0 = tf.reshape(w0, self.h_shape)
 
         padding = tf.constant(
-            [[0, 0], [int(xm.shape[-2] / 4), int(xm.shape[-2] / 4)], [int(xm.shape[-1] / 4), int(xm.shape[-1] / 4)]])
+            [[0, 0], [int(xm.shape[-2] / 2), int(xm.shape[-2] / 2)], [int(xm.shape[-1] / 2), int(xm.shape[-1] / 2)]])
         xm = tf.pad(xm, padding, "CONSTANT")
 
         paddings = tf.constant([[0, xm.shape[-2] - w0.shape[-2]], [0, xm.shape[-1] - w0.shape[-1]]])
@@ -45,7 +45,7 @@ class DeconvDft2dLayer(layers.Layer):
         ym = tf.cast(ym, dtype=tf.float32)
 
         ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
-        ym = tf.image.central_crop(ym, 0.67)
+        ym = tf.image.central_crop(ym, 0.5)
 
         return ym
 

@@ -120,7 +120,7 @@ def alot_deconv_with_augmentation_test(img_shape):
     return history, results
 
 
-def alot_deconvrgb_test(img_shape):
+def alot_deconv_test(img_shape):
     (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
 
     model = tf.keras.Sequential(
@@ -139,7 +139,40 @@ def alot_deconvrgb_test(img_shape):
         metrics=["accuracy"],
     )
 
-    history = model.fit(ds_train, epochs=5, verbose=2)
+    history = model.fit(ds_train, epochs=20, verbose=2)
+    results = model.evaluate(ds_validation)
+
+    return history, results, model.layers[0].w
+
+
+def alot_deconv_test_with_augmentation(img_shape):
+    (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape)
+    crop_size = (256, 256, 1)
+
+    model = tf.keras.Sequential(
+        [
+            layers.Input(img_shape),
+            # layers.Rand
+            DeconvDft2dLayer((3, 3)),
+            layers.Flatten(),
+            layers.Dense(250),
+        ]
+    )
+
+    def augment(img_label, seed):
+        label = img_label[1]
+        img = random_central_crop(img_label[0], crop_size)
+        return img, label
+
+    ds_train.map(augment)
+
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(),
+        loss=[tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)],
+        metrics=["accuracy"],
+    )
+
+    history = model.fit(ds_train, epochs=20, verbose=2)
     results = model.evaluate(ds_validation)
 
     return history, results, model.layers[0].w
@@ -175,7 +208,7 @@ def alot_test_comparison(img_shape):
     Train deconv, conv, dense NN on MNIST datasets and return results tuple
     :return: dictionary containing results tuple from each NN
     """
-    results = {'deconv': alot_deconvrgb_test(img_shape),
+    results = {'deconv': alot_deconv_test(img_shape),
                'conv': alot_conv_test(img_shape)}
     return results
 
@@ -213,10 +246,13 @@ def alot_deconv_conv_response(c_k, d_k, img_shape):
     deconv.w = d_k
     conv.kernel = c_k
 
+    img_reshape = list(img_shape)
+    img_reshape.insert(0, 1)
+
     plt.figure(figsize=(10, 10))
     for images, labels in ds_train.take(1):
         for i in range(3):
-            img = tf.reshape(images[i], (1, 512, 512, 1))
+            img = tf.reshape(images[i], tuple(img_reshape))
             deconv_out = deconv(img)
             conv_out = conv(img)
 
@@ -323,11 +359,10 @@ def deconv_alot_impulse_response(c_k, d_k):
 
 
 if __name__ == '__main__':
-    img_shape = (512, 512, 1)
+    img_shape = (420, 420, 1)
     print(tf.__version__)
-    # results = alot_deconv_test(img_shape)
-    # alot_deconv_with_augmentation_test(img_shape)
-    # alot_deconv_test((400, 400, 1))
+    history, results, d_k = alot_deconv_test(img_shape)
+    useful.save_data(d_k, 'alot_deconv_w')
     c_k = useful.load_data('alot_conv_kernel')
     d_k = useful.load_data('alot_deconv_w')
-    deconv_alot_impulse_response(c_k, d_k)
+    alot_deconv_conv_response(c_k, d_k, img_shape)
