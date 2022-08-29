@@ -1,10 +1,14 @@
 import os
+import random
 
 import tensorflow as tf
 from keras import layers
 from Convolution.CausalConvLayer import CausalConvLayer
 
+import matplotlib.pyplot as plt
 import numpy as np
+
+import DeconvMultiDatasetTest as useful
 
 
 def conv_rms_test():
@@ -146,6 +150,51 @@ def alot_autoregression_test():
 
     history = model.fit(x_train, y_train, epochs=10, verbose=2)
 
+    ar_filter = model.layers[0].w
+
+    return history, ar_filter
+
+
+def plot_ar(ar_filter):
+    data_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4/1/'
+    img_names = os.listdir(data_path)
+    imgs = []
+    for img_name in img_names:
+        img_path = os.path.join(data_path, img_name)
+        img = tf.keras.utils.load_img(img_path,
+                                      color_mode='grayscale',
+                                      target_size=(300, 300))
+        img = tf.keras.preprocessing.image.img_to_array(img)
+        imgs.append(img)
+
+    imgs = tf.constant(imgs)
+
+    x_train = imgs / 255.0
+
+    i = random.randint(0, 100)
+
+    x = tf.reshape(x_train[i], (1, 300, 300, 1))
+
+    ar_model = CausalConvLayer((3, 3))
+    ar_model.w = ar_filter
+
+    y = ar_model(x)
+    y = y * 255
+
+    x = x * 255
+
+    ax = plt.subplot(2, 1, 1)
+    plt.imshow(x[0].numpy().astype('uint8'), cmap='gray')
+    plt.title('Original image')
+    plt.axis('off')
+
+    ax = plt.subplot(2, 1, 2)
+    plt.imshow(y[0].numpy().astype('uint8'), cmap='gray')
+    plt.title('After autoregression')
+    plt.axis('off')
+
+    plt.show()
+
 
 def random_central_crop(img, crop_size):
     y0 = int((img.shape[-3] - crop_size[-3]) / 2)
@@ -157,4 +206,8 @@ def random_central_crop(img, crop_size):
 
 if __name__ == '__main__':
     print(tf.__version__)
-    alot_autoregression_test()
+    # history, ar_filter = alot_autoregression_test()
+    # useful.save_data(ar_filter.numpy(), 'ar_w_alot_0_class')
+    ar_filter = useful.load_data('ar_w_alot_0_class')
+    print(ar_filter)
+    plot_ar(ar_filter)
