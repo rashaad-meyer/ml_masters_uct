@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 import random
 
@@ -9,6 +11,8 @@ from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 import matplotlib.pyplot as plt
 from Augmentation.RandomCropLayer import RandomCrop
 import DeconvMultiDatasetTest as useful
+
+import pandas as pd
 
 
 def get_grayscale_alot_ds(image_size, seed=100, validation_split=0.2):
@@ -139,10 +143,20 @@ def alot_deconv_test(img_shape):
         metrics=["accuracy"],
     )
 
-    history = model.fit(ds_train, epochs=20, verbose=2)
+    w_i = model.layers[0].w.numpy()
+
+    history = model.fit(ds_train, epochs=10, verbose=2)
     results = model.evaluate(ds_validation)
 
-    return history, results, model.layers[0].w
+    w_f = model.layers[0].w.numpy()
+
+    print('W before:')
+    print(w_i)
+    print('===========================')
+    print('W after:')
+    print(w_f)
+
+    return history, results, w_i, w_f
 
 
 def alot_deconv_test_with_augmentation(img_shape):
@@ -236,7 +250,7 @@ def plot_results(trains_results):
 
 def alot_deconv_conv_response(c_k, d_k, img_shape):
     i = random.randint(0, 10000)
-    (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape, seed=100)
+    (ds_train, ds_validation) = get_grayscale_alot_ds(img_shape, seed=i)
 
     class_names = ds_train.class_names
 
@@ -279,7 +293,7 @@ def random_central_crop(img, crop_size):
     x0 = int((img.shape[-2] - crop_size[-2]) / 2)
     rand_xy = tf.random.uniform((2,), minval=-20, maxval=20, dtype=tf.int32)
     img = tf.image.crop_to_bounding_box(img, y0 + rand_xy[0], x0 + rand_xy[1], crop_size[-3], crop_size[-2])
-    return img
+    return img.numpy()
 
 
 def random_crop_test(img_shape):
@@ -358,11 +372,25 @@ def deconv_alot_impulse_response(c_k, d_k):
     plt.show()
 
 
+def save_history_csv(w_i, w_f, history, test_acc, input_shape, aug=False):
+    train_hist = {'w_i': [w_i], 'w_f': [w_f], 'history': [history], 'test_acc': [test_acc], 'data_aug': [aug]}
+    df = pd.DataFrame(train_hist)
+    output_path = 'csv_files/alot_test_results.csv'
+    df.to_csv(output_path, mode='a', header=not os.path.exists(output_path))
+
+
 if __name__ == '__main__':
-    img_shape = (420, 420, 1)
+    img_shape = (256, 256, 1)
     print(tf.__version__)
-    history, results, d_k = alot_deconv_test(img_shape)
-    useful.save_data(d_k, 'alot_deconv_w')
-    c_k = useful.load_data('alot_conv_kernel')
-    d_k = useful.load_data('alot_deconv_w')
-    alot_deconv_conv_response(c_k, d_k, img_shape)
+
+    for i in range(5):
+        print('====================================')
+        print('              Loop ' + str(i))
+        print('====================================')
+        history, results, w_i, w_f = alot_deconv_test(img_shape)
+        save_history_csv(w_i, w_f, history.history['accuracy'], img_shape, results)
+
+    # useful.save_data(d_k, 'alot_deconv_w')
+    # c_k = useful.load_data('alot_conv_kernel')
+    # d_k = useful.load_data('alot_deconv_w')
+    # alot_deconv_conv_response(c_k, d_k, img_shape)

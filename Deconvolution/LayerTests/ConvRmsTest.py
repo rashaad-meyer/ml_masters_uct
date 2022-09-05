@@ -127,16 +127,24 @@ def alot_autoregression_test():
         img = tf.keras.preprocessing.image.img_to_array(img)
         imgs.append(img)
 
-    imgs = tf.constant(imgs)
+    aug_imgs = []
+    aug_imgs = imgs
 
-    x_train = imgs / 255.0
+    # for img in imgs:
+    #     for j in range(10):
+    #         aug_img = random_central_crop(img, (256, 256, 1))
+    #         aug_imgs.append(aug_img)
+
+    imgs_tensor = tf.constant(aug_imgs)
+
+    x_train = imgs_tensor / 255.0
     y_train = tf.zeros(x_train.shape)
 
     print(x_train.shape)
 
     model = tf.keras.Sequential(
         [
-            layers.Input((300, 300, 1)),
+            layers.Input((256, 256, 1)),
             CausalConvLayer((3, 3)),
             # layers.Conv2D(1, 3, padding='same')
         ]
@@ -206,8 +214,8 @@ def random_central_crop(img, crop_size):
 
 if __name__ == '__main__':
     print(tf.__version__)
-    # history, ar_filter = alot_autoregression_test()
-    # useful.save_data(ar_filter.numpy(), 'ar_w_alot_0_class')
+    history, ar_filter = alot_autoregression_test()
+    useful.save_data(ar_filter.numpy(), 'ar_w_alot_0_class')
     ar_filter = useful.load_data('ar_w_alot_0_class')
     print(ar_filter)
     plot_ar(ar_filter)
