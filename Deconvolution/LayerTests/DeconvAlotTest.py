@@ -354,7 +354,7 @@ def deconv_alot_impulse_response(c_k, d_k):
     ymc = convfn(xmc)
     ymd = deconvfn(xmd)
 
-    # Reshape output so it can be plotted
+    # Reshape output, so it can be plotted
     # ymc = tf.reshape(ymc, (ymc.shape[-3], ymc.shape[-2]))
     # ymd = tf.reshape(ymd, (ymd.shape[-2], ymd.shape[-1]))
 
