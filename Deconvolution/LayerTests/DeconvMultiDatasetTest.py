@@ -1,3 +1,4 @@
+import os
 import random
 import numpy as np
 import tensorflow as tf
@@ -189,6 +190,10 @@ def save_data(data, name):
     :param name: name of the file
     :return:
     """
+    if not os.path.exists('saved_data/'):
+        print('Works!')
+        os.makedirs('saved_data/')
+
     filename = 'saved_data/' + name + '.npy'
     with open(filename, 'wb') as f:
         np.save(f, data)
