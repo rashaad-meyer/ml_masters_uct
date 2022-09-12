@@ -15,7 +15,7 @@ def conv_rms_test():
     # input
     # causal conv like deconv
     # centre extract
-    # flatten? maybe not needed check if can do without
+    # flatten? maybe not needed check if you can do without
     # make mean square loss function
     ds_train = tf.keras.preprocessing.image_dataset_from_directory(
         'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4',
@@ -115,30 +115,8 @@ def custom_training_loop():
     return imgs
 
 
-def alot_autoregression_test():
-    data_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4/1/'
-    img_names = os.listdir(data_path)
-    imgs = []
-    for img_name in img_names:
-        img_path = os.path.join(data_path, img_name)
-        img = tf.keras.utils.load_img(img_path,
-                                      color_mode='grayscale',
-                                      target_size=(300, 300))
-        img = tf.keras.preprocessing.image.img_to_array(img)
-        imgs.append(img)
-
-    aug_imgs = []
-    aug_imgs = imgs
-
-    # for img in imgs:
-    #     for j in range(10):
-    #         aug_img = random_central_crop(img, (256, 256, 1))
-    #         aug_imgs.append(aug_img)
-
-    imgs_tensor = tf.constant(aug_imgs)
-
-    x_train = imgs_tensor / 255.0
-    y_train = tf.zeros(x_train.shape)
+def alot_autoregression_test(ds_path, target_size=[256, 256]):
+    x_train, y_train = get_dataset(ds_path, target_size)
 
     print(x_train.shape)
 
@@ -156,32 +134,45 @@ def alot_autoregression_test():
         metrics='mse'
     )
 
-    history = model.fit(x_train, y_train, epochs=10, verbose=2)
+    history = model.fit(x_train, y_train, epochs=20, verbose=2)
 
     ar_filter = model.layers[0].w
 
     return history, ar_filter
 
 
-def plot_ar(ar_filter):
-    data_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4/1/'
-    img_names = os.listdir(data_path)
+def get_dataset(ds_path, target_size=[256, 256]):
+    img_names = os.listdir(ds_path)
     imgs = []
+
     for img_name in img_names:
-        img_path = os.path.join(data_path, img_name)
-        img = tf.keras.utils.load_img(img_path,
-                                      color_mode='grayscale',
-                                      target_size=(300, 300))
-        img = tf.keras.preprocessing.image.img_to_array(img)
-        imgs.append(img)
+        if img_name[-4:] == '.png':
+            img_path = os.path.join(ds_path, img_name)
+            img = tf.keras.utils.load_img(img_path,
+                                          color_mode='grayscale',
+                                          target_size=target_size)
+            img = tf.keras.preprocessing.image.img_to_array(img)
+            imgs.append(img)
+    aug_imgs = imgs
 
-    imgs = tf.constant(imgs)
+    imgs_tensor = tf.constant(aug_imgs)
+    x_train = imgs_tensor / 255.0
+    y_train = tf.zeros(x_train.shape)
 
-    x_train = imgs / 255.0
+    return x_train, y_train
+
+
+def plot_ar(ar_filter, history, ds_path, target_size=[256, 256], save=''):
+    new_shape = None
+
+    x_train, y_train = get_dataset(ds_path, target_size)
 
     i = random.randint(0, 100)
 
-    x = tf.reshape(x_train[i], (1, 300, 300, 1))
+    new_shape = [1, target_size[0], target_size[1], 1]
+    print(new_shape)
+
+    x = tf.reshape(x_train[i], new_shape)
 
     ar_model = CausalConvLayer((3, 3))
     ar_model.w = ar_filter
@@ -191,17 +182,32 @@ def plot_ar(ar_filter):
 
     x = x * 255
 
-    ax = plt.subplot(2, 1, 1)
+    ax = plt.subplot(2, 2, 1)
     plt.imshow(x[0].numpy().astype('uint8'), cmap='gray')
     plt.title('Original image')
     plt.axis('off')
 
-    ax = plt.subplot(2, 1, 2)
+    ax = plt.subplot(2, 2, 2)
     plt.imshow(y[0].numpy().astype('uint8'), cmap='gray')
     plt.title('After autoregression')
     plt.axis('off')
 
-    plt.show()
+    ax = plt.subplot(2, 1, 2)
+    plt.plot(history['mse'])
+    plt.title('MSE over epochs')
+    plt.ylabel('MSE')
+    plt.xlabel('Epochs')
+
+    if save != '':
+        plt.savefig(save + '.png')
+        plt.clf()
+    else:
+        plt.show()
+
+
+def inverse_autoregression_test():
+    # TODO inverse of autoregression then white noise through autregression
+    return 0
 
 
 def random_central_crop(img, crop_size):
@@ -214,8 +220,23 @@ def random_central_crop(img, crop_size):
 
 if __name__ == '__main__':
     print(tf.__version__)
-    history, ar_filter = alot_autoregression_test()
-    useful.save_data(ar_filter.numpy(), 'ar_w_alot_0_class')
-    ar_filter = useful.load_data('ar_w_alot_0_class')
-    print(ar_filter)
-    plot_ar(ar_filter)
+    target_size = [256, 256]
+    for i in range(10):
+        print('==================================================')
+        print()
+        print('ITERATION ' + str(i))
+        print()
+        print('==================================================')
+
+        r = str(random.randint(1, 249))
+        ds_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4/' + r
+        history = None
+
+        # ds_path = 'C:/Users/Rashaad/Documents/Postgrad/PAR Resources/shared/csir2014/intersection_birds_nama'
+
+        history, ar_filter = alot_autoregression_test(ds_path, target_size)
+        useful.save_data(ar_filter.numpy(), 'ar_w_' + r)
+
+        ar_filter = useful.load_data('ar_w_' + r)
+        save_filename = 'C:/Users/Rashaad/Documents/Postgrad/Results/Autoregression/alot_' + str(r)
+        plot_ar(ar_filter, history.history, ds_path, target_size, save_filename)
