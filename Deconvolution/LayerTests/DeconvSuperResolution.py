@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
 from keras import layers
+from matplotlib import gridspec
+
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer as Deconv2D
 from Deconvolution.LayerTests import DeconvMultiDatasetTest as useful
 import numpy as np
@@ -22,14 +24,16 @@ def deconv_super_res_test(save_w=False):
         optimizer=tf.keras.optimizers.Adam(),
     )
 
-    model.fit(x_train, y_train, batch_size=32, epochs=10, verbose=2)
+    w0 = model.layers[1].w.numpy()
+    history = model.fit(x_train, y_train, batch_size=32, epochs=20, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
     wf = model.layers[1].w.numpy()
 
     if save_w:
         useful.save_data(wf, 'super_res_deconv_wf')
+        useful.save_data(w0, 'super_res_deconv_w0')
 
-    return
+    return history
 
 
 def deconv_gauss_blur_test(ds_path, save_w=False):
@@ -107,41 +111,76 @@ def imgs_to_tensor(data_path):
     return x_train
 
 
-def plot_super_res_test_results():
+def plot_super_res_test_results(history=None):
     i = random.randint(0, 140)
 
     # load data from tests
     x_test = useful.load_data('super_res_x_test')
     y_test = useful.load_data('super_res_y_test')
-    w = useful.load_data('super_res_deconv_w')
+    wf = useful.load_data('super_res_deconv_wf')
+    w0 = useful.load_data('super_res_deconv_w0')
 
     x = x_test[i:i + 2]
     y = y_test[i:i + 2]
 
     deconv = Deconv2D((3, 3))
-    deconv.w = w
-    y_pred = deconv(x)
+
+    deconv.w = wf
+    y_predf = deconv(x)
+
+    deconv.w = w0
+    y_pred0 = deconv(x)
+
+    pad_w = tf.constant([[0, 0], [1, 0]])
+    wf_ = tf.pad(wf, pad_w, mode='CONSTANT', constant_values=1)
+    wf_ = tf.reshape(wf_, (3, 3))
+    w0_ = tf.pad(w0, pad_w, mode='CONSTANT', constant_values=1)
+    w0_ = tf.reshape(w0_, (3, 3))
 
     plt.figure(figsize=(10, 10))
 
-    # TODO plot before kernel
-    # TODO plot before kernel
+    ax = plt.subplot(2, 2, 1)
+    plt.imshow(x[0], cmap='gray')
+    ax.set_title('Low res')
+    plt.axis('off')
 
-    for i in range(x.shape[0]):
-        ax = plt.subplot(2, 3, i * 3 + 1)
-        plt.imshow(y[i], cmap='gray')
-        ax.set_title('High Res')
-        plt.axis('off')
+    ax = plt.subplot(2, 2, 2)
+    plt.imshow(y[0], cmap='gray')
+    ax.set_title('High Res')
+    plt.axis('off')
 
-        ax = plt.subplot(2, 3, i * 3 + 2)
-        plt.imshow(y_pred[i].numpy(), cmap='gray')
-        ax.set_title('Predicted')
-        plt.axis('off')
+    ax = plt.subplot(2, 2, 3)
+    plt.imshow(y_pred0[0].numpy(), cmap='gray')
+    ax.set_title('Predicted w0')
+    plt.axis('off')
 
-        ax = plt.subplot(2, 3, i * 3 + 3)
-        plt.imshow(x[i], cmap='gray')
-        ax.set_title('Low Res')
-        plt.axis('off')
+    ax = plt.subplot(2, 2, 4)
+    plt.imshow(y_predf[0].numpy(), cmap='gray')
+    ax.set_title('Predicted wf')
+    plt.axis('off')
+
+    plt.show()
+
+    # plot on differet plot
+    plt.figure(figsize=(10, 10))
+
+    ax = plt.subplot(2, 2, 1)
+    ax.table(w0_.numpy(), loc='center')
+    ax.set_title('kernel before training')
+    ax.axis('tight')
+    ax.axis('off')
+
+    ax = plt.subplot(2, 2, 2)
+    ax.table(wf_.numpy(), loc='center')
+    ax.set_title('kernel after training')
+    ax.axis('tight')
+    ax.axis('off')
+
+    ax = plt.subplot(2, 1, 2)
+    plt.plot(history.history['loss'])
+    ax.set_title('MSE over epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('MSE')
 
     plt.show()
 
@@ -259,6 +298,7 @@ if __name__ == '__main__':
     base_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/Super resolution/' + \
                 'Image Super Resolution Aditya/dataset'
     # deconv_gauss_blur_test(base_path, save_w=True)
-    plot_gauss_blur_test_results()
-    # plot_super_res_test_results()
+    # plot_gauss_blur_test_results()
+    history = deconv_super_res_test(save_w=True)
+    plot_super_res_test_results(history)
     # save_data_in_csv()
