@@ -115,8 +115,8 @@ def custom_training_loop():
     return imgs
 
 
-def alot_autoregression_test(ds_path, target_size=[256, 256]):
-    x_train, y_train = get_dataset(ds_path, target_size)
+def alot_autoregression_test(ds_name, target_size=[256, 256]):
+    x_train, y_train = load_ds_from_csv(ds_name)
 
     print(x_train.shape)
 
@@ -133,12 +133,16 @@ def alot_autoregression_test(ds_path, target_size=[256, 256]):
         loss=[tf.keras.losses.MeanSquaredError()],
         metrics='mse'
     )
+    w0 = model.layers[0].w.numpy()
 
     history = model.fit(x_train, y_train, epochs=20, verbose=2)
 
-    ar_filter = model.layers[0].w
+    wf = model.layers[0].w.numpy()
 
-    return history, ar_filter
+    useful.save_data(w0, ds_name + '_w0')
+    useful.save_data(wf, ds_name + '_wf')
+
+    return history, w0, wf
 
 
 def get_dataset(ds_path, target_size=[256, 256]):
@@ -162,35 +166,82 @@ def get_dataset(ds_path, target_size=[256, 256]):
     return x_train, y_train
 
 
-def plot_ar(ar_filter, history, ds_path, target_size=[256, 256], save=''):
+def save_ds_to_csv(x_train, y_train, name):
+    """
+    :param x_train: input data
+    :param y_train: output data
+    :param name: <name of dataset>_<class_name>_<algorithm>
+    :return:
+    """
+    useful.save_data(x_train, name + '_x_train')
+    useful.save_data(y_train, name + '_y_train')
+
+
+def load_ds_from_csv(name):
+    x_train = useful.load_data(name + '_x_train')
+    y_train = useful.load_data(name + '_y_train')
+    return x_train, y_train
+
+
+def plot_ar(history, ds_name, target_size=None):
+    if target_size is None:
+        target_size = [256, 256]
     new_shape = None
 
-    x_train, y_train = get_dataset(ds_path, target_size)
+    x_train, y_train = load_ds_from_csv(ds_name)
 
     i = random.randint(0, 100)
 
-    new_shape = [1, target_size[0], target_size[1], 1]
-    print(new_shape)
+    x = x_train[i:i + 2]
 
-    x = tf.reshape(x_train[i], new_shape)
+    wf = useful.load_data(ds_name + '_wf')
+    w0 = useful.load_data(ds_name + '_w0')
 
     ar_model = CausalConvLayer((3, 3))
-    ar_model.w = ar_filter
+    ar_model.w = wf
+    yf = ar_model(x)
+    ar_model.w = w0
+    y0 = ar_model(x)
 
-    y = ar_model(x)
-    y = y * 255
+    pad_w = tf.constant([[0, 0], [1, 0]])
+    wf_ = tf.pad(wf, pad_w, mode='CONSTANT', constant_values=1)
+    wf_ = tf.reshape(wf_, (3, 3))
+    w0_ = tf.pad(w0, pad_w, mode='CONSTANT', constant_values=1)
+    w0_ = tf.reshape(w0_, (3, 3))
 
-    x = x * 255
+    plt.figure(figsize=(10, 10))
 
-    ax = plt.subplot(2, 2, 1)
-    plt.imshow(x[0].numpy().astype('uint8'), cmap='gray')
+    ax = plt.subplot(1, 3, 1)
+    plt.imshow(x[0], cmap='gray')
     plt.title('Original image')
     plt.axis('off')
 
-    ax = plt.subplot(2, 2, 2)
-    plt.imshow(y[0].numpy().astype('uint8'), cmap='gray')
-    plt.title('After autoregression')
+    ax = plt.subplot(1, 3, 2)
+    plt.imshow(yf[0].numpy(), cmap='gray')
+    plt.title('After autoregressive training')
     plt.axis('off')
+
+    ax = plt.subplot(1, 3, 3)
+    plt.imshow(y0[0].numpy(), cmap='gray')
+    plt.title('Before autoregressive training')
+    plt.axis('off')
+
+    plt.show()
+
+    # plot on differet plot
+    plt.figure(figsize=(10, 10))
+
+    ax = plt.subplot(2, 2, 1)
+    ax.table(w0_.numpy(), loc='center')
+    ax.set_title('kernel before training')
+    ax.axis('tight')
+    ax.axis('off')
+
+    ax = plt.subplot(2, 2, 2)
+    ax.table(wf_.numpy(), loc='center')
+    ax.set_title('kernel after training')
+    ax.axis('tight')
+    ax.axis('off')
 
     ax = plt.subplot(2, 1, 2)
     plt.plot(history['mse'])
@@ -198,11 +249,7 @@ def plot_ar(ar_filter, history, ds_path, target_size=[256, 256], save=''):
     plt.ylabel('MSE')
     plt.xlabel('Epochs')
 
-    if save != '':
-        plt.savefig(save + '.png')
-        plt.clf()
-    else:
-        plt.show()
+    plt.show()
 
 
 def inverse_autoregression_test():
@@ -220,23 +267,7 @@ def random_central_crop(img, crop_size):
 
 if __name__ == '__main__':
     print(tf.__version__)
-    target_size = [256, 256]
-    for i in range(10):
-        print('==================================================')
-        print()
-        print('ITERATION ' + str(i))
-        print()
-        print('==================================================')
-
-        r = str(random.randint(1, 249))
-        ds_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4/' + r
-        history = None
-
-        # ds_path = 'C:/Users/Rashaad/Documents/Postgrad/PAR Resources/shared/csir2014/intersection_birds_nama'
-
-        history, ar_filter = alot_autoregression_test(ds_path, target_size)
-        useful.save_data(ar_filter.numpy(), 'ar_w_' + r)
-
-        ar_filter = useful.load_data('ar_w_' + r)
-        save_filename = 'C:/Users/Rashaad/Documents/Postgrad/Results/Autoregression/alot_' + str(r)
-        plot_ar(ar_filter, history.history, ds_path, target_size, save_filename)
+    # ds_path = 'C:/Users/Rashaad/Documents/Postgrad/Datasets/ALOT/alot_grey_quarter/alot_grey4/grey4/1/'
+    ds_name = 'alot_1_autoregression'
+    history, w0, wf = alot_autoregression_test(ds_name)
+    plot_ar(history.history, ds_name)
