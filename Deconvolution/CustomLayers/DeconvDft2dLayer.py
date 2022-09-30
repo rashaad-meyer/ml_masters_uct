@@ -1,5 +1,6 @@
 import tensorflow as tf
-from tensorflow.keras import layers
+from tensorflow import keras
+from keras import layers
 
 
 class DeconvDft2dLayer(layers.Layer):
