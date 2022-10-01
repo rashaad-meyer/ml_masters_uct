@@ -31,7 +31,6 @@ class CausalConvLayer(layers.Layer):
         w0 = tf.reshape(w0, self.filter_shape)
 
         ym = tf.nn.conv2d(xm, w0, strides=[1, 1, 1, 1], padding='SAME')
-        # square convolution output
 
         return ym
 
