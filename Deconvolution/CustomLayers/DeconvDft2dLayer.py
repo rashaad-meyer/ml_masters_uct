@@ -7,13 +7,16 @@ class DeconvDft2dLayer(layers.Layer):
 
     def __init__(self, h_shape, pad_amount=0.5):
         super(DeconvDft2dLayer, self).__init__()
+        self.w = None
         self.h_shape = h_shape
+        self.pad_amount = pad_amount
 
+    def build(self, input_shape):
         # Initialise filter (w) except for the first element
         # So that first element is not trainable
-        self.w = tf.random.uniform((1, h_shape[-2] * h_shape[-1] - 1))
+        # Randomly initialise other components and multiply by factor of 1/2*sqrt(no. of pixels)
+        self.w = tf.random.uniform((1, self.h_shape[-2] * self.h_shape[-1] - 1))
         self.w = tf.Variable(self.w, trainable=True)
-        self.pad_amount = pad_amount
 
     def custom_op(self, xm):
         xm = tf.reshape(xm, (-1, xm.shape[-3], xm.shape[-2]))
