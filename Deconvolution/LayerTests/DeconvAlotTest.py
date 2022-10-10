@@ -5,7 +5,7 @@ import random
 
 from keras_preprocessing.image import ImageDataGenerator
 
-from tensorflow.keras import layers
+from keras import layers
 from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 import matplotlib.pyplot as plt
