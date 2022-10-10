@@ -37,16 +37,12 @@ def easy_two_by_two_blur_ds(ds_path):
     kg = np.array([k0, k, k0], dtype=np.float32)
     kb = np.array([k0, k0, k], dtype=np.float32)
 
-    kf = np.array([kr, kg, kb, kb])
+    kf = np.array([kr, kg, kb])
     kf = tf.transpose(kf, perm=[2, 3, 1, 0])
 
-    # y = tf.nn.conv2d(imgs, kf, strides=[1, 1, 1, 1], padding='SAME')
+    kf = tf.constant(kf, dtype=tf.float32)
 
-    conv2d = keras.layers.Conv2D(3, (2, 2), padding='SAME')
-    conv2d.kernel = kf
-    y = conv2d(imgs)
-
-    print(conv2d.kernel)
+    y = tf.nn.conv2d(imgs, kf, strides=[1, 1, 1, 1], padding='SAME')
 
     img_names = os.listdir(ds_path)
     base_path = ds_path + '/../two_by_two_blur/'
