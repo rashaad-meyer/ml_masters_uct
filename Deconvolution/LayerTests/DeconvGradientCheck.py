@@ -5,13 +5,16 @@ import tensorflow as tf
 def check_gradient():
     # initialise variables needed for forward pass
     h_shape = (2, 2)
-    w = tf.random.uniform((1, h_shape[-2] * h_shape[-1] - 1), seed=10)
+    w = tf.random.uniform((1, h_shape[-2] * h_shape[-1] - 1), seed=42)
     w = tf.Variable(w)
-    xm = tf.random.uniform((1, 16, 16, 1))
+    xm = tf.random.uniform((1, 16, 16, 1), seed=42)
     pad_amount = 0.5
+
 
     # calculate gradient approximation
     grad_approx = get_grad_approx(h_shape, pad_amount, w, xm)
+
+    print('Gradient using gradient checking:')
     print(grad_approx)
 
     # Calculate forward pass and get gradient tape to keep track of operations
@@ -55,6 +58,8 @@ def check_gradient():
 
     # get gradients from GradientTape
     grad = tape.gradient(loss, w)
+
+    print('\nGradient using gradient autodiff:')
     print(grad)
 
     grad = np.array(grad, dtype=np.float32)
