@@ -6,6 +6,7 @@ from keras import layers
 from keras.datasets import mnist
 
 from CustomGradientTest import CustomLayer
+import matplotlib.pyplot as plt
 
 
 def custom_dense_test():
@@ -37,8 +38,10 @@ def custom_dense_test():
         metrics=["accuracy"],
     )
 
-    model.fit(x_train, y_train, batch_size=32, epochs=5, verbose=2)
+    history = model.fit(x_train, y_train, batch_size=32, epochs=5, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
+
+    return history
 
 
 def tf_dense_test():
@@ -67,10 +70,18 @@ def tf_dense_test():
         metrics=["accuracy"],
     )
 
-    model.fit(x_train, y_train, batch_size=32, epochs=5, verbose=2)
+    history = model.fit(x_train, y_train, batch_size=32, epochs=5, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
+
+    return history
 
 
 if __name__ == '__main__':
-    custom_dense_test()
-    tf_dense_test()
+    cust_hist = custom_dense_test()
+    tf_hist = tf_dense_test()
+
+    plt.plot(cust_hist.history['accuracy'])
+    plt.plot(tf_hist.history['accuracy'])
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.show()
