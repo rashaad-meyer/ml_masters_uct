@@ -10,7 +10,6 @@ def check_gradient():
     xm = tf.random.uniform((1, 16, 16, 1), seed=42)
     pad_amount = 0.5
 
-
     # calculate gradient approximation
     grad_approx = get_grad_approx(h_shape, pad_amount, w, xm)
 
