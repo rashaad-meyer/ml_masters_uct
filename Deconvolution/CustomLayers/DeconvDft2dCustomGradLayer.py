@@ -6,7 +6,6 @@ import numpy as np
 
 @tf.custom_gradient
 def custom_op(xm, w, h_shape):
-    xm = tf.reshape(xm, (-1, xm.shape[-3], xm.shape[-2]))
     paddings = tf.constant([[0, xm.shape[-2] - w.shape[-2]],
                             [0, xm.shape[-1] - w.shape[-1]]])
     hm1 = tf.pad(w, paddings, "CONSTANT")
@@ -27,10 +26,8 @@ def custom_op(xm, w, h_shape):
     ym = tf.signal.ifft2d(ymf)
     ym = tf.cast(ym, dtype=tf.float32)
 
-    ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
-
     def grad_fn(um):
-        um = tf.reshape(um, (-1, um.shape[-3], um.shape[-2]))
+        # um = tf.reshape(um, (-1, um.shape[-3], um.shape[-2]))
         umi = tf.cast(um, dtype=tf.complex64)
 
         # backprop layer inputs
@@ -116,7 +113,18 @@ class DeconvDft2dLayer(layers.Layer):
         self.w = tf.Variable(self.w, trainable=True)
 
     def call(self, inputs):
-        return custom_op(inputs, self.w, self.h_shape)
+        inputs = tf.reshape(inputs, (-1, inputs.shape[-3], inputs.shape[-2]))
+
+        padding = tf.constant(
+            [[0, 0], [int(inputs.shape[-2] * self.pad_amount), int(inputs.shape[-2] * self.pad_amount)],
+             [int(inputs.shape[-1] * self.pad_amount), int(inputs.shape[-1] * self.pad_amount)]])
+        inputs = tf.pad(inputs, padding, "CONSTANT")
+
+        ym = custom_op(inputs, self.w, self.h_shape)
+
+        ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
+        ym = tf.image.central_crop(ym, 1 / (1 + 2 * self.pad_amount))
+        return ym
 
 
 if __name__ == '__main__':
@@ -138,5 +146,5 @@ if __name__ == '__main__':
                   optimizer=keras.optimizers.Adam(),
                   metrics=['accuracy'])
 
-    model.fit(x_train, y_train, batch_size=32, epochs=5, verbose=2)
+    model.fit(x_train, y_train, batch_size=32, epochs=10, verbose=2)
     model.evaluate(x_test, y_test, batch_size=32, verbose=2)
