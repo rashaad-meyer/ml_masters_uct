@@ -104,5 +104,11 @@ def get_grad_approx(h_shape, pad_amount, w, xm, eps=1e-7):
     return grad_approx
 
 
+def custom_grad_check():
+    # Expected output:
+    # 102.2888  113.4538  115.5920  125.2290  118.3843   74.5657   98.5300
+    return
+
+
 if __name__ == '__main__':
     check_gradient()
