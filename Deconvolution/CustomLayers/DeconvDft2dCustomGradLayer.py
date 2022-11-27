@@ -5,7 +5,7 @@ import numpy as np
 
 
 @tf.custom_gradient
-def custom_op(xm, w, h_shape):
+def custom_op(xm, w, h_shape, hsir):
     paddings = tf.constant([[0, xm.shape[-2] - w.shape[-2]],
                             [0, xm.shape[-1] - w.shape[-1]]])
     hm1 = tf.pad(w, paddings, "CONSTANT")
@@ -37,62 +37,72 @@ def custom_op(xm, w, h_shape):
         dldx = tf.signal.ifft2d(dldxf)
         dldx = tf.cast(dldx, dtype=tf.float32)
 
-        hsir_top = tf.zeros((1, h_shape[0] * h_shape[1]), dtype=tf.int32)
-        hsir_bot = tf.range(0, h_shape[0] * h_shape[1], dtype=tf.int32)
-        hsir_bot = tf.reshape(hsir_bot, (1, -1))
-        hsir = tf.concat([hsir_top, hsir_bot], 0)
-        hsir = hsir[:, 1:]
-
-        dldw = tf.zeros((1, hsir.shape[1]))
+        dldw = tf.zeros((1, hsir['G1'].shape[1]))
 
         vm = tf.signal.ifft2d(tf.multiply(gm1f, ymf))
         vm = tf.cast(vm, tf.float32)
 
-        # g1
-        hsirf = hsir
-        for j in range(hsirf.shape[1]):
-            j_zeros = np.zeros((1, hsirf.shape[1]), dtype=np.float32)
-            j_zeros[0][j] = 1
-            vmq = tf.roll(vm, shift=hsirf[1][j], axis=0)
-            temp = tf.multiply(vmq, um)
-            temp = tf.multiply(j_zeros, tf.reduce_sum(temp))
-            dldw = tf.add(dldw, temp)
+        # G1
+        hsirf = hsir['G1']
 
-        # g2
-        hsirf = hsir[:, :]
-        hsirf = -hsirf
+        vm = tf.signal.ifft2d(tf.multiply(gm1f, ymf))
+        vm = tf.cast(vm, tf.float32)
 
         for j in range(hsirf.shape[1]):
             j_zeros = np.zeros((1, hsirf.shape[1]), dtype=np.float32)
             j_zeros[0][j] = 1
-            vmq = tf.roll(vm, shift=hsirf[1][j], axis=0)
+            shift = tf.transpose(hsirf[:, j])
+            vmq = tf.roll(vm, shift=shift, axis=[1, 2])
             temp = tf.multiply(vmq, um)
             temp = tf.multiply(j_zeros, tf.reduce_sum(temp))
             dldw = tf.add(dldw, temp)
 
-        # g3
-        hsirf = hsir
-        hsirf = -hsirf
+        # G2
+        hsirf = hsir['G2']
+
+        vm = tf.signal.ifft2d(tf.multiply(gm2f, ymf))
+        vm = tf.cast(vm, tf.float32)
+
         for j in range(hsirf.shape[1]):
             j_zeros = np.zeros((1, hsirf.shape[1]), dtype=np.float32)
             j_zeros[0][j] = 1
-            vmq = tf.roll(vm, shift=hsirf[1][j], axis=0)
+            shift = tf.transpose(hsirf[:, j])
+            vmq = tf.roll(vm, shift=shift, axis=[1, 2])
             temp = tf.multiply(vmq, um)
             temp = tf.multiply(j_zeros, tf.reduce_sum(temp))
             dldw = tf.add(dldw, temp)
 
-        # g4
-        hsirf = hsir
-        hsirf = -hsirf
+        # G3
+        hsirf = hsir['G3']
+
+        vm = tf.signal.ifft2d(tf.multiply(gm3f, ymf))
+        vm = tf.cast(vm, tf.float32)
+
         for j in range(hsirf.shape[1]):
             j_zeros = np.zeros((1, hsirf.shape[1]), dtype=np.float32)
             j_zeros[0][j] = 1
-            vmq = tf.roll(vm, shift=hsirf[1][j], axis=0)
+            shift = tf.transpose(hsirf[:, j])
+            vmq = tf.roll(vm, shift=shift, axis=[1, 2])
             temp = tf.multiply(vmq, um)
             temp = tf.multiply(j_zeros, tf.reduce_sum(temp))
             dldw = tf.add(dldw, temp)
 
-        return dldx, dldw, None, None
+        # G4
+        hsirf = hsir['G4']
+
+        vm = tf.signal.ifft2d(tf.multiply(gm4f, ymf))
+        vm = tf.cast(vm, tf.float32)
+
+        for j in range(hsirf.shape[1]):
+            j_zeros = np.zeros((1, hsirf.shape[1]), dtype=np.float32)
+            j_zeros[0][j] = 1
+            shift = tf.transpose(hsirf[:, j])
+            vmq = tf.roll(vm, shift=shift, axis=[1, 2])
+            temp = tf.multiply(vmq, um)
+            temp = tf.multiply(j_zeros, tf.reduce_sum(temp))
+            dldw = tf.add(dldw, temp)
+
+        return dldx, dldw, None, None, None, None, None, None
 
     return ym, grad_fn
 
@@ -104,6 +114,21 @@ class DeconvDft2dLayer(layers.Layer):
         self.w = None
         self.h_shape = h_shape
         self.pad_amount = pad_amount
+
+        X = tf.range(0, h_shape[0])
+        Y = tf.range(0, h_shape[1])
+        X1, X2 = tf.meshgrid(X, Y)
+        X1 = tf.reshape(X1, (1, -1))
+        X2 = tf.reshape(X2, (1, -1))
+
+        self.hsir = {}
+
+        hsirf = tf.concat([X1, X2], axis=0)
+
+        self.hsir['G1'] = hsirf[:, 1:]
+        self.hsir['G2'] = tf.concat([-X1, X2], axis=0)[:, 1:]
+        self.hsir['G3'] = tf.concat([X1, -X2], axis=0)[:, 1:]
+        self.hsir['G4'] = tf.concat([-X1, -X2], axis=0)[:, 1:]
 
     def build(self, input_shape):
         # Initialise filter (w) except for the first element
@@ -120,7 +145,7 @@ class DeconvDft2dLayer(layers.Layer):
              [int(inputs.shape[-1] * self.pad_amount), int(inputs.shape[-1] * self.pad_amount)]])
         inputs = tf.pad(inputs, padding, "CONSTANT")
 
-        ym = custom_op(inputs, self.w, self.h_shape)
+        ym = custom_op(inputs, self.w, self.h_shape, self.hsir)
 
         ym = tf.reshape(ym, (-1, ym.shape[-2], ym.shape[-1], 1))
         ym = tf.image.central_crop(ym, 1 / (1 + 2 * self.pad_amount))
