@@ -1,20 +1,20 @@
 import numpy as np
 import tensorflow as tf
-from Deconvolution.CustomLayers.DeconvDft2dCustomGradLayer import custom_op
+from Deconvolution.CustomLayers.DeconvDft2dCustomGradLayer import DeconvDft2dLayer as Deconv2D
 
 
 def check_gradient():
     # initialise variables needed for forward pass
     h_shape = (2, 2)
     w = tf.random.uniform((1, h_shape[-2] * h_shape[-1] - 1), seed=42)
-    w = tf.Variable(w)
+    w = tf.Variable(w, trainable=True)
     xm = tf.random.uniform((1, 16, 16, 1), seed=42)
     pad_amount = 0.5
 
     # calculate gradient approximation
     grad_approx = get_grad_approx(h_shape, pad_amount, w, xm)
 
-    print('Gradient using gradient checking:')
+    print('Gradient using GRADIENT CHECKING:')
     print(grad_approx)
 
     # Calculate forward pass and get gradient tape to keep track of operations
@@ -24,13 +24,28 @@ def check_gradient():
     # get gradients from GradientTape
     grad = tape.gradient(loss, w)
 
-    print('\nGradient using gradient autodiff:')
+    print('\nGradient using gradient AUTODIFF:')
     print(grad)
+
+    # Custom gradient
+    deconv = Deconv2D((2, 2))
+    deconv.set_w(w)
+    print(deconv.w)
+    with tf.GradientTape() as tape:
+        y = deconv(xm)
+        loss = tf.reduce_mean(tf.square(y))
+
+    custom_grad = tape.gradient(loss, deconv.w)
+
+    print('\nGradient using CUSTOM GRADIENT:')
+    print(custom_grad)
 
     grad = np.array(grad, dtype=np.float32)
     grad_approx = np.array(grad_approx, dtype=np.float32)
 
     difference = np.linalg.norm(grad - grad_approx) / (np.linalg.norm(grad) + np.linalg.norm(grad_approx))
+    diff_custom = np.linalg.norm(custom_grad - grad_approx) / (
+            np.linalg.norm(custom_grad) + np.linalg.norm(grad_approx))
 
     if difference > 1e-7:
         print(
@@ -38,6 +53,13 @@ def check_gradient():
     else:
         print(
             "\033[92m" + "Your backward propagation works perfectly fine! difference = " + str(difference) + "\033[0m")
+
+    if difference > 1e-7:
+        print(
+            "\033[93m" + "There is a mistake in the custom gradient! difference = " + str(diff_custom) + "\033[0m")
+    else:
+        print(
+            "\033[92m" + "Your custom gradient works perfectly fine! difference = " + str(diff_custom) + "\033[0m")
 
 
 @tf.function
@@ -75,7 +97,7 @@ def forward_prop(h_shape, pad_amount, w, xm):
         # crop to original image size
         ym = tf.image.central_crop(ym, 1 / (1 + 2 * pad_amount))
 
-        loss = tf.reduce_mean(ym ** 2)
+        loss = tf.reduce_mean(tf.square(ym))
     return loss
 
 
@@ -127,11 +149,10 @@ def custom_grad_check():
     tf.random.set_seed(42)
 
     w = tf.constant([[1, 0.1, 0.2, -0.1],
-                  [0, 0.1, 0.3, 0]])
+                     [0, 0.1, 0.2, 0]])
 
-
-    xm = tf.random.uniform((1, 28, 28), seed=42)
-    um = tf.random.uniform((1, 28, 28))
+    xm = tf.random.uniform((1, 10, 10), seed=42)
+    um = tf.random.uniform((1, 10, 10), seed=42)
 
     paddings = tf.constant([[0, xm.shape[-2] - w.shape[-2]],
                             [0, xm.shape[-1] - w.shape[-1]]])
@@ -236,7 +257,11 @@ def custom_grad_check():
     return grads[1]
 
 
+def check_layer_against_matlab_code():
+    # TODO
+    # TODO test forward prop code as well
+    pass
+
+
 if __name__ == '__main__':
-    # check_gradient()
-    dldw = custom_grad_check()
-    print(dldw)
+    check_gradient()
