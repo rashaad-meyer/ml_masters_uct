@@ -130,6 +130,9 @@ class DeconvDft2dLayer(layers.Layer):
         self.hsir['G3'] = tf.concat([X1, -X2], axis=0)[:, 1:]
         self.hsir['G4'] = tf.concat([-X1, -X2], axis=0)[:, 1:]
 
+    def set_w(self, w):
+        self.w = tf.Variable(w, trainable=True)
+
     def build(self, input_shape):
         # Initialise filter (w) except for the first element
         # So that first element is not trainable
