@@ -10,7 +10,7 @@ def check_gradient():
     w = tf.Variable(w, trainable=True)
     xm = tf.random.uniform((1, 16, 16, 1), seed=42)
     pad_amount = 0.5
-
+    print(w)
     # calculate gradient approximation
     grad_approx = get_grad_approx(h_shape, pad_amount, w, xm)
 
@@ -30,7 +30,6 @@ def check_gradient():
     # Custom gradient
     deconv = Deconv2D((2, 2))
     deconv.set_w(w)
-    print(deconv.w)
     with tf.GradientTape() as tape:
         y = deconv(xm)
         loss = tf.reduce_mean(tf.square(y))
@@ -258,10 +257,24 @@ def custom_grad_check():
 
 
 def check_layer_against_matlab_code():
-    # TODO
-    # TODO test forward prop code as well
-    pass
+    w = tf.constant([[0.1, 0.2, -0.1, 0, 0.1, 0.2, 0]])
+    deconv_layer = Deconv2D((2, 4), pad_amount=0)
+    deconv_layer.set_w(w)
+
+    tf.random.set_seed(42)
+    xm = tf.random.uniform((1, 10, 10), seed=42)
+    xm = tf.expand_dims(xm, axis=-1)
+
+    with tf.GradientTape() as tape:
+        y = deconv_layer(xm)
+        loss = tf.square(y)
+
+    grad = tape.gradient(loss, deconv_layer.w)
+
+    return grad
 
 
 if __name__ == '__main__':
     check_gradient()
+    grad = check_layer_against_matlab_code()
+    print(grad)
