@@ -6,6 +6,11 @@ import numpy as np
 
 @tf.custom_gradient
 def custom_op(xm, w, h_shape, hsir):
+    pad_w = tf.constant([[0, 0], [1, 0]])
+    # Set first element to 1 then reshape into specified filter shape
+    w = tf.pad(w, pad_w, mode='CONSTANT', constant_values=1)
+    w = tf.reshape(w, h_shape)
+
     paddings = tf.constant([[0, xm.shape[-2] - w.shape[-2]],
                             [0, xm.shape[-1] - w.shape[-1]]])
     hm1 = tf.pad(w, paddings, "CONSTANT")
@@ -129,16 +134,13 @@ class DeconvDft2dLayer(layers.Layer):
         self.hsir['G2'] = tf.concat([-X1, X2], axis=0)[:, 1:]
         self.hsir['G3'] = tf.concat([X1, -X2], axis=0)[:, 1:]
         self.hsir['G4'] = tf.concat([-X1, -X2], axis=0)[:, 1:]
-
-    def set_w(self, w):
-        self.w = tf.Variable(w, trainable=True)
-
-    def build(self, input_shape):
-        # Initialise filter (w) except for the first element
-        # So that first element is not trainable
-        # Randomly initialise other components and multiply by factor of 1/2*sqrt(no. of pixels)
         self.w = tf.random.uniform((1, self.h_shape[-2] * self.h_shape[-1] - 1))
         self.w = tf.Variable(self.w, trainable=True)
+
+    def set_w(self, w):
+        assert w.shape == (1, self.h_shape[-2] * self.h_shape[-1] - 1)
+        self.w = tf.Variable(w, trainable=True)
+        print(self.w)
 
     def call(self, inputs):
         inputs = tf.reshape(inputs, (-1, inputs.shape[-3], inputs.shape[-2]))
