@@ -6,10 +6,10 @@ import random
 from keras_preprocessing.image import ImageDataGenerator
 
 from keras import layers
-from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
-from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
 import matplotlib.pyplot as plt
-from Augmentation.RandomCropLayer import RandomCrop
+from TensorFlow.Augmentation.RandomCropLayer import RandomCrop
 import DeconvMultiDatasetTest as useful
 
 import pandas as pd

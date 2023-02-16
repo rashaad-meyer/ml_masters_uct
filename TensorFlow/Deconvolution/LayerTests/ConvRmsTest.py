@@ -3,7 +3,7 @@ import random
 
 import tensorflow as tf
 from keras import layers
-from Convolution.CausalConvLayer import CausalConvLayer
+from TensorFlow.Convolution.CausalConvLayer import CausalConvLayer
 
 import matplotlib.pyplot as plt
 import numpy as np

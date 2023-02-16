@@ -1,7 +1,7 @@
 import random
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from Deconvolution.LayerTests import DeconvAlotTest
+from TensorFlow.Deconvolution.LayerTests import DeconvAlotTest
 from RandomCropLayer import RandomCrop
 
 

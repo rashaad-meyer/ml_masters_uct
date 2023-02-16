@@ -1,8 +1,8 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
-from Convolution.CustomConvolutionLayer import CustomConvolutionLayer
-from Deconvolution.CustomLayers.DeconvLayer import DeconvLayer
+from TensorFlow.Convolution.CustomConvolutionLayer import CustomConvolutionLayer
+from TensorFlow.Deconvolution.CustomLayers.DeconvLayer import DeconvLayer
 import DatasetGenerator
 import time
 

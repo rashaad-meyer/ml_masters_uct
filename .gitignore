@@ -1,10 +1,10 @@
 /sample.html
 /Fmd_DeconvAndConvResults.csv
-/Deconvolution/LayerTests/saved_data/
-/Deconvolution/LayerTests/csv_files/
+/TensorFlow/Deconvolution/LayerTests/saved_data/
+/TensorFlow/Deconvolution/LayerTests/csv_files/
 /Nicolls/
 /.idea/csv-plugin.xml
-/Deconvolution/Notebooks/.ipynb_checkpoints/
+/TensorFlow/Deconvolution/Notebooks/.ipynb_checkpoints/
 *checkpoint.ipynb
 *.xml
 *.iml

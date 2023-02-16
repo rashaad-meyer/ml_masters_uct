@@ -8,8 +8,8 @@ from keras.datasets import cifar10
 from tensorflow.keras import layers
 from tensorflow.keras.datasets import mnist
 
-from Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
-from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dRgbLayer import DeconvDft2dRgbLayer
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 
 
 def deconv_rgb_forward_pass_test():

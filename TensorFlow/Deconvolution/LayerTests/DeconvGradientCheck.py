@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from Deconvolution.CustomLayers.DeconvDft2dCustomGradLayer import DeconvDft2dLayer as Deconv2D
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dCustomGradLayer import DeconvDft2dLayer as Deconv2D
 
 
 def check_gradient():

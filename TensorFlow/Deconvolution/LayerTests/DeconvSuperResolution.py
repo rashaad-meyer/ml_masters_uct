@@ -7,8 +7,8 @@ import os
 from keras import layers
 from matplotlib import gridspec
 
-from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer as Deconv2D
-from Deconvolution.LayerTests import DeconvMultiDatasetTest as useful
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer as Deconv2D
+from TensorFlow.Deconvolution.LayerTests import DeconvMultiDatasetTest as useful
 import numpy as np
 
 

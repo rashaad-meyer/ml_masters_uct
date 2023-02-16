@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
-from Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
+from TensorFlow.Deconvolution.CustomLayers.DeconvDft2dLayer import DeconvDft2dLayer
 import csv
 from csv import DictWriter
 
