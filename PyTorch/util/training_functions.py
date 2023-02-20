@@ -84,7 +84,6 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
 
         history['loss'].append(running_loss)
 
-        if (epoch + 1) % 50 == 0:
-            print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
+        print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
 
     return history
