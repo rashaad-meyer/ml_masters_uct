@@ -14,7 +14,7 @@ classdef deconv_clayer2 < nnet.layer.Layer
       layer.odim = odim_;
 
       layer.hrfd = hrfd_;
-      layer.hrfp = zeros(1,prod(hrfd_)-1)
+      layer.hrfp = zeros(1,prod(hrfd_)-1);
       %layer.hrf = zeros(hrfd_);
       %layer.hrf(1) = 1;
 
@@ -55,70 +55,80 @@ classdef deconv_clayer2 < nnet.layer.Layer
       gm4f = circshift(flip(gm3f,1),1,1);
       gmf = gm1f.*gm2f.*gm3f.*gm4f;
 
-      ymf = gmf.*fft2(X);
-      Z = ifft2(ymf);
-      memory(:,:,1) = gm1f;  
-      memory(:,:,2) = gm2f;
-      memory(:,:,3) = gm3f;
-      memory(:,:,4) = gm4f;
-      memory(:,:,5) = gmf;
-      memory(:,:,6) = ymf;
+      memory(1,:,:) = gm1f;  
+      memory(2,:,:) = gm2f;
+      memory(3,:,:) = gm3f;
+      memory(4,:,:) = gm4f;
+      memory(5,:,:) = gmf;
+
+      for i = 1:size(X, 1)
+          x = squeeze(X(i, :, :));
+          ymf = gmf.*fft2(x);
+          Z(i, :, :) = ifft2(ymf);
+          memory(5+i,:,:) = ymf;
+      end
+      
+      
     end
 
-    function [dLdX,dLdHrf] = backward(layer,X,Z,dLdZ,memory)
-      um = dLdZ;
-      gm1f = memory(:,:,1);
-      gm2f = memory(:,:,2);
-      gm3f = memory(:,:,3);
-      gm4f = memory(:,:,4);
-      gmf =  memory(:,:,5);
-      ymf =  memory(:,:,6);
+    function [dLdX,dLdHrf] = backward(layer,X,Z,DLDZ,memory)
       
-      dLdX = ifft2(gmf.*fft2(dLdZ));
-      cl = class(dLdZ);
-      uyphmr = zeros(1,size(layer.hsir,2), cl);
-      M = length(size(X));
-
-      % g1
-      vm = ifft2(gm1f.*ymf);
-      hsirf = layer.hsir;
-      for j=1:size(hsirf,2)
-        vmq = circshift(vm,hsirf(:,j)');
-        uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
+      gm1f = memory(1,:,:);
+      gm2f = memory(2,:,:);
+      gm3f = memory(3,:,:);
+      gm4f = memory(4,:,:);
+      gmf =  memory(5,:,:);
+      for i=1:size(X,1)
+          ymf =  memory(i+5,:,:);
+          
+          um = dLdZ;
+    
+          dLdX = ifft2(gmf.*fft2(dLdZ));
+          cl = class(dLdZ);
+          uyphmr = zeros(1,size(layer.hsir,2), cl);
+          M = length(size(X));
+    
+          % g1
+          vm = ifft2(gm1f.*ymf);
+          hsirf = layer.hsir;
+          for j=1:size(hsirf,2)
+            vmq = circshift(vm,hsirf(:,j)');
+            uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
+          end
+          
+          % g2
+          vm = ifft2(gm2f.*ymf);
+          hsirf = layer.hsir;  hsirf(1,:) = -hsirf(1,:);
+          for j=1:size(hsirf,2)
+            vmq = circshift(vm,hsirf(:,j)');
+            uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
+          end
+    
+          % g3
+          vm = ifft2(gm3f.*ymf);
+          hsirf = layer.hsir;  hsirf(2,:) = -hsirf(2,:);
+          for j=1:size(hsirf,2)
+            vmq = circshift(vm,hsirf(:,j)');
+            uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
+          end
+    
+          % g4
+          vm = ifft2(gm4f.*ymf);
+          hsirf = -layer.hsir;
+          for j=1:size(hsirf,2)
+            vmq = circshift(vm,hsirf(:,j)');
+            uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
+          end
+            
+          %uyphm = reshape([0 -uyphmr],layer.hrfd);
+          uyphm = -uyphmr;
+          dLdHrf = uyphm;
+    
+          % Any of the below should make checklayer() fail
+          %dLdX = dLdX + 0.001*randn(size(dLdX));
+          %dLdW = dLdW + 0.001*randn(size(dLdW));
+          %dLdb = dLdb + 0.001*randn(size(dLdb));
       end
-      
-      % g2
-      vm = ifft2(gm2f.*ymf);
-      hsirf = layer.hsir;  hsirf(1,:) = -hsirf(1,:);
-      for j=1:size(hsirf,2)
-        vmq = circshift(vm,hsirf(:,j)');
-        uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
-      end
-
-      % g3
-      vm = ifft2(gm3f.*ymf);
-      hsirf = layer.hsir;  hsirf(2,:) = -hsirf(2,:);
-      for j=1:size(hsirf,2)
-        vmq = circshift(vm,hsirf(:,j)');
-        uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
-      end
-
-      % g4
-      vm = ifft2(gm4f.*ymf);
-      hsirf = -layer.hsir;
-      for j=1:size(hsirf,2)
-        vmq = circshift(vm,hsirf(:,j)');
-        uyphmr(j) = uyphmr(j) + dot(um(:),vmq(:));
-      end
-        
-      %uyphm = reshape([0 -uyphmr],layer.hrfd);
-      uyphm = -uyphmr;
-      dLdHrf = uyphm;
-
-      % Any of the below should make checklayer() fail
-      %dLdX = dLdX + 0.001*randn(size(dLdX));
-      %dLdW = dLdW + 0.001*randn(size(dLdW));
-      %dLdb = dLdb + 0.001*randn(size(dLdb));
     end
   end
 end
