@@ -18,8 +18,17 @@ output image as blurry as the input image
 
 ## 04_deconv_pytorch_cifar
 
-In this experiment, 2 models were trained on the cifar dataset. Both models
+In this experiment, 2 models were trained on the cifar10 dataset. Both models
 were using the ConvNet Tiny architecture as a backbone. The difference between
 the 2 models were that the first was using a deconv layer as its first layer and
 the second was using a conv layer. The deconv layer managed to score an accuracy
 that was 1% higher than the conv layer after 5 epochs
+
+
+## 07_deconv_pytorch_cifar100
+
+In this experiment, 2 models were trained on the cifar100 dataset. Both models
+were using the ResNet18 architecture as a backbone. The difference between
+the 2 models were that the first was using a deconv layer as its first layer and
+the second was using a conv layer. The deconv layer managed to score an accuracy
+of 86.2% whereas the conv layer scored an accuracy of 83.6% after 10 epochs
