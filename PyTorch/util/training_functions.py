@@ -3,7 +3,7 @@ import torch.nn as nn
 from tqdm import tqdm
 
 
-def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3):
+def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
     """
         Trains NN classifier on classification dataset
         :param model: The NN model that you would like to train must be of type nn.Module
@@ -11,6 +11,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         :param optimizer: The optimizer that will optimize the NN
         :param dataloader: Dataloader that loads data from classification dataset
         :param num_epochs: Number of times you want to train the data over
+        :param deconv: boolean check whether to save deconv kernel or not
         :return: A dictionary containing training loss and accuracy for each epoch
         and list of the kernels after each epoch if the model is a deconv layer
     """
@@ -47,14 +48,10 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         epoch_loss = running_loss
         epoch_acc = running_correct / data_len
 
-        try:
+        if deconv:
             w = nn.functional.pad(model.w_flat, (1, 0), value=1)
             w = torch.reshape(w, model.h_shape)
             kernel_history.append(w.numpy())
-        except NameError:
-            if kernel_history is not None:
-                print('WARNING: Not deconv model! Not saving kernel history')
-            kernel_history = None
 
         history['loss'].append(epoch_loss)
         history['accuracy'].append(epoch_acc)
@@ -63,7 +60,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
     return history, kernel_history
 
 
-def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3):
+def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
     """
         Trains NN regression on datasets for deblurring and super image resolution
         :param model: The NN model that you would like to train must be of type nn.Module
@@ -71,6 +68,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         :param optimizer: The optimizer that will optimize the NN
         :param dataloader: Dataloader that loads data from classification dataset
         :param num_epochs: Number of times you want to train the data over
+        :param deconv: boolean check whether to save deconv kernel or not
         :return: A dictionary containing training loss for each epoch
         and list of the kernels after each epoch if the model is a deconv layer
     """
@@ -96,14 +94,10 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
 
             running_loss += loss.item()
 
-        try:
+        if deconv:
             w = nn.functional.pad(model.w_flat, (1, 0), value=1)
             w = torch.reshape(w, model.h_shape)
             kernel_history.append(w.numpy())
-        except NameError:
-            if kernel_history is not None:
-                print('WARNING: Not deconv model! Not saving kernel history')
-            kernel_history = None
 
         history['loss'].append(running_loss)
 
