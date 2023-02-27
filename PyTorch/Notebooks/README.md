@@ -24,6 +24,29 @@ the 2 models were that the first was using a deconv layer as its first layer and
 the second was using a conv layer. The deconv layer managed to score an accuracy
 that was 1% higher than the conv layer after 5 epochs
 
+## 05_deconv_avg_blur_test
+
+In this experiment, the deconv layer was tested on how well it could learn to
+deblur images that have been blurred with an average blur filter. When adding
+padding to the images, the MSE managed to get lower than 0.01 but this could 
+be due to a large portion of the pixels being 0(from padding). An experiment
+was also run without the padding and the MSE got to 0.025 instead. The deconv
+layer didn't do much deblurring and also decreased the image quality as well.
+A scaling factor (also a learnable param) was added after the deconv layer to
+help the deconv learn the inverse operation better
+
+
+## 06_deconv_gaussian_blur_test
+
+In this experiment, the deconv layer was tested on how well it could learn to
+deblur images that have been blurred with a gaussian blur filter. When adding
+padding to the images, the MSE managed to get to 0.027. Looking at the output,
+the deconv layer seemed to blur the image instead of deblurring it.
+
+### Future Experiment ideas:
+
+- Take out padding
+- Add learnable scaling factor
 
 ## 07_deconv_pytorch_cifar100
 
