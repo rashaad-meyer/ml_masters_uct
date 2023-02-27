@@ -4,7 +4,7 @@ import numpy as np
 from torch.fft import fft2, ifft2
 
 
-def blur_images(img, w=torch.FloatTensor([[1, 0.2, 0, 0], [0, 0, 0, 0]])):
+def four_factor_blur_images(img, w=torch.FloatTensor([[1, 0.2, 0, 0], [0, 0, 0, 0]])):
     # 4 factor blur
 
     hm1 = nn.functional.pad(w, (0, img.size(-1) - w.size(-1), 0, img.size(-2) - w.size(-2)))
@@ -44,3 +44,25 @@ def gaussian_kernel(size, sigma=1):
     kernel = kernel[center:, center:]
     kernel[0, 0] = 1.0
     return kernel
+
+
+def create_avg_blur_kernel(size):
+    kernel = torch.ones((size, size))
+    kernel = kernel / (size * size)
+    return kernel
+
+
+def avg_blur_image(img, size):
+    kernel = create_avg_blur_kernel(size)
+    img = blur_gray_image(img, kernel)
+    return img
+
+
+def blur_gray_image(img, kernel):
+    kernel = torch.reshape(kernel, (1, 1, *kernel.size()))
+    img = nn.functional.conv2d(img, kernel, padding='same')
+    return img
+
+
+if __name__ == '__main__':
+    print(create_avg_blur_kernel(3))
