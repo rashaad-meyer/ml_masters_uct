@@ -34,3 +34,15 @@ class Deconv2D(nn.Module):
         y = ifft2(ymf).real
 
         return y
+
+
+class Deconv2DWithScaling(nn.Module):
+    def __init__(self, shape):
+        super(Deconv2DWithScaling, self).__init__()
+        self.deconv = Deconv2D(shape)
+        self.w = nn.Parameter(data=torch.tensor([0.5]), requires_grad=True)
+
+    def forward(self, x):
+        x = self.deconv(x)
+        x = self.w * x
+        return x
