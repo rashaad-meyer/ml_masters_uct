@@ -52,7 +52,7 @@ def create_avg_blur_kernel(size):
     return kernel
 
 
-def avg_blur_image(img, size):
+def avg_blur_image(img, size=3):
     kernel = create_avg_blur_kernel(size)
     img = blur_gray_image(img, kernel)
     return img
