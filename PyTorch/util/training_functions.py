@@ -59,7 +59,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
 
         history['loss'].append(epoch_loss)
         history['accuracy'].append(epoch_acc)
-        if epoch % print_epoch_every == 0:
+        if (epoch + 1) % print_epoch_every == 0:
             print('Loss: {:.4f}, Acc: {:.3f}'.format(epoch_loss, epoch_acc))
 
     return history, kernel_history
@@ -109,7 +109,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
             kernel_history.append(w.numpy())
 
         history['loss'].append(running_loss)
-        if epoch % print_epoch_every == 0:
+        if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
 
     return history, kernel_history
