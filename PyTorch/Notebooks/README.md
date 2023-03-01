@@ -60,8 +60,10 @@ of 86.2% whereas the conv layer scored an accuracy of 83.6% after 10 epochs
 
 In this experiment, the deconv layer was tested on a Super Image resolution dataset
 found on [Kaggle](https://www.kaggle.com/datasets/akhileshdkapse/super-image-resolution?resource=download).
-The deconv layer managed to get the MSE down to around 0.008, but it did degrade
-the quality of the image
+The deconv layer managed to get the MSE down to around 0.008 after 200 epochs,
+but it did degrade the quality of the image. The same experiment was done using a
+convolution layer. The convolution layer managed to reduce the loss to 0.01 after 200
+epochs and blurred the image further showing that the deconv did in fact outperform the conv layer
 
 ### Future work:
 - Read through super-image resolution papers and apply what was done there in deconv
