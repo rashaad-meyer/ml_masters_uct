@@ -64,5 +64,5 @@ The deconv layer managed to get the MSE down to around 0.008, but it did degrade
 the quality of the image
 
 ### Future work:
-- Read through super-image resolution papers and apply what was done there in these
+- Read through super-image resolution papers and apply what was done there in deconv
 experiments
