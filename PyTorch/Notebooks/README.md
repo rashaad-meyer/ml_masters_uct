@@ -55,3 +55,14 @@ were using the ResNet18 architecture as a backbone. The difference between
 the 2 models were that the first was using a deconv layer as its first layer and
 the second was using a conv layer. The deconv layer managed to score an accuracy
 of 86.2% whereas the conv layer scored an accuracy of 83.6% after 10 epochs
+
+## 08_deconv_SIR_kaggle_ds
+
+In this experiment, the deconv layer was tested on a Super Image resolution dataset
+found on [Kaggle](https://www.kaggle.com/datasets/akhileshdkapse/super-image-resolution?resource=download).
+The deconv layer managed to get the MSE down to around 0.008, but it did degrade
+the quality of the image
+
+### Future work:
+- Read through super-image resolution papers and apply what was done there in these
+experiments
