@@ -11,8 +11,8 @@ class RandomCropIsr(object):
 
         lr_crop_size = self.hr_crop_size // scale
 
-        lr_top = torch.randint(low=0, high=lr_shape[-2] - lr_crop_size + 1, size=(1,))
-        lr_left = torch.randint(low=0, high=lr_shape[-1] - lr_crop_size + 1, size=(1,))
+        lr_top = torch.randint(low=0, high=lr_shape[0] - lr_crop_size + 1, size=(1,))
+        lr_left = torch.randint(low=0, high=lr_shape[1] - lr_crop_size + 1, size=(1,))
 
         hr_top = lr_top * scale
         hr_left = lr_left * scale
