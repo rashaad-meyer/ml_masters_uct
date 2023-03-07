@@ -32,6 +32,10 @@ class ImageSuperResDataset(Dataset):
         y_imgs.sort()
         x_imgs.sort()
 
+        # shorten image list
+        y_imgs = y_imgs[:ds_length]
+        x_imgs = x_imgs[:ds_length]
+
         self.hr_paths = list(map(lambda img_path: f'{hr_path}/{img_path}', y_imgs))
         self.lr_paths = list(map(lambda img_path: f'{lr_path}/{img_path}', x_imgs))
 
