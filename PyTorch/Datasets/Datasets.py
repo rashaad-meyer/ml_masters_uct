@@ -1,4 +1,4 @@
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from torchvision import io
 
 import os
@@ -28,26 +28,26 @@ class ImageSuperResDataset(Dataset):
         y_imgs = os.listdir(hr_path)[:ds_length]
         x_imgs = os.listdir(lr_path)[:ds_length]
 
-        self.y_paths = list(map(lambda img_path: f'{hr_path}/{img_path}', y_imgs))
-        self.x_paths = list(map(lambda img_path: f'{lr_path}/{img_path}', x_imgs))
+        self.hr_paths = list(map(lambda img_path: f'{hr_path}/{img_path}', y_imgs))
+        self.lr_paths = list(map(lambda img_path: f'{lr_path}/{img_path}', x_imgs))
 
     def __len__(self):
-        return len(self.y_paths)
+        return len(self.hr_paths)
 
     def __getitem__(self, idx):
-        y_path = self.y_paths[idx]
-        x_path = self.x_paths[idx]
+        hr_path = self.hr_paths[idx]
+        lr_path = self.lr_paths[idx]
 
-        y_img = io.read_image(y_path, self.color_mode)
-        x_img = io.read_image(x_path, self.color_mode)
+        hr_img = io.read_image(hr_path, self.color_mode)
+        lr_img = io.read_image(lr_path, self.color_mode)
 
         if self.transform:
-            x_img, y_img = self.transform(x_img, y_img)
+            lr_img, hr_img = self.transform(lr_img, hr_img)
 
         # Preprocess HR image
-        y_img = y_img / 255.0
+        hr_img = hr_img / 255.0
 
         # Preprocess LR image
-        x_img = x_img / 255.0
+        lr_img = lr_img / 255.0
 
-        return x_img, y_img
+        return lr_img, hr_img
