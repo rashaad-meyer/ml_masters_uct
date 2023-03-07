@@ -5,7 +5,7 @@ import os
 
 
 class ImageSuperResDataset(Dataset):
-    def __init__(self, hr_path, lr_path, rgb=False, transform=None, ds_length=None):
+    def __init__(self, lr_path, hr_path, rgb=False, transform=None, ds_length=None):
         """
         Class for Image Super Resolution Dataset. It takes path for high resolution images
         and path for low resolution images. You can also transform data, specify amount of images
