@@ -25,8 +25,8 @@ class ImageSuperResDataset(Dataset):
         else:
             self.color_mode = io.ImageReadMode.GRAY
 
-        y_imgs = os.listdir(hr_path)[:ds_length]
-        x_imgs = os.listdir(lr_path)[:ds_length]
+        y_imgs = os.listdir(hr_path)
+        x_imgs = os.listdir(lr_path)
 
         # sort lists
         y_imgs.sort()
