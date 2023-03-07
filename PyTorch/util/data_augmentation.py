@@ -4,7 +4,6 @@ import torch
 class RandomCropIsr(object):
     def __init__(self, hr_crop_size):
         self.hr_crop_size = hr_crop_size
-        pass
 
     def __call__(self, lr_img, hr_img):
         lr_shape = lr_img.shape[-2:]
@@ -13,7 +12,7 @@ class RandomCropIsr(object):
         lr_crop_size = self.hr_crop_size // scale
 
         lr_top = torch.randint(low=0, high=lr_shape[-2] - lr_crop_size + 1, size=(1,))
-        lr_left = torch.randint(low=0, high=lr_shape[-2] - lr_crop_size + 1, size=(1,))
+        lr_left = torch.randint(low=0, high=lr_shape[-1] - lr_crop_size + 1, size=(1,))
 
         hr_top = lr_top * scale
         hr_left = lr_left * scale
