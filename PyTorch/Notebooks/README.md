@@ -85,3 +85,21 @@ This notebook is almost identical to notebook 8 except that an L1 loss was used 
 whereas L2 (MSE) was used in notebook 8. The deconv layer (L1 loss = 0.08) still manages to beat the conv layer
 (L1 loss = 0.09). The picture quality after being inputted in both of these layers do not reduce the quality in
 the image or at least it is less noticeable!
+
+## 10_deconv_SIR_SSIM
+
+In this [notebook](https://github.com/viibrem/ml_masters_uct/blob/master/PyTorch/Notebooks/10_deconv_SIR_SSIM.ipynb)
+, the deconv layer was tested on a Super Image resolution dataset
+found on [Kaggle](https://www.kaggle.com/datasets/akhileshdkapse/super-image-resolution?resource=download).
+The loss function used in this notebook is SSIM. The deconv layer was compared against a conv layer. The deconv 
+layer minimizes the loss to lower than 0.09 whereas the conv layer only gets a loss of 0.6. Although the deconv
+layer manages to beat the conv layer it greys out the image. The conv layer degrades the image quality
+
+## 11_deconv_SIR_SSIM_L1
+
+In this [notebook](https://github.com/viibrem/ml_masters_uct/blob/master/PyTorch/Notebooks/11_deconv_SIR_SSIM_L1.ipynb)
+, the deconv layer was tested on a Super Image resolution dataset
+found on [Kaggle](https://www.kaggle.com/datasets/akhileshdkapse/super-image-resolution?resource=download).
+The loss function used in this notebook is a combination of SSIM and L1 Loss. The deconv layer was compared against a conv
+layer. The deconv layer minimizes the loss to lower than 0.52 whereas the conv layer only gets a loss of 0.66. Although
+the deconv layer manages to beat the conv layer it greys out the image. The conv layer degrades the image quality
