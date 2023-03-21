@@ -49,19 +49,25 @@ class Deconv2DWithScaling(nn.Module):
 
 
 class Deconv2DMultiFilter(nn.Module):
-    def __init__(self, shape=(2, 4), filters=1):
+    def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), ):
         super(Deconv2DMultiFilter, self).__init__()
 
-        temp = torch.rand((filters,) + shape)
-        temp_sum = torch.sum(temp, dim=(1, 2))
+        # initialise filter weights
+        w = torch.rand((out_channels, in_channels,) + kernel_size)
 
-        temp = temp / temp_sum.view((filters, 1, 1))
+        # divide each filter by the sum of their weights multiplied by number of input channels so that
+        # out_channel filters don't increase in
+        w_sum = torch.sum(w, dim=(-2, -1)).view(out_channels, in_channels, 1, 1)
+        w = w / (in_channels * w_sum)
 
-        temp[:, 0, 0] = 1.0
+        # make first element of each filter 1.0
+        w[:, :, 0, 0] = 1.0
 
-        self.w = nn.Parameter(data=temp, requires_grad=True)
+        self.w = nn.Parameter(data=w, requires_grad=True)
 
     def forward(self, x):
+        # add dimension so that we can broadcast it later
+        x = x.unsqueeze(dim=1)
 
         w = self.w
         hm1 = nn.functional.pad(w, (0, x.size(-1) - w.size(-1), 0, x.size(-2) - w.size(-2)))
@@ -82,5 +88,8 @@ class Deconv2DMultiFilter(nn.Module):
         ymf = gmf * fft2(x)
 
         y = ifft2(ymf).real
+
+        # sum along input channels dim to reduce dims to standard image dims (batch x channels x height x width)
+        y = torch.sum(y, dim=-3)
 
         return y
