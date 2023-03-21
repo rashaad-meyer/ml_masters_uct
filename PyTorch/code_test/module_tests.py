@@ -9,9 +9,9 @@ def deconv_initialisation_test():
 
 
 def deconv_multi_filter_dim_test():
-    filters = 64
-    deconv = Deconv2DMultiFilter(filters=filters)
-    x = torch.rand((8, 1, 18, 18))
+    filters = 128
+    deconv = Deconv2DMultiFilter(in_channels=10, out_channels=filters, kernel_size=(4, 4))
+    x = torch.rand((8, 10, 18, 18))
     y = deconv(x)
     expected_size = (8, filters, 18, 18)
     print('Actual size', tuple(y.size()))
