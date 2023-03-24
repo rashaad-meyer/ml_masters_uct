@@ -48,3 +48,16 @@ class DCT(nn.Module):
         img = img.unsqueeze(1).unsqueeze(1)
         y = self.a_p * self.a_q * (img * self.u.cos() * self.v.cos()).sum(dim=(-1, -2))
         return y
+
+
+class MseWithDct(nn.Module):
+    def __init__(self, img_size=(96, 96)):
+        super(MseWithDct, self).__init__()
+        self.mse = nn.MSELoss()
+        self.dct = DCT(img_size)
+
+    def forward(self, x, y):
+        x = self.dct(x)
+        y = self.dct(y)
+        loss = self.mse(x, y)
+        return loss
