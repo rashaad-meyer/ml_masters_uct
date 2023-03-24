@@ -30,8 +30,8 @@ class DCT(nn.Module):
         grid_q = grid_q.unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
         grid_p = grid_p.unsqueeze(-1).unsqueeze(-1).unsqueeze(0)
 
-        self.u = (np.pi * (2 * grid_x + 1) * grid_p) / (2 * M)
-        self.v = (np.pi * (2 * grid_y + 1) * grid_q) / (2 * N)
+        u = (np.pi * (2 * grid_x + 1) * grid_p) / (2 * M)
+        v = (np.pi * (2 * grid_y + 1) * grid_q) / (2 * N)
 
         a_p = torch.ones((P, Q)) * (2 / M) ** 0.5
         a_q = torch.ones((P, Q)) * (2 / M) ** 0.5
@@ -39,8 +39,10 @@ class DCT(nn.Module):
         a_q[0, :] = a_q[0, :] / 2.0 ** 0.5
         a_p[:, 0] = a_p[:, 0] / 2.0 ** 0.5
 
-        self.a_q = a_q
-        self.a_p = a_p
+        self.a_q = nn.Parameter(a_q, requires_grad=False)
+        self.a_p = nn.Parameter(a_p, requires_grad=False)
+        self.u = nn.Parameter(u, requires_grad=False)
+        self.v = nn.Parameter(v, requires_grad=False)
 
     def forward(self, img):
         img = img.unsqueeze(1).unsqueeze(1)
