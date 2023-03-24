@@ -103,3 +103,23 @@ found on [Kaggle](https://www.kaggle.com/datasets/akhileshdkapse/super-image-res
 The loss function used in this notebook is a combination of SSIM and L1 Loss. The deconv layer was compared against a conv
 layer. The deconv layer minimizes the loss to lower than 0.52 whereas the conv layer only gets a loss of 0.66. Although
 the deconv layer manages to beat the conv layer it greys out the image. The conv layer degrades the image quality
+
+
+## 12_cnn_3layer_SIR
+
+In this [notebook](https://github.com/viibrem/ml_masters_uct/blob/master/PyTorch/Notebooks/12_cnn_3layer_SIR.ipynb)
+, [this paper](https://arxiv.org/pdf/1501.00092v3.pdf) was implemented. The paper implemented a 3 layer CNN for super
+image resolution. This CNN was implemented in this notebook as well. I tested the CNN against the same CNN except with
+the first layer as a Deconv Layer. The result of this experiment was that the Deconv + CNN combo beat out the standard
+CNN. The CNN managed to minimise the MSE loss to about 0.06 whereas the deconv + CNN combo minimised it to 0.008, so 
+the deconv + CNN combo is clear winner in this experiment
+
+## 13_cnn_3layer_SIR_DCT
+
+In this [notebook](https://github.com/viibrem/ml_masters_uct/blob/master/PyTorch/Notebooks/13_cnn_3layer_SIR_DCT.ipynb)
+, [this paper](https://arxiv.org/pdf/1501.00092v3.pdf) was implemented. The paper implemented a 3 layer CNN for super
+image resolution. This CNN was implemented in this notebook as well. I tested the CNN against the same CNN except with
+the first layer as a Deconv Layer. We also apply a DCT transform to the predicted image and actual image and calculate
+the loss as the MSE between the 2 DCTs of the images. The result of this experiment was that the Deconv + CNN combo beat
+out the standard CNN. The CNN managed to minimise the DCT MSE loss to about 0.11 whereas the deconv + CNN combo minimised
+it to 0.017, so the deconv + CNN combo is clear winner in this experiment
