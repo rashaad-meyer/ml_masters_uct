@@ -1,11 +1,12 @@
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import io
+from torchvision import transforms as T
 
 import os
 
 
 class ImageSuperResDataset(Dataset):
-    def __init__(self, lr_path, hr_path, rgb=False, transform=None, ds_length=None):
+    def __init__(self, lr_path, hr_path, resize_lr=False, rgb=False, transform=None, ds_length=None):
         """
         Class for Image Super Resolution Dataset. It takes path for high resolution images
         and path for low resolution images. You can also transform data, specify amount of images
@@ -19,6 +20,8 @@ class ImageSuperResDataset(Dataset):
         self.hr_path = hr_path
         self.lr_path = lr_path
         self.transform = transform
+        self.resize_lr = resize_lr
+        self.resize = None
 
         if rgb:
             self.color_mode = io.ImageReadMode.UNCHANGED
@@ -51,6 +54,11 @@ class ImageSuperResDataset(Dataset):
 
         if self.transform:
             lr_img, hr_img = self.transform(lr_img, hr_img)
+
+        if self.resize_lr:
+            if self.resize is None:
+                self.resize = T.Resize(hr_img.size()[-2:], interpolation=T.InterpolationMode.BICUBIC)
+            lr_img = self.resize(lr_img)
 
         # Preprocess HR image
         hr_img = hr_img / 255.0
