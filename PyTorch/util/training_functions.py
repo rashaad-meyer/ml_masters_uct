@@ -17,6 +17,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
+    criterion = criterion.to(device)
     if num_epochs > 20:
         print_epoch_every = num_epochs // 20
     else:
@@ -79,6 +80,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
+    criterion = criterion.to(device)
     if num_epochs > 20:
         print_epoch_every = num_epochs // 20
     else:
