@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from tqdm import tqdm
 
 
 def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
