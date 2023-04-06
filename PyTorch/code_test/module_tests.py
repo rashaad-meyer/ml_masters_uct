@@ -1,8 +1,7 @@
 import torch
-import torch.nn as nn
 from PyTorch.Models.DeconvModels import Deconv2D, Deconv2DMultiFilter
-from PyTorch.Datasets.Datasets import ImageSuperResDataset
 from PyTorch.Models.LossModules import DCT
+from PyTorch.Models.ResNet import ResNet
 
 
 def test_deconv_initialisation():
@@ -78,11 +77,33 @@ def test_dct_multi_img_dims():
     assert x.size() == y.size()
 
 
+def test_resnet():
+    print('Testing resnet Module... ', end='\t')
+    resnet_1 = ResNet(2, 8, channels=1)
+    resnet_3 = ResNet(2, 8, channels=3)
+
+    x_1 = torch.rand((2, 1, 16, 16))
+    x_3 = torch.rand((2, 3, 16, 16))
+
+    expected_1 = [2, 1, 32, 32]
+    expected_3 = [2, 3, 32, 32]
+
+    y_1 = resnet_1(x_1)
+    y_3 = resnet_3(x_3)
+
+    assert list(y_1.size()) == expected_1
+    assert list(y_3.size()) == expected_3
+
+    print('PASSED')
+
+
 def run_tests():
     test_deconv_initialisation()
     test_deconv_multi_filter_dim()
     test_dct_single_img()
     test_dct_multi_img()
+    test_resnet()
+    return
 
 
 if __name__ == '__main__':
