@@ -45,7 +45,7 @@ def main():
     dataloader = DataLoader(data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
-        model = SRCNN(deconv)
+        model = SRCNN(deconv=deconv)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
