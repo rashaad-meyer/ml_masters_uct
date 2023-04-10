@@ -3,6 +3,10 @@ import torch.nn as nn
 from torch.fft import fft2, ifft2
 
 
+def __init__():
+    pass
+
+
 class Deconv2D(nn.Module):
     def __init__(self, shape=(2, 4)):
         super(Deconv2D, self).__init__()
