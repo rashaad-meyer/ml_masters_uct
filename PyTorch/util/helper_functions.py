@@ -70,7 +70,9 @@ def write_history_to_csv(path, history: dict, model_name, deconv, loss):
 
     file_name = f'{date.today()}_{deconv}_{model_name}_{loss}'
     df = pd.DataFrame(history)
-    df.to_csv(f'{path}/{file_name}')
+    output_filename = f'{path}/{file_name}.csv'
+    df.to_csv(output_filename)
+    print(f'Results written to {output_filename}')
 
 
 def main():

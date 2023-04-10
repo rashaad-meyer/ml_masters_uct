@@ -33,12 +33,12 @@ def main():
     deconv = args.deconv
     loss = args.loss
     num_epochs = args.num_epochs
-    lr = 10**(-args.learning_rate)
+    lr = 10 ** (-args.learning_rate)
 
     lr_path, hr_path = helper.download_and_unzip_div2k(path)
 
     random_crop = RandomCropIsr(IMG_SIZE[0])
-
+    print('Preparing Dataloader...')
     data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop)
     dataloader = DataLoader(data, batch_size=16, shuffle=True)
 
@@ -62,10 +62,16 @@ def main():
         print('Loss function specified not supported')
         return
 
+    print(f'Model set to {model_name}...')
+    print(f'Loss set to {loss}...')
+    print(f'Learning rate {lr}...')
+
     optimizer = optim.Adam(model.parameters(), lr=lr)
 
+    print(f'Training for {num_epochs} epochs...')
     history = train_regression_model(model, criterion, optimizer, dataloader, num_epochs=num_epochs)
 
+    print('')
     helper.write_history_to_csv(path, history, model_name, deconv, loss)
 
 
