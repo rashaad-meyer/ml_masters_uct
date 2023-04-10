@@ -153,9 +153,6 @@ class MS_SSIM(torch.nn.Module):
         )
 
 
-
-
-
 def fspecial_gauss_1d(size, sigma):
     r"""Create 1-D gauss kernel
     Args:
