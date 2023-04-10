@@ -1,5 +1,7 @@
 import os
 import zipfile
+from datetime import date
+import pandas as pd
 
 
 def unzip_data(filename, path):
@@ -58,6 +60,17 @@ def download_and_unzip_div2k(path='data', downsample='X2'):
         print('HR already unzipped!')
 
     return lr_path, hr_path
+
+
+def write_history_to_csv(path, history: dict, model_name, deconv, loss):
+    if deconv:
+        deconv = 'deconv'
+    else:
+        deconv = 'conv'
+
+    file_name = f'{date.today()}_{deconv}_{model_name}_{loss}'
+    df = pd.DataFrame(history)
+    df.to_csv(f'{path}/{file_name}')
 
 
 def main():
