@@ -1,5 +1,5 @@
 import torch.nn as nn
-from PyTorch.Models.DeconvModels import Deconv2DMultiFilter
+from DeconvModels import Deconv2DMultiFilter
 
 
 class SRCNN(nn.Module):
