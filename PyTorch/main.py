@@ -1,14 +1,14 @@
 import argparse
 from torch import nn
 import torch.optim as optim
-from PyTorch.Models.ResNet import ResNet
-from PyTorch.Models.SRCNN import SRCNN
+from Models.ResNet import ResNet
+from Models.SRCNN import SRCNN
 import util.helper_functions as helper
 from torch.utils.data import DataLoader
-from PyTorch.Datasets.Datasets import ImageSuperResDataset
-from PyTorch.util.data_augmentation import RandomCropIsr
-from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
-from PyTorch.util.training_functions import train_regression_model
+from Datasets.Datasets import ImageSuperResDataset
+from util.data_augmentation import RandomCropIsr
+from Models.LossModules import MSE_WITH_DCT, SSIM
+from util.training_functions import train_regression_model
 
 IMG_SIZE = (96, 96)
 
