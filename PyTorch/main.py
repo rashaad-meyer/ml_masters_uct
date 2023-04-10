@@ -20,7 +20,9 @@ def main():
                                                              "located in this path")
     parser.add_argument("-m", "--model", default='srcnn', help="Pick model that you would like to train\n"
                                                                "Options: srcnn,resnet")
-    parser.add_argument("-d", "--deconv", default=True, type=bool, help="Whether to use deconv option for model")
+    parser.add_argument('--deconv', dest='deconv', action='store_true')
+    parser.set_defaults(feature=False)
+
     parser.add_argument("-l", "--loss", default='L1', help="Which Loss function\n"
                                                            "Options: L1, MSE, DCT, SSIM")
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
