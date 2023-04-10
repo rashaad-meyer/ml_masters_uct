@@ -1,6 +1,6 @@
 import os
 import zipfile
-from datetime import date
+from datetime import datetime
 import pandas as pd
 
 
@@ -67,8 +67,9 @@ def write_history_to_csv(path, history: dict, model_name, deconv, loss):
         deconv = 'deconv'
     else:
         deconv = 'conv'
-
-    file_name = f'{date.today()}_{deconv}_{model_name}_{loss}'
+    now = datetime.now()
+    dt_string = now.strftime("%Y-%m-%d_%H-%M")
+    file_name = f'{dt_string}_{deconv}_{model_name}_{loss}'
     df = pd.DataFrame(history)
     output_filename = f'{path}/{file_name}.csv'
     df.to_csv(output_filename)
