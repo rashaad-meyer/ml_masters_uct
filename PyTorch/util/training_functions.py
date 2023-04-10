@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+import time
 
 
 def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
@@ -22,7 +23,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         print_epoch_every = num_epochs // 20
     else:
         print_epoch_every = 1
-    history = {'loss': [], 'accuracy': []}
+    history = {'loss': [], 'accuracy': [], 'time': []}
 
     for epoch in range(num_epochs):
         print(f'Epoch {epoch + 1:2d}/{num_epochs}')
@@ -31,6 +32,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         running_loss = 0.0
         running_correct = 0
         data_len = 0
+        start = time.time()
 
         for X, labels in tqdm(dataloader):
             X = X.to(device)
@@ -51,9 +53,12 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
 
         epoch_loss = running_loss
         epoch_acc = running_correct / data_len
+        end = time.time()
 
         history['loss'].append(epoch_loss)
         history['accuracy'].append(epoch_acc)
+        history['time'].append(round(end - start))
+
         if (epoch + 1) % print_epoch_every == 0:
             print('Loss: {:.4f}, Acc: {:.3f}'.format(epoch_loss, epoch_acc))
 
@@ -79,12 +84,12 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         print_epoch_every = num_epochs // 20
     else:
         print_epoch_every = 1
-    history = {'loss': []}
+    history = {'loss': [], 'time': []}
 
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-
+        start = time.time()
         for X, y in tqdm(dataloader):
             X = X.to(device)
             y = y.to(device)
@@ -99,7 +104,10 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
 
             running_loss += loss.item()
 
+        end = time.time()
+
         history['loss'].append(running_loss)
+        history['time'].append(round(end - start))
         if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
 
