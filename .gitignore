@@ -8,3 +8,4 @@
 *checkpoint.ipynb
 *.xml
 *.iml
+/PyTorch/util/data/
