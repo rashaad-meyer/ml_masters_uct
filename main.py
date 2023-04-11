@@ -1,134 +1,81 @@
-import os
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.datasets import mnist
-import time
+import argparse
+from torch import nn
+import torch.optim as optim
+from PyTorch.Models.ResNet import ResNet
+from PyTorch.Models.SRCNN import SRCNN
+import PyTorch.util.helper_functions as helper
+from torch.utils.data import DataLoader
+from PyTorch.Datasets.Datasets import ImageSuperResDataset
+from PyTorch.util.data_augmentation import RandomCropIsr
+from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
+from PyTorch.util.training_functions import train_regression_model
+
+IMG_SIZE = (96, 96)
 
 
-# To Avoid GPU errors. Turn off if you don't have a GPU
-# physical_devices = tf.config.list_physical_devices("GPU")
-# tf.config.experimental.set_memory_growth(physical_devices[0], True)
+def main():
+    parser = argparse.ArgumentParser()
 
-# populating 2d tensor
-def create_toeplitz():
-    input_shape = [3, 3]
-    kernel_size = 2
+    parser.add_argument("-p", "--path", default='data', help="Path to DIV2K. The dataset will be downloaded if not"
+                                                             "located in this path")
+    parser.add_argument("-m", "--model", default='srcnn', help="Pick model that you would like to train\n"
+                                                               "Options: srcnn,resnet")
+    parser.add_argument('--deconv', dest='deconv', action='store_true')
+    parser.set_defaults(feature=False)
 
-    kernel = tf.reshape(tf.range(1, kernel_size ** 2 + 1, dtype=tf.float32), [kernel_size, kernel_size])
+    parser.add_argument("-l", "--loss", default='L1', help="Which Loss function\n"
+                                                           "Options: L1, MSE, DCT, SSIM")
+    parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
+    parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
 
-    t0 = time.time()
-    input_dim = tf.cast(input_shape[-1], tf.int32)
-    input_size = input_dim * input_dim
+    args = parser.parse_args()
 
-    output_dim = input_dim - kernel_size + 1
-    output_size = output_dim * output_dim
+    path = args.path
+    model_name = args.model
+    deconv = args.deconv
+    loss = args.loss
+    num_epochs = args.num_epochs
+    lr = 10 ** (-args.learning_rate)
 
-    row = tf.TensorArray(tf.float32, size=input_size, dynamic_size=False, clear_after_read=False)
-    zeros = tf.TensorArray(tf.float32, size=input_size, dynamic_size=False, clear_after_read=False)
+    lr_path, hr_path = helper.download_and_unzip_div2k(path)
 
-    t1 = time.time()
-    for i in range(input_size):
-        if i % input_dim < kernel_size and i // input_dim < kernel_size:
-            row = row.write(i, kernel[i // input_dim][(i % input_dim) % kernel_size])
-        else:
-            row = row.write(i, 0)
-        if i == 0:
-            zeros = zeros.write(i, kernel[0][0])
-        else:
-            zeros = zeros.write(i, 0)
-    zeros = tf.zeros([input_size])
-    t2 = time.time()
+    random_crop = RandomCropIsr(IMG_SIZE[0])
+    print('Preparing Dataloader...')
+    data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop)
+    dataloader = DataLoader(data, batch_size=16, shuffle=True)
 
-    row = row.stack()
-    # zeros = zeros.stack()
+    if model_name == 'srcnn':
+        model = SRCNN(deconv=deconv)
+    elif model_name == 'resnet':
+        model = ResNet(32, 128)
+    else:
+        print('Model specified not supported')
+        return
 
-    toeplitz = tf.linalg.LinearOperatorToeplitz(zeros, row).to_dense()
+    if loss == 'L1':
+        criterion = nn.L1Loss()
+    elif loss == 'MSE':
+        criterion = nn.MSELoss()
+    elif loss == 'DCT':
+        criterion = MSE_WITH_DCT(IMG_SIZE)
+    elif loss == 'SSIM':
+        criterion = SSIM()
+    else:
+        print('Loss function specified not supported')
+        return
 
-    t3 = time.time()
-    # Take a slices of toeplitz matrix because toeplitz is not exactly the same as the matrix that we need
-    temp = []
-    for i in range(input_size):
-        if not (i % input_dim > input_dim - kernel_size):
-            temp.append(toeplitz[i])
+    print(f'Model set to {model_name}...')
+    print(f'Loss set to {loss}...')
+    print(f'Learning rate {lr}...')
 
-        if len(temp) >= output_size:
-            break
+    optimizer = optim.Adam(model.parameters(), lr=lr)
 
-    t4 = time.time()
+    print(f'Training for {num_epochs} epochs...')
+    history = train_regression_model(model, criterion, optimizer, dataloader, num_epochs=num_epochs)
 
-    weight_matrix = tf.concat([temp], 0)
-
-    t_f = time.time()
-
-    t0_ = t_f - t0
-    t1_ = t1 - t0
-    t2_ = t2 - t1
-    t3_ = t3 - t2
-    t4_ = t4 - t3
-
-    print("t0 = %s seconds " % t0_)
-    print("t4 = %s seconds " % t4_)
-    print("t3 = %s seconds " % t3_)
-    print("t2 = %s seconds " % t2_)
-    print("t1 = %s seconds " % t1_)
-
-    return weight_matrix
-
-
-def create_conv_mat_indices(input_dim, kernel_dim):
-    kernel_size = kernel_dim ** 2
-
-    output_dim = input_dim - kernel_dim + 1
-    output_size = output_dim ** 2
-
-    # calculate index displacements for each row
-    j = 0
-    k_i = []
-    for i in range(kernel_size):
-        if i % kernel_dim == 0 and i != 0:
-            j = j + (input_dim - kernel_dim)
-
-        k_i.append(j)
-        j = j + 1
-
-    indices = []
-    j = 0
-
-    # calculate indices for entire matrix
-    for i in range(output_size):
-
-        if i % output_dim == 0 and i != 0:
-            j = j + input_dim - output_dim
-
-        for v in k_i:
-            indices.append([i, j + v])
-
-        j = j + 1
-    return indices
-
-
-def create_conv_mat(input_shape, kernel):
-    # Calculate dimensions
-    input_dim = input_shape[-1]
-    input_size = input_dim ** 2
-
-    kernel_dim = kernel.shape[-1]
-    kernel_size = kernel_dim ** 2
-
-    output_dim = input_dim - kernel_dim + 1
-    output_size = output_dim ** 2
-
-    indices = create_conv_mat_indices(input_shape[-1], kernel_dim)
-
-    # flatten kernel then repeat it for output_size amount of times
-    flat_kernel = tf.reshape(kernel, kernel_size)
-    kernel_tile = tf.tile(flat_kernel, [output_size])
-
-    st = tf.SparseTensor(indices=indices, values=kernel_tile, dense_shape=[output_size, input_size])
-    st1 = tf.sparse.to_dense(st)
-    return st1
+    print('')
+    helper.write_history_to_csv(path, history, model_name, deconv, loss)
 
 
 if __name__ == '__main__':
-    print()
+    main()
