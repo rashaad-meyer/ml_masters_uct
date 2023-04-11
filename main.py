@@ -1,4 +1,6 @@
 import argparse
+
+import pandas as pd
 from torch import nn
 import torch.optim as optim
 from PyTorch.Models.ResNet import ResNet
@@ -10,6 +12,7 @@ from PyTorch.util.data_augmentation import RandomCropIsr
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
 from PyTorch.util.training_functions import train_regression_model
 
+# Global variables
 IMG_SIZE = (96, 96)
 
 
@@ -28,19 +31,32 @@ def main():
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
 
+    parser.add_argument("--multiple", default='', help="Run with multiple experiments. "
+                                                       "Csv file must be provided in the following columns\n"
+                                                       "model_name, deconv, loss, num_epochs, lr")
+
     args = parser.parse_args()
 
     path = args.path
-    model_name = args.model
-    deconv = args.deconv
-    loss = args.loss
-    num_epochs = args.num_epochs
-    lr = 10 ** (-args.learning_rate)
 
+    if args.multiple == '':
+        experiments = [{'model_name': args.model,
+                        'deconv': args.deconv,
+                        'loss': args.loss,
+                        'num_epochs': args.num_epochs,
+                        'learning_rate': 10 ** (-args.learning_rate)}]
+    else:
+        experiments = pd.read_csv(args.multiple).to_dict('records')
+
+    for experiment in experiments:
+        run_experiment(path=path, *experiment)
+
+
+def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate):
     lr_path, hr_path = helper.download_and_unzip_div2k(path)
 
-    random_crop = RandomCropIsr(IMG_SIZE[0])
     print('Preparing Dataloader...')
+    random_crop = RandomCropIsr(IMG_SIZE[0])
     data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop)
     dataloader = DataLoader(data, batch_size=16, shuffle=True)
 
@@ -65,15 +81,15 @@ def main():
         return
 
     print(f'Model set to {model_name}...')
+    print(f'Deconv set to {deconv}...')
     print(f'Loss set to {loss}...')
-    print(f'Learning rate {lr}...')
+    print(f'Learning rate {learning_rate}...')
 
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     print(f'Training for {num_epochs} epochs...')
     history = train_regression_model(model, criterion, optimizer, dataloader, num_epochs=num_epochs)
 
-    print('')
     helper.write_history_to_csv(path, history, model_name, deconv, loss)
 
 
