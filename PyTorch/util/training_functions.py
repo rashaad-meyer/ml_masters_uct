@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 import time
+import os
+from datetime import datetime
 
 
 def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
@@ -65,9 +67,10 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
     return history
 
 
-def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
+def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, name='model'):
     """
         Trains NN regression on datasets for deblurring and super image resolution
+        :param name: name of model that you will use
         :param model: The NN model that you would like to train must be of type nn.Module
         :param criterion: The loss function that you would like to use
         :param optimizer: The optimizer that will optimize the NN
@@ -108,7 +111,20 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
 
         history['loss'].append(running_loss)
         history['time'].append(round(end - start))
+
+        save_model(model, name, epoch, running_loss)
+
         if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
 
     return history
+
+
+def save_model(model, name, epoch, loss, folder='saved_models'):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    now = datetime.now()
+    dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
+    file_name = f'{folder}/{dt_string}_{name}_{epoch}'
+    torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
