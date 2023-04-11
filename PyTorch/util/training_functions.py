@@ -128,3 +128,4 @@ def save_model(model, name, epoch, loss, folder='saved_models'):
     dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
     file_name = f'{folder}/{dt_string}_{name}_{epoch}'
     torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
+    print(f'Model saved at {file_name}')
