@@ -64,6 +64,8 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         if (epoch + 1) % print_epoch_every == 0:
             print('Loss: {:.4f}, Acc: {:.3f}'.format(epoch_loss, epoch_acc))
 
+    print('======================================================================================================\n')
+
     return history
 
 
@@ -111,10 +113,12 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         dt_string = now.strftime("%m-%d_%H-%M")
         history['time'].append(dt_string)
 
-        save_model(model, name, epoch, running_loss)
-
         if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
+
+        save_model(model, name, epoch, running_loss)
+
+    print('======================================================================================================\n')
 
     return history
 
@@ -123,12 +127,14 @@ def save_model(model, name, epoch, loss, folder='saved_models'):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    if not os.path.exists(f'{folder}/{name}'):
-        os.makedirs(name)
+    experiment_folder = f'{folder}/{name}'
+
+    if not os.path.exists(experiment_folder):
+        os.makedirs(experiment_folder)
 
     now = datetime.now()
     dt_string = now.strftime("%m-%d_%H-%M")
-    file_name = f'{folder}/{name}/{dt_string}_epoch_{epoch}'
+    file_name = f'{folder}/{name}/{dt_string}_epoch_{epoch + 1:04d}'
 
     torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
     print(f'Model saved at {file_name}')
