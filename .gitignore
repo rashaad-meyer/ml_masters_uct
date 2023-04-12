@@ -9,3 +9,5 @@
 *.xml
 *.iml
 /PyTorch/util/data/
+data
+saved_models

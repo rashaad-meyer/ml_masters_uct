@@ -32,15 +32,14 @@ def main():
     parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
 
     parser.add_argument("--multiple", default='', help="Run with multiple experiments. "
-                                                       "Csv file must be provided in the following columns\n"
-                                                       "model_name, deconv, loss, num_epochs, lr")
+                                                       "Csv file must be provided in the following columns:\n"
+                                                       "path, model_name, deconv, loss, num_epochs, lr")
 
     args = parser.parse_args()
 
-    path = args.path
-
     if args.multiple == '':
-        experiments = [{'model_name': args.model,
+        experiments = [{'path': args.path,
+                        'model_name': args.model,
                         'deconv': args.deconv,
                         'loss': args.loss,
                         'num_epochs': args.num_epochs,
@@ -49,7 +48,7 @@ def main():
         experiments = pd.read_csv(args.multiple).to_dict('records')
 
     for experiment in experiments:
-        run_experiment(path=path, *experiment)
+        run_experiment(**experiment)
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate):
@@ -87,8 +86,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate):
 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
+    model_file_name = f'{model_name}_{loss}_{"deconv" if deconv else "conv"}'
+
     print(f'Training for {num_epochs} epochs...')
-    history = train_regression_model(model, criterion, optimizer, dataloader, num_epochs=num_epochs)
+    history = train_regression_model(model, criterion, optimizer, dataloader, num_epochs=num_epochs,
+                                     name=model_file_name)
 
     helper.write_history_to_csv(path, history, model_name, deconv, loss)
 
