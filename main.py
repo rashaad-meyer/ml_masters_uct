@@ -1,16 +1,21 @@
 import argparse
 
 import pandas as pd
+
 from torch import nn
 import torch.optim as optim
+from torch.utils.data import DataLoader
+
 from PyTorch.Models.ResNet import ResNet
 from PyTorch.Models.SRCNN import SRCNN
-import PyTorch.util.helper_functions as helper
-from torch.utils.data import DataLoader
-from PyTorch.Datasets.Datasets import ImageSuperResDataset
-from PyTorch.util.data_augmentation import RandomCropIsr
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
+
+import PyTorch.util.helper_functions as helper
+from PyTorch.util.data_augmentation import RandomCropIsr
 from PyTorch.util.training_functions import train_regression_model
+
+from PyTorch.Datasets.Datasets import ImageSuperResDataset
+
 
 # Global variables
 IMG_SIZE = (96, 96)
@@ -33,7 +38,7 @@ def main():
 
     parser.add_argument("--multiple", default='', help="Run with multiple experiments. "
                                                        "Csv file must be provided in the following columns:\n"
-                                                       "path, model_name, deconv, loss, num_epochs, lr")
+                                                       "path, model_name, deconv, loss, num_epochs, learning_rate")
 
     args = parser.parse_args()
 
@@ -45,7 +50,7 @@ def main():
                         'num_epochs': args.num_epochs,
                         'learning_rate': 10 ** (-args.learning_rate)}]
     else:
-        experiments = pd.read_csv(args.multiple).to_dict('records')
+        experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
 
     for experiment in experiments:
         run_experiment(**experiment)
