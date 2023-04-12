@@ -119,7 +119,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
 
-        if max(history[:-1]) > history[-1]:
+        if epoch == 0 or max(history['loss'][:-1]) > history['loss'][-1]:
             save_model(model, experiment_name, epoch, running_loss)
 
     print('======================================================================================================\n')
