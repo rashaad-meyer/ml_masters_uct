@@ -68,7 +68,7 @@ def write_history_to_csv(path, history: dict, model_name, deconv, loss):
     else:
         deconv = 'conv'
     now = datetime.now()
-    dt_string = now.strftime("%Y-%m-%d_%H-%M")
+    dt_string = now.strftime("%m-%d_%H-%M")
     file_name = f'{dt_string}_{deconv}_{model_name}_{loss}'
     df = pd.DataFrame(history)
     output_filename = f'{path}/{file_name}.csv'

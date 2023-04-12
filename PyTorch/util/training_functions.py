@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-import time
 import os
 from datetime import datetime
 
@@ -34,7 +33,6 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         running_loss = 0.0
         running_correct = 0
         data_len = 0
-        start = time.time()
 
         for X, labels in tqdm(dataloader):
             X = X.to(device)
@@ -55,11 +53,13 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
 
         epoch_loss = running_loss
         epoch_acc = running_correct / data_len
-        end = time.time()
 
         history['loss'].append(epoch_loss)
         history['accuracy'].append(epoch_acc)
-        history['time'].append(round(end - start))
+
+        now = datetime.now()
+        dt_string = now.strftime("%m-%d_%H-%M")
+        history['time'].append(dt_string)
 
         if (epoch + 1) % print_epoch_every == 0:
             print('Loss: {:.4f}, Acc: {:.3f}'.format(epoch_loss, epoch_acc))
@@ -91,7 +91,6 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-        start = time.time()
         for X, y in tqdm(dataloader):
             X = X.to(device)
             y = y.to(device)
@@ -106,10 +105,11 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
 
             running_loss += loss.item()
 
-        end = time.time()
-
         history['loss'].append(running_loss)
-        history['time'].append(round(end - start))
+
+        now = datetime.now()
+        dt_string = now.strftime("%m-%d_%H-%M")
+        history['time'].append(dt_string)
 
         save_model(model, name, epoch, running_loss)
 
@@ -123,8 +123,12 @@ def save_model(model, name, epoch, loss, folder='saved_models'):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+    if not os.path.exists(f'{folder}/{name}'):
+        os.makedirs(name)
+
     now = datetime.now()
-    dt_string = now.strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = f'{folder}/{dt_string}_{name}_epoch_{epoch}'
+    dt_string = now.strftime("%m-%d_%H-%M")
+    file_name = f'{folder}/{name}/{dt_string}_epoch_{epoch}'
+
     torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
     print(f'Model saved at {file_name}')
