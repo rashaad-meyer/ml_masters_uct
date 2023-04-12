@@ -67,6 +67,16 @@ class MSE_WITH_DCT(nn.Module):
         return loss
 
 
+class PSNR(nn.Module):
+    def __init__(self):
+        super(PSNR, self).__init__()
+        self.mse = nn.MSELoss()
+
+    def forward(self, x, y):
+        loss = 10 * torch.log(1 / self.mse(x, y))
+        return loss
+
+
 class SSIM(torch.nn.Module):
     def __init__(
             self,
