@@ -90,6 +90,9 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         print_epoch_every = 1
     history = {'loss': [], 'time': []}
 
+    start_time = datetime.now().strftime("%m-%d_%H-%M")
+    experiment_name = f'{start_time}_{name}'
+
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -116,7 +119,8 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
 
-        save_model(model, name, epoch, running_loss)
+        if max(history[:-1]) > history[-1]:
+            save_model(model, experiment_name, epoch, running_loss)
 
     print('======================================================================================================\n')
 
@@ -127,14 +131,7 @@ def save_model(model, name, epoch, loss, folder='saved_models'):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    experiment_folder = f'{folder}/{name}'
-
-    if not os.path.exists(experiment_folder):
-        os.makedirs(experiment_folder)
-
-    now = datetime.now()
-    dt_string = now.strftime("%m-%d_%H-%M")
-    file_name = f'{folder}/{name}/{dt_string}_epoch_{epoch + 1:04d}'
+    file_name = f'{folder}/{name}'
 
     torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
     print(f'Model saved at {file_name}')
