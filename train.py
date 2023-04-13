@@ -99,6 +99,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate):
 
     helper.write_history_to_csv(path, history, model_name, deconv, loss)
 
+    print('======================================================================================================\n')
+
 
 if __name__ == '__main__':
     main()

@@ -67,11 +67,17 @@ def write_history_to_csv(path, history: dict, model_name, deconv, loss):
         deconv = 'deconv'
     else:
         deconv = 'conv'
+
+    results_folder = f'{path}/results'
+
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+
     now = datetime.now()
     dt_string = now.strftime("%m-%d_%H-%M")
     file_name = f'{dt_string}_{deconv}_{model_name}_{loss}'
     df = pd.DataFrame(history)
-    output_filename = f'{path}/{file_name}.csv'
+    output_filename = f'{results_folder}/{file_name}.csv'
     df.to_csv(output_filename)
     print(f'Results written to {output_filename}')
 

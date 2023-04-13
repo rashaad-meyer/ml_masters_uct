@@ -122,8 +122,6 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         if epoch == 0 or min(history['loss'][:-1]) > history['loss'][-1]:
             save_model(model, experiment_name, epoch, running_loss)
 
-    print('======================================================================================================\n')
-
     return history
 
 
