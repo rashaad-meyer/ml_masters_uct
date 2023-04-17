@@ -2,17 +2,21 @@ import torch
 
 
 class RandomCropIsr(object):
-    def __init__(self, hr_crop_size):
+    def __init__(self, hr_crop_size, train=True):
         self.hr_crop_size = hr_crop_size
+        self.train = train
 
     def __call__(self, lr_img, hr_img):
         lr_shape = lr_img.shape[-2:]
         scale = hr_img.shape[-1] // lr_shape[-1]
 
         lr_crop_size = self.hr_crop_size // scale
-
-        lr_top = torch.randint(low=0, high=lr_shape[0] - lr_crop_size + 1, size=(1,))
-        lr_left = torch.randint(low=0, high=lr_shape[1] - lr_crop_size + 1, size=(1,))
+        if self.train:
+            lr_top = torch.randint(low=0, high=lr_shape[0] - lr_crop_size + 1, size=(1,))
+            lr_left = torch.randint(low=0, high=lr_shape[1] - lr_crop_size + 1, size=(1,))
+        else:
+            lr_top = 50  # TODO change it to middle of image
+            lr_left = 50
 
         hr_top = lr_top * scale
         hr_left = lr_left * scale
