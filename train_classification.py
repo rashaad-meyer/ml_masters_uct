@@ -24,7 +24,7 @@ def main():
     train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
     print('Setting up model, loss, and criterion')
-
+    print(f'Use deconv module set to {DECONV}')
     image, label = next(iter(train_dataloader))
     channels = image.size(1)
 
