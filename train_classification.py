@@ -22,15 +22,18 @@ def main():
     training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
 
     train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
+
+    print('Setting up model, loss, and criterion')
+
     image, label = next(iter(train_dataloader))
-    print(label.size())
     channels = image.size(1)
 
     model = nn.Sequential(SRCNN(num_channels=channels, deconv=DECONV, use_pixel_shuffle=False),
-                          nn.Linear(3072, 10), )
+                          nn.Flatten(), nn.Linear(3072, 100))
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
+    print('Training NN')
     history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=10)
 
     helper.write_history_to_csv('data', history, 'srcnn', DECONV, '')
