@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 
-def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, deconv=False):
+def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3):
     """
         Trains NN classifier on classification dataset
         :param model: The NN model that you would like to train must be of type nn.Module
