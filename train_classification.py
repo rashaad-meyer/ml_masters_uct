@@ -16,6 +16,11 @@ def main():
     parser.add_argument('--deconv', dest='deconv', action='store_true')
     args = parser.parse_args()
 
+    parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
+    parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
+
+    learning_rate = 10**-args.learning_rate
+    num_epochs = args.num_epochs
     DECONV = args.deconv
 
     transforms = T.Compose([T.ToTensor()])
@@ -31,10 +36,10 @@ def main():
     model = nn.Sequential(SRCNN(num_channels=channels, deconv=DECONV, use_pixel_shuffle=False),
                           nn.Flatten(), nn.Linear(3072, 100))
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     print('Training NN')
-    history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=10)
+    history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=num_epochs)
 
     helper.write_history_to_csv('data', history, 'srcnn', DECONV, '')
 
