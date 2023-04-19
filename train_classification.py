@@ -14,12 +14,11 @@ from PyTorch.util.training_functions import train_classification_model
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--deconv', dest='deconv', action='store_true')
-    args = parser.parse_args()
-
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
+    args = parser.parse_args()
 
-    learning_rate = 10**-args.learning_rate
+    learning_rate = 10 ** -args.learning_rate
     num_epochs = args.num_epochs
     DECONV = args.deconv
 
