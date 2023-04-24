@@ -16,7 +16,6 @@ from PyTorch.util.training_functions import train_regression_model
 
 from PyTorch.Datasets.Datasets import ImageSuperResDataset
 
-
 # Global variables
 IMG_SIZE = (96, 96)
 
