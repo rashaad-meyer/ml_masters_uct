@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--deconv', dest='deconv', action='store_true')
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
-    parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
+    parser.add_argument("-lr", "--learning_rate", default=3, type=int, help="Learning rate")
     args = parser.parse_args()
 
     learning_rate = 10 ** -args.learning_rate
