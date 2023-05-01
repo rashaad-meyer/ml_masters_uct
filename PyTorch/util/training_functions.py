@@ -84,7 +84,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     criterion = criterion.to(device)
-    if num_epochs > 100:
+    if num_epochs > 200:
         print_epoch_every = num_epochs // 20
     else:
         print_epoch_every = 1
