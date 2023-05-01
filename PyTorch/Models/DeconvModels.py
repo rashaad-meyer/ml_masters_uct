@@ -57,17 +57,23 @@ class Deconv2DMultiFilter(nn.Module):
         super(Deconv2DMultiFilter, self).__init__()
 
         # initialise filter weights
-        w = torch.rand((out_channels, in_channels,) + kernel_size)
+        w = torch.rand((out_channels, in_channels,) + (kernel_size[0] * kernel_size[1] - 1,))
 
         # divide each filter by the sum of their weights multiplied by number of input channels so that
         # out_channel filters don't increase in
-        init_factor = (kernel_size[0]*kernel_size[1]*(in_channels + out_channels))
+        init_factor = (kernel_size[0] * kernel_size[1] * (in_channels + out_channels))
         w = w / init_factor
 
-        # make first element of each filter 1.0
-        w[:, :, 0, 0] = 1.0
+        w = nn.Parameter(data=w, requires_grad=True)
 
-        self.w = nn.Parameter(data=w, requires_grad=True)
+        w = nn.functional.pad(w, (1, 0), value=1)
+
+        w = torch.reshape(w, (out_channels, in_channels,) + kernel_size)
+
+        # make first element of each filter 1.0
+        # w[:, :, 0, 0] = 1.0
+
+        self.w = w
         self.b = nn.Parameter(data=torch.zeros(1, out_channels, 1, 1), requires_grad=True)
 
     def forward(self, x):
