@@ -61,13 +61,14 @@ class Deconv2DMultiFilter(nn.Module):
 
         # divide each filter by the sum of their weights multiplied by number of input channels so that
         # out_channel filters don't increase in
-        w_sum = torch.sum(w, dim=(-2, -1)).view(out_channels, in_channels, 1, 1)
-        w = w / (in_channels * w_sum)
+        init_factor = (kernel_size[0]*kernel_size[1]*(in_channels + out_channels))
+        w = w / init_factor
 
         # make first element of each filter 1.0
         w[:, :, 0, 0] = 1.0
 
         self.w = nn.Parameter(data=w, requires_grad=True)
+        self.b = nn.Parameter(data=torch.zeros(1, out_channels, 1, 1), requires_grad=True)
 
     def forward(self, x):
         # add dimension so that we can broadcast it later
@@ -94,6 +95,6 @@ class Deconv2DMultiFilter(nn.Module):
         y = ifft2(ymf).real
 
         # sum along input channels dim to reduce dims to standard image dims (batch x channels x height x width)
-        y = torch.sum(y, dim=-3)
+        y = torch.mean(y, dim=-3) + self.b
 
         return y
