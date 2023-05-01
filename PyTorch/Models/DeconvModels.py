@@ -66,13 +66,11 @@ class Deconv2DMultiFilter(nn.Module):
 
         w = nn.Parameter(data=w, requires_grad=True)
 
-        w = nn.functional.pad(w, (1, 0), value=1)
-
-        w = torch.reshape(w, (out_channels, in_channels,) + kernel_size)
-
         # make first element of each filter 1.0
         # w[:, :, 0, 0] = 1.0
-
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
         self.w = w
         self.b = nn.Parameter(data=torch.zeros(1, out_channels, 1, 1), requires_grad=True)
 
@@ -81,6 +79,9 @@ class Deconv2DMultiFilter(nn.Module):
         x = x.unsqueeze(dim=1)
 
         w = self.w
+        w = nn.functional.pad(w, (1, 0), value=1)
+        w = torch.reshape(w, (self.out_channels, self.in_channels,) + self.kernel_size)
+
         hm1 = nn.functional.pad(w, (0, x.size(-1) - w.size(-1), 0, x.size(-2) - w.size(-2)))
 
         gm1f = 1 / fft2(hm1)
