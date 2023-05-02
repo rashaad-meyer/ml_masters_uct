@@ -72,7 +72,7 @@ class Deconv2DMultiFilter(nn.Module):
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.w = w
-        self.b = nn.Parameter(data=torch.zeros(1, out_channels, 1, 1), requires_grad=True)
+        self.b = nn.Parameter(data=torch.rand(1, out_channels, 1, 1) - 0.5, requires_grad=True)
 
     def forward(self, x):
         # add dimension so that we can broadcast it later
