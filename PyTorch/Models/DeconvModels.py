@@ -53,7 +53,7 @@ class Deconv2DWithScaling(nn.Module):
 
 
 class Deconv2DMultiFilter(nn.Module):
-    def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), ):
+    def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), bias=True):
         super(Deconv2DMultiFilter, self).__init__()
 
         # initialise filter weights
@@ -72,7 +72,11 @@ class Deconv2DMultiFilter(nn.Module):
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.w = w
-        self.b = nn.Parameter(data=torch.rand(1, out_channels, 1, 1) - 0.5, requires_grad=True)
+
+        if bias:
+            self.b = nn.Parameter(data=torch.rand(1, out_channels, 1, 1) - 0.5, requires_grad=True)
+        else:
+            self.b = nn.Parameter(data=torch.tensor([0.0]), requires_grad=False)
 
     def forward(self, x):
         # add dimension so that we can broadcast it later
