@@ -5,8 +5,8 @@ import os
 
 
 def test_isr_data():
-    hr_path = '../data/DIV2K_train_HR'
-    lr_path = '../data/DIV2K_train_LR_bicubic/X2'
+    hr_path = 'C:/Users/Rashaad/Documents/Postgrad/ml-masters-github/ml_masters_uct/data/DIV2K_train_HR'
+    lr_path = 'C:/Users/Rashaad/Documents/Postgrad/ml-masters-github/ml_masters_uct/data/DIV2K_train_LR_bicubic/X2'
 
     random_crop = RandomCropIsr(96)
 
