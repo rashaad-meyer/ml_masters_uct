@@ -9,8 +9,6 @@ def test_deconv_initialisation():
 
 
 def test_deconv_multi_filter_dim():
-    print('Testing multi-filter dims... ', end='')
-
     filters = 128
     deconv = Deconv2DMultiFilter(in_channels=10, out_channels=filters, kernel_size=(4, 4))
     x = torch.rand((8, 10, 18, 18))
@@ -18,8 +16,6 @@ def test_deconv_multi_filter_dim():
     y = deconv(x)
     expected_size = (8, filters, 18, 18)
     assert tuple(y.size()) == expected_size
-
-    print('PASSED')
 
 
 def test_get_dct_single_img():
@@ -45,7 +41,6 @@ def test_get_dct_single_img():
 
 
 def test_dct_single_img():
-    print('Testing DCT with single image... ', end='')
     x, expected_output = test_get_dct_single_img()
 
     x = x.view(1, 1, 8, 8)
@@ -55,11 +50,9 @@ def test_dct_single_img():
     actual_output = dct(x)
 
     assert torch.allclose(actual_output, expected_output, rtol=1e-3, atol=1e-4)
-    print('PASSED')
 
 
 def test_dct_multi_img():
-    print('Testing DCT with multiple images... ', end='')
     dct = DCT(img_size=(8, 8))
 
     x, y = test_get_dct_single_img()
@@ -72,7 +65,6 @@ def test_dct_multi_img():
     actual_output = dct(x_in)
 
     assert torch.allclose(actual_output, expected_output, rtol=1e-2, atol=1e-3)
-    print('PASSED')
 
 
 def test_dct_multi_img_dims():
@@ -87,7 +79,6 @@ def test_dct_multi_img_dims():
 
 
 def test_resnet():
-    print('Testing resnet Module... ', end='')
     resnet_1 = ResNet(2, 8, channels=1)
     resnet_3 = ResNet(2, 8, channels=3)
 
@@ -102,8 +93,6 @@ def test_resnet():
 
     assert list(y_1.size()) == expected_1
     assert list(y_3.size()) == expected_3
-
-    print('PASSED')
 
 
 def run_tests():

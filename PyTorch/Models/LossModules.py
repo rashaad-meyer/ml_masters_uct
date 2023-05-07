@@ -49,7 +49,7 @@ class DCT(nn.Module):
         self.v = nn.Parameter(v, requires_grad=False)
 
     def forward(self, img):
-        img = img.unsqueeze(1).unsqueeze(1)
+        img = img.unsqueeze(2).unsqueeze(2)
         y = self.a_p * self.a_q * (img * self.u.cos() * self.v.cos()).sum(dim=(-1, -2))
         return y
 

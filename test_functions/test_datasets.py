@@ -5,8 +5,8 @@ import os
 
 
 def test_isr_data():
-    hr_path = '../../../../data/deconv_tests/DIV2K/DIV2K_train_HR'
-    lr_path = '../../../../data/deconv_tests/DIV2K/DIV2K_train_LR_bicubic/X2'
+    hr_path = '../data/DIV2K_train_HR'
+    lr_path = '../data/DIV2K_train_LR_bicubic/X2'
 
     random_crop = RandomCropIsr(96)
 
@@ -20,5 +20,4 @@ def test_isr_data():
 
 
 if __name__ == '__main__':
-    for i in range(5):
-        test_isr_data()
+    pass
