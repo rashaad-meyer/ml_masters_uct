@@ -12,3 +12,4 @@
 data
 saved_models
 experiment_csv
+.pytest_cache

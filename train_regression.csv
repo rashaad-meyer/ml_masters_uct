@@ -1,3 +1,0 @@
-path,model_name,deconv,loss,num_epochs,learning_rate
-data,srcnn,True,L1,200,0.0001
-data,srcnn,False,L1,200,0.0001
