@@ -1,7 +1,6 @@
 from PyTorch.Datasets.Datasets import ImageSuperResDataset
 from PyTorch.util.data_augmentation import RandomCropIsr
 from torch.utils.data import DataLoader
-import os
 
 
 def test_isr_data():
