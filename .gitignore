@@ -11,3 +11,4 @@
 /PyTorch/util/data/
 data
 saved_models
+experiment_csv
