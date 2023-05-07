@@ -82,6 +82,21 @@ def write_history_to_csv(path, history: dict, model_name, deconv, loss):
     print(f'Results written to {output_filename}')
 
 
+def write_history_to_csv_by_experiment_name(path, history: dict, experiment_name):
+    results_folder = f'{path}/results'
+
+    if not os.path.exists(results_folder):
+        os.makedirs(results_folder)
+
+    now = datetime.now()
+    dt_string = now.strftime("%m-%d_%H-%M")
+    file_name = f'{dt_string}_{experiment_name}'
+    df = pd.DataFrame(history)
+    output_filename = f'{results_folder}/{file_name}.csv'
+    df.to_csv(output_filename)
+    print(f'Results written to {output_filename}')
+
+
 def main():
     download_and_unzip_div2k(downsample='X2')
 
