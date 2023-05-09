@@ -8,9 +8,9 @@ class TwoLayerCNN(nn.Sequential):
         super(TwoLayerCNN, self).__init__()
 
         if layer_1 == 'conv':
-            self.layer2 = nn.Conv2d(layer_1_in, layer_1_out, kernel_size=3, padding='same')
+            self.layer1 = nn.Conv2d(layer_1_in, layer_1_out, kernel_size=3, padding='same')
         elif layer_1 == 'deconv':
-            self.layer2 = Deconv2DMultiFilter(layer_1_in, layer_1_out, kernel_size=3, bias=deconv_bias,
+            self.layer1 = Deconv2DMultiFilter(layer_1_in, layer_1_out, kernel_size=3, bias=deconv_bias,
                                               first_elem_trainable=first_elem_trainable)
 
         if layer_2 == 'conv':
