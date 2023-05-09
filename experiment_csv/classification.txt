@@ -1,3 +1,3 @@
-{'layer_1' = 'conv',    'layer_2' = 'conv', 'layer_1_in' = 3, 'layer_1_out' = 16, 'layer_2_out' = 32, 'deconv_bias' = False, 'first_elem_trainable' = False}
-{'layer_1' = 'deconv',  'layer_2' = 'conv', 'layer_1_in' = 3, 'layer_1_out' = 16, 'layer_2_out' = 32, 'deconv_bias' = False, 'first_elem_trainable' = False}
-{'layer_1' = 'deconv',  'layer_2' = 'deconv', 'layer_1_in' = 3, 'layer_1_out' = 16, 'layer_2_out' = 32, 'deconv_bias' = False, 'first_elem_trainable' = False}
+{"layer_1": "conv",    "layer_2": "conv", "layer_1_in": 3, "layer_1_out": 16, "layer_2_out": 32, "deconv_bias": false, "first_elem_trainable": false}
+{"layer_1": "deconv",  "layer_2": "conv", "layer_1_in": 3, "layer_1_out": 16, "layer_2_out": 32, "deconv_bias": false, "first_elem_trainable": false}
+{"layer_1": "deconv",  "layer_2": "deconv", "layer_1_in": 3, "layer_1_out": 16, "layer_2_out": 32, "deconv_bias": false, "first_elem_trainable": false}

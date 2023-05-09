@@ -1,6 +1,6 @@
+import json
 import wandb
 import argparse
-import pandas as pd
 
 import torch.nn as nn
 from torch import optim
@@ -27,10 +27,12 @@ def main():
     DECONV = args.deconv
 
     if args.multi:
-        wandb.login()
+        wandb.login(key=['2121a1ed327903622f934980ca216233453408a0'])
 
-        configs = pd.read_json('experiments_csv/classification.txt', orient='records').to_dict('records')
+        configs = read_json_objects('experiment_csv/classification.txt')
+        print(configs)
 
+        return
         transforms = T.Compose([T.ToTensor()])
 
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
@@ -66,6 +68,22 @@ def main():
         history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=num_epochs)
 
         helper.write_history_to_csv('data', history, 'srcnn', DECONV, '')
+
+
+def read_json_objects(file_path):
+    json_objects = []
+
+    with open(file_path, 'r', encoding='UTF-8') as file:
+        lines = file.readlines()
+
+    for line in lines:
+        try:
+            json_object = json.loads(line.strip())
+            json_objects.append(json_object)
+        except json.JSONDecodeError:
+            print(f"Invalid JSON object at line {len(json_objects) + 1}: {line.strip()}")
+
+    return json_objects
 
 
 if __name__ == '__main__':
