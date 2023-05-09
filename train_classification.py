@@ -27,7 +27,7 @@ def main():
     DECONV = args.deconv
 
     if args.multi:
-        wandb.login(key=['2121a1ed327903622f934980ca216233453408a0'])
+        wandb.login(key='2121a1ed327903622f934980ca216233453408a0')
 
         configs = read_json_objects('experiment_csv/classification.txt')
         print(configs)
