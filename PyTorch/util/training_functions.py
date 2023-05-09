@@ -1,4 +1,5 @@
 import torch
+import wandb
 import torch.nn as nn
 from tqdm import tqdm
 import os
@@ -56,6 +57,8 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
 
         history['loss'].append(epoch_loss)
         history['accuracy'].append(epoch_acc)
+
+        wandb.log({"epoch_loss": epoch_loss, "accuracy": epoch_acc}, step=epoch)
 
         now = datetime.now()
         dt_string = now.strftime("%m-%d_%H-%M")

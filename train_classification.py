@@ -1,4 +1,6 @@
+import wandb
 import argparse
+import pandas as pd
 
 import torch.nn as nn
 from torch import optim
@@ -25,66 +27,24 @@ def main():
     DECONV = args.deconv
 
     if args.multi:
-        experiments = {}
+        wandb.login()
+
+        configs = pd.read_json('experiments_csv/classification.txt', orient='records').to_dict('records')
+
         transforms = T.Compose([T.ToTensor()])
 
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
-        criterion = nn.CrossEntropyLoss()
+        for hyperparams in configs:
+            with wandb.init(project="Cifar100-TwoLayerCNN", config=hyperparams):
+                config = wandb.config
+                model = TwoLayerCNN(**config)
 
-        # Two Layer CNN both convolution
-        layer_1 = 'conv',
-        layer_2 = 'conv',
-        layer_1_in = 3,
-        layer_1_out = 32,
-        layer_2_out = 32
-        deconv_bias = False
-        first_elem_trainable = False
+                criterion = nn.CrossEntropyLoss()
+                optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-        model = TwoLayerCNN(
-            layer_1=layer_1,
-            layer_2=layer_2,
-            layer_1_in=layer_1_in,
-            layer_1_out=layer_1_out,
-            layer_2_out=layer_2_out
-        )
-
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-        experiment_name = f'TwoLayerCNN_{layer_1}_{layer_2}_filters_' + \
-                          '{layer_1_out}_{layer_1_out}_{deconv_bias}_{first_elem_trainable}'
-
-        experiments[experiment_name] = [model, criterion, optimizer, train_dataloader, num_epochs]
-
-        # ===============================================================================================
-        # Two Layer CNN both convolution
-        layer_1 = 'deconv',
-        layer_2 = 'conv',
-        layer_1_in = 3,
-        layer_1_out = 32,
-        layer_2_out = 32
-
-        model = TwoLayerCNN(
-            layer_1=layer_1,
-            layer_2=layer_2,
-            layer_1_in=layer_1_in,
-            layer_1_out=layer_1_out,
-            layer_2_out=layer_2_out
-        )
-
-        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-        experiment_name = f'TwoLayerCNN_{layer_1}_{layer_2}_filters_{layer_1_out}_{layer_1_out}'
-
-        experiments[experiment_name] = [model, criterion, optimizer, train_dataloader, num_epochs]
-
-        # ===============================================================================================
-
-        for exp_name, params in experiments:
-            history = train_classification_model(*params)
-
-            helper.write_history_to_csv('data', history, exp_name)
+                history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=10)
 
     else:
         transforms = T.Compose([T.ToTensor()])

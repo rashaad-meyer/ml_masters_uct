@@ -6,3 +6,5 @@ tqdm
 matplotlib
 pandas
 pytest
+wandb
+keras
