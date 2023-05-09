@@ -11,4 +11,5 @@
 /PyTorch/util/data/
 data
 saved_models
+wandb
 .pytest_cache
