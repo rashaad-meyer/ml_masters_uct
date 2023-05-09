@@ -30,6 +30,5 @@ class TwoLayerCNN(nn.Module):
         x = self.layer2(x)
         x = self.relu(x)
         x = self.flatten(x)
-        print(x.size())
         x = self.fc1(x)
         return x
