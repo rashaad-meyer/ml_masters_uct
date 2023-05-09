@@ -30,9 +30,7 @@ def main():
         wandb.login(key='2121a1ed327903622f934980ca216233453408a0')
 
         configs = read_json_objects('experiment_csv/classification.txt')
-        print(configs)
 
-        return
         transforms = T.Compose([T.ToTensor()])
 
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
