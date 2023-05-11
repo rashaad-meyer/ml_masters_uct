@@ -27,6 +27,8 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         print_epoch_every = 1
     history = {'loss': [], 'accuracy': [], 'time': []}
 
+    wandb.watch(model, criterion, log="all", log_freq=10)
+
     for epoch in range(num_epochs):
         print(f'Epoch {epoch + 1:2d}/{num_epochs}')
 
