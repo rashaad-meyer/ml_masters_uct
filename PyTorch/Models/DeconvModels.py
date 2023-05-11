@@ -56,16 +56,19 @@ class Deconv2DMultiFilter(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), bias=True, first_elem_trainable=False):
         super(Deconv2DMultiFilter, self).__init__()
 
+        init_factor = (kernel_size[0] * kernel_size[1] * (in_channels + out_channels))
+
         if first_elem_trainable:
             # initialise filter as correct shape so that first element is trainable
             w = torch.rand((out_channels, in_channels,) + kernel_size)
+            w = w / init_factor
             w[:, :, 0, 0] = 1.0
+
         else:
             # initialise filter as flat to be reshaped after so that first element is not trainable
             w = torch.rand((out_channels, in_channels,) + (kernel_size[0] * kernel_size[1] - 1,))
+            w = w / init_factor
 
-        init_factor = (kernel_size[0] * kernel_size[1] * (in_channels + out_channels))
-        w = w / init_factor
         w = nn.Parameter(data=w, requires_grad=True)
 
         # make first element of each filter 1.0
