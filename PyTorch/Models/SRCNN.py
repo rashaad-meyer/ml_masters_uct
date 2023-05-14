@@ -1,5 +1,5 @@
 import torch.nn as nn
-from PyTorch.Models.DeconvModels import Deconv2DMultiFilter
+from PyTorch.Models.DeconvModels import Deconv2D
 
 
 class SRCNN(nn.Module):
@@ -17,7 +17,7 @@ class SRCNN(nn.Module):
 
         self.relu = nn.ReLU()
         if deconv:
-            self.conv1 = Deconv2DMultiFilter(num_channels, 64, (9, 9))
+            self.conv1 = Deconv2D(num_channels, 64, (9, 9))
         else:
             self.conv1 = nn.Conv2d(num_channels, 64, kernel_size=9, padding=4)
 

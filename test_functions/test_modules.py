@@ -1,5 +1,5 @@
 import torch
-from PyTorch.Models.DeconvModels import Deconv2D, Deconv2DMultiFilter
+from PyTorch.Models.DeconvModels import Deconv2D, Deconv2D
 from PyTorch.Models.LossModules import DCT
 from PyTorch.Models.ResNet import ResNet
 
@@ -10,7 +10,7 @@ def test_deconv_initialisation():
 
 def test_deconv_multi_filter_dim():
     filters = 128
-    deconv = Deconv2DMultiFilter(in_channels=10, out_channels=filters, kernel_size=(4, 4))
+    deconv = Deconv2D(in_channels=10, out_channels=filters, kernel_size=(4, 4))
     x = torch.rand((8, 10, 18, 18))
 
     y = deconv(x)
