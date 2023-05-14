@@ -56,7 +56,9 @@ def main():
         experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
 
     for experiment in experiments:
-        run_experiment(**experiment)
+        with wandb.init(project="Cifar100-TwoLayerCNN", config=experiment):
+            config = wandb.config
+            run_experiment(**config)
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False):

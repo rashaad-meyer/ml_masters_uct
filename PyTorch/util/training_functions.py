@@ -14,7 +14,6 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         :param optimizer: The optimizer that will optimize the NN
         :param dataloader: Dataloader that loads data from classification dataset
         :param num_epochs: Number of times you want to train the data over
-        :param deconv: boolean check whether to save deconv kernel or not
         :return: A dictionary containing training loss and accuracy for each epoch
         and list of the kernels after each epoch if the model is a deconv layer
     """
@@ -98,6 +97,8 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
     start_time = datetime.now().strftime("%m-%d_%H-%M")
     experiment_name = f'{start_time}_{name}'
 
+    wandb.watch(model, criterion, log="all", log_freq=10)
+
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -120,6 +121,8 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
         now = datetime.now()
         dt_string = now.strftime("%m-%d_%H-%M")
         history['time'].append(dt_string)
+
+        wandb.log({"epoch_loss": running_loss}, step=epoch)
 
         if (epoch + 1) % print_epoch_every == 0:
             print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
