@@ -1,5 +1,6 @@
 import argparse
 
+import wandb
 import pandas as pd
 
 from torch import nn
@@ -40,6 +41,7 @@ def main():
                                                        "path, model_name, deconv, loss, num_epochs, learning_rate")
 
     args = parser.parse_args()
+    wandb.login(key='2121a1ed327903622f934980ca216233453408a0')
 
     if args.multiple == '':
         experiments = [{'path': args.path,
@@ -47,7 +49,9 @@ def main():
                         'deconv': args.deconv,
                         'loss': args.loss,
                         'num_epochs': args.num_epochs,
-                        'learning_rate': 10 ** (-args.learning_rate)}]
+                        'learning_rate': 10 ** (-args.learning_rate),
+                        'bias': True,
+                        'first_elem_trainable': True}]
     else:
         experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
 
@@ -55,7 +59,7 @@ def main():
         run_experiment(**experiment)
 
 
-def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate):
+def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False):
     lr_path, hr_path = helper.download_and_unzip_div2k(path)
 
     print('Preparing Dataloader...')
@@ -64,7 +68,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate):
     dataloader = DataLoader(data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
-        model = SRCNN(deconv=deconv)
+        model = SRCNN(deconv=deconv, bias=bias, first_elem_trainable=first_elem_trainable)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
