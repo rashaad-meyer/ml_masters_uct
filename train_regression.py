@@ -41,7 +41,7 @@ def main():
                                                        "path, model_name, deconv, loss, num_epochs, learning_rate")
 
     args = parser.parse_args()
-    wandb.login(key='2121a1ed327903622f934980ca216233453408a0')
+    wandb.login()
 
     if args.multiple == '':
         experiments = [{'path': args.path,
