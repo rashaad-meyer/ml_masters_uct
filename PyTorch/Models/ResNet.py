@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from PyTorch.Models.DeconvModels import Deconv2D
+
 
 class ResBlock(nn.Module):
     def __init__(self, n_feat, kernel_size, res_scale=1.0, bias=True, bn=False, activation=nn.ReLU(True)):
@@ -36,13 +38,16 @@ class UpScale(nn.Sequential):
 
 
 class ResNet(nn.Module):
-    def __init__(self, n_resblocks, n_features, channels=1):
+    def __init__(self, n_resblocks, n_features, deconv=False, channels=1):
         super().__init__()
-        self.start = nn.Conv2d(channels, n_features, 3, padding='same')
+        if deconv:
+            self.start = Deconv2D(channels, n_features, (3, 3), first_elem_trainable=True)
+        else:
+            self.start = nn.Conv2d(channels, n_features, (3, 3), padding='same')
 
         resblocks = []
         for i in range(n_resblocks):
-            resblocks.append(ResBlock(n_features, 3, res_scale=0.15))
+            resblocks.append(ResBlock(n_features, (3, 3), res_scale=0.15))
 
         resblocks.append(nn.Conv2d(n_features, n_features, 3, padding='same', bias=True))
 
