@@ -4,20 +4,20 @@ from PyTorch.Models.DeconvModels import Deconv2D
 
 class TwoLayerCNN(nn.Module):
     def __init__(self, img_size=(32, 32), layer_1='conv', layer_2='conv', layer_1_in=3, layer_1_out=32, layer_2_out=32,
-                 num_classes=100, deconv_bias=True, first_elem_trainable=True):
+                 num_classes=100, deconv_bias=True, first_elem_trainable=True, four_factor=True):
         super(TwoLayerCNN, self).__init__()
 
         if layer_1 == 'conv':
             self.layer1 = nn.Conv2d(layer_1_in, layer_1_out, kernel_size=3, padding='same')
         elif layer_1 == 'deconv':
             self.layer1 = Deconv2D(layer_1_in, layer_1_out, kernel_size=(3, 3), bias=deconv_bias,
-                                   first_elem_trainable=first_elem_trainable)
+                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
 
         if layer_2 == 'conv':
             self.layer2 = nn.Conv2d(layer_1_out, layer_2_out, kernel_size=3, padding='same')
         elif layer_2 == 'deconv':
             self.layer2 = Deconv2D(layer_1_out, layer_2_out, kernel_size=(3, 3), bias=deconv_bias,
-                                   first_elem_trainable=first_elem_trainable)
+                                   first_elem_trainable=first_elem_trainable, four_factor=True)
 
         self.fc1 = nn.Linear(layer_2_out * img_size[0] * img_size[1], num_classes)
 
