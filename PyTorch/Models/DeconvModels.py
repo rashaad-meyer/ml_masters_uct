@@ -8,7 +8,8 @@ def __init__():
 
 
 class Deconv2D(nn.Module):
-    def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), bias=True, first_elem_trainable=False):
+    def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), bias=True, first_elem_trainable=False,
+                 four_factor=True):
         super(Deconv2D, self).__init__()
 
         init_factor = (kernel_size[0] * kernel_size[1] * (in_channels + out_channels))
@@ -32,6 +33,7 @@ class Deconv2D(nn.Module):
         self.kernel_size = kernel_size
         self.w = w
         self.first_elem_trainable = first_elem_trainable
+        self.four_factor = four_factor
 
         if bias:
             self.b = nn.Parameter(data=torch.rand(1, out_channels, 1, 1) - 0.5, requires_grad=True)
@@ -51,16 +53,19 @@ class Deconv2D(nn.Module):
 
         gm1f = 1 / fft2(hm1)
 
-        gm2f_ = torch.flip(gm1f, (0,))
-        gm2f = torch.roll(gm2f_, shifts=1, dims=0)
+        if self.four_factor:
+            gm2f_ = torch.flip(gm1f, (0,))
+            gm2f = torch.roll(gm2f_, shifts=1, dims=0)
 
-        gm3f_ = torch.flip(gm1f, (1,))
-        gm3f = torch.roll(gm3f_, shifts=1, dims=1)
+            gm3f_ = torch.flip(gm1f, (1,))
+            gm3f = torch.roll(gm3f_, shifts=1, dims=1)
 
-        gm4f_ = torch.flip(gm1f, (0, 1))
-        gm4f = torch.roll(gm4f_, shifts=(1, 1), dims=(0, 1))
+            gm4f_ = torch.flip(gm1f, (0, 1))
+            gm4f = torch.roll(gm4f_, shifts=(1, 1), dims=(0, 1))
 
-        gmf = gm1f * gm2f * gm3f * gm4f
+            gmf = gm1f * gm2f * gm3f * gm4f
+        else:
+            gmf = gm1f
 
         ymf = gmf * fft2(x)
 
