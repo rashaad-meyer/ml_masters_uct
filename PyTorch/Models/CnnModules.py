@@ -21,14 +21,21 @@ class TwoLayerCNN(nn.Module):
 
         self.fc1 = nn.Linear(layer_2_out * img_size[0] * img_size[1], num_classes)
 
+        self.layer1_out = None
+        self.layer2_out = None
+
         self.relu = nn.ReLU()
         self.flatten = nn.Flatten()
 
     def forward(self, x):
         x = self.layer1(x)
+        self.layer1_out = x
         x = self.relu(x)
+
         x = self.layer2(x)
+        self.layer2_out = x
         x = self.relu(x)
+
         x = self.flatten(x)
         x = self.fc1(x)
         return x
