@@ -10,7 +10,7 @@ from PyTorch.Models.CnnModules import TwoLayerCNN
 def impulse_response_of_model(model, img_size):
     model.eval()
 
-    x = F.pad(torch.tensor([[[[1.0]]]]), (0, img_size[0] - 1, 0, img_size[1] - 1))
+    x = F.pad(torch.tensor([[[[1.0]]]]), (0, img_size[-2] - 1, 0, img_size[-1] - 1))
     _ = model(x)
 
     yt = model.layer1_out
