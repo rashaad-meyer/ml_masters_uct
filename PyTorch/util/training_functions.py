@@ -68,7 +68,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         try:
             impulse_responses = impulse_response_of_model(model, image.size())
             response_images = save_tensor_images(impulse_responses)
-            wandb.log({f"epoch_{epoch:04d}_impulse": [wandb.Image(image) for image in response_images]})
+            wandb.log({f"impulse_response": [wandb.Image(image) for image in response_images]}, step=epoch)
         except:
             print('First layer is not deconv. Not logging impulse responses')
 
