@@ -9,12 +9,13 @@ from PyTorch.Models.CnnModules import TwoLayerCNN
 
 def impulse_response_of_model(model, img_size):
     model.eval()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     x = F.pad(torch.tensor([[[[1.0]]]]), (0, img_size[-2] - 1, 0, img_size[-1] - 1))
+    x = x.to(device)
+
     _ = model(x)
-
     yt = model.layer1_out
-
     yf = fft2(yt).real
 
     return yf
