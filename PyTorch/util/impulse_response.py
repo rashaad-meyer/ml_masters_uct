@@ -2,6 +2,8 @@ import os
 import torch
 import torch.nn.functional as F
 import torchvision.transforms.functional as TF
+from torch.fft import fft2
+
 from PyTorch.Models.CnnModules import TwoLayerCNN
 
 
@@ -11,7 +13,11 @@ def impulse_response_of_model(model, img_size):
     x = F.pad(torch.tensor([[[[1.0]]]]), (0, img_size[0] - 1, 0, img_size[1] - 1))
     _ = model(x)
 
-    return model.layer1_out
+    yt = model.layer1_out
+
+    yf = fft2(yt).real
+
+    return yf
 
 
 def save_tensor_images(tensor, file_prefix, folder):
