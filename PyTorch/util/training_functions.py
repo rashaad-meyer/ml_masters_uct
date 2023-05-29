@@ -5,6 +5,8 @@ from tqdm import tqdm
 import os
 from datetime import datetime
 
+from PyTorch.util.impulse_response import impulse_response_of_model, save_tensor_images
+
 
 def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3):
     """
@@ -60,6 +62,15 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         history['accuracy'].append(epoch_acc)
 
         wandb.log({"epoch_loss": epoch_loss, "accuracy": epoch_acc}, step=epoch)
+
+        image, _ = next(iter(dataloader))
+
+        try:
+            impulse_responses = impulse_response_of_model(model, image.size())
+            response_images = save_tensor_images(impulse_responses)
+            wandb.log({f"epoch_{epoch:04d}_impulse": response_images})
+        except:
+            print('First layer is not deconv. Not logging impulse responses')
 
         now = datetime.now()
         dt_string = now.strftime("%m-%d_%H-%M")
