@@ -20,7 +20,7 @@ def impulse_response_of_model(model, img_size):
     return yf
 
 
-def save_tensor_images(tensor, file_prefix, folder):
+def save_tensor_images(tensor, file_prefix=None, folder=None):
     # Get the dimensions of the tensor
     batch_size, num_channels, height, width = tensor.size()
 
@@ -28,6 +28,7 @@ def save_tensor_images(tensor, file_prefix, folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+    pil_images = []
     # Iterate over the tensor and save each channel as a grayscale image
     for channel_idx in range(num_channels):
         # Extract the channel tensor
@@ -36,7 +37,11 @@ def save_tensor_images(tensor, file_prefix, folder):
         # Convert the channel tensor to a PIL image
         pil_image = TF.to_pil_image(channel_tensor)
 
-        # Save the image with a unique filename
-        filename = f"{folder}/{file_prefix}_channel_{channel_idx:02d}.png"
-        pil_image.save(filename)
+        pil_images.append(pil_image)
 
+        # Save the image with a unique filename
+        if file_prefix is None or folder is None:
+            filename = f"{folder}/{file_prefix}_channel_{channel_idx:02d}.png"
+            pil_image.save(filename)
+
+    return pil_images
