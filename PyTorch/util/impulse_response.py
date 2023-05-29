@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn.functional as F
-import torchvision.transforms.functional as TF
+import torchvision.transforms as T
 from torch.fft import fft2
 
 from PyTorch.Models.CnnModules import TwoLayerCNN
@@ -25,22 +25,25 @@ def save_tensor_images(tensor, file_prefix=None, folder=None):
     batch_size, num_channels, height, width = tensor.size()
 
     # if folder doesn't exist create it
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    if file_prefix is not None and folder is not None:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
 
     pil_images = []
+
+    transform = T.ToPILImage()
     # Iterate over the tensor and save each channel as a grayscale image
     for channel_idx in range(num_channels):
         # Extract the channel tensor
         channel_tensor = tensor[0, channel_idx]
 
         # Convert the channel tensor to a PIL image
-        pil_image = TF.to_pil_image(channel_tensor)
+        pil_image = transform(channel_tensor.unsqueeze(0))
 
         pil_images.append(pil_image)
 
         # Save the image with a unique filename
-        if file_prefix is None or folder is None:
+        if file_prefix is not None and folder is not None:
             filename = f"{folder}/{file_prefix}_channel_{channel_idx:02d}.png"
             pil_image.save(filename)
 
