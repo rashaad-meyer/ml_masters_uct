@@ -54,7 +54,6 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
             running_loss += loss.item()
             running_correct += torch.sum(preds == labels.data).item()
             data_len += X.size(0)
-            break
 
         epoch_loss = running_loss
         epoch_acc = running_correct / data_len
