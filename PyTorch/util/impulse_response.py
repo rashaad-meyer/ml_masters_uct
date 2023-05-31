@@ -49,3 +49,20 @@ def save_tensor_images(tensor, file_prefix=None, folder=None):
             pil_image.save(filename)
 
     return pil_images
+
+
+def check_filter_diff(tensor):
+    batch_size, num_channels, height, width = tensor.size()
+    diff_all = []
+    for i in range(num_channels):
+        # Extract the channel tensor
+        channel_tensor_01 = tensor[0, i]
+        diffs = []
+
+        for j in range(num_channels):
+            channel_tensor_02 = tensor[0, j]
+            diff = (channel_tensor_01 - channel_tensor_02).abs().sum().item()
+            diffs.append(diff)
+
+        diff_all.append(diffs)
+    return diff_all

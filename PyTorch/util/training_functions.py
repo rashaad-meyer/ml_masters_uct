@@ -5,7 +5,7 @@ from tqdm import tqdm
 import os
 from datetime import datetime
 
-from PyTorch.util.impulse_response import impulse_response_of_model, save_tensor_images
+from PyTorch.util.impulse_response import impulse_response_of_model, save_tensor_images, check_filter_diff
 
 
 def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3):
@@ -71,6 +71,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
             phase_images = save_tensor_images(phase)
             wandb.log({f"impulse_response_mag": [wandb.Image(image) for image in mag_images]}, step=epoch)
             wandb.log({f"impulse_response_phase": [wandb.Image(image) for image in phase_images]}, step=epoch)
+            print(check_filter_diff(mag))
         except:
             print('First layer is not deconv. Not logging impulse responses')
 
