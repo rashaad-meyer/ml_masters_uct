@@ -13,7 +13,7 @@ class Deconv2D(nn.Module):
                  four_factor=True):
         super(Deconv2D, self).__init__()
 
-        init_factor = 1.0
+        init_factor = (kernel_size[0] * kernel_size[1] * (in_channels + out_channels))
 
         if first_elem_trainable:
             # initialise filter as correct shape so that first element is trainable
