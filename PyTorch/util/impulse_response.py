@@ -15,12 +15,10 @@ def impulse_response_of_model(model, img_size):
     x = x.to(device)
 
     _ = model(x)
-    yt = model.layer1_out
-    yf = fft2(yt).real
+    y = fft2(model.layer1_out)
 
-    # TODO output magnitude and phase
-
-    return yf
+    # return output magnitude and phase
+    return y.abs(), y.angle()
 
 
 def save_tensor_images(tensor, file_prefix=None, folder=None):

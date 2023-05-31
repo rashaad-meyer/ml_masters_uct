@@ -17,8 +17,9 @@ def test_impulse_response():
         deconv_bias=False,
     )
 
-    out = impulse_response_of_model(model, img_size)
+    mag, phase = impulse_response_of_model(model, img_size)
 
     test_folder = 'data/impulse_response_test'
-    save_tensor_images(out, 'test', test_folder)
+    save_tensor_images(mag, 'test', test_folder)
+    save_tensor_images(phase, 'test', test_folder)
     shutil.rmtree(test_folder)
