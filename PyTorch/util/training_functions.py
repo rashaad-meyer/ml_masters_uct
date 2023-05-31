@@ -73,7 +73,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
             wandb.log({f"impulse_response_phase": [wandb.Image(image) for image in phase_images]}, step=epoch)
             diffs = check_filter_diff(mag)
             for diff in diffs:
-                print(diff)
+                print(f'{diff:5.4f}')
         except:
             print('First layer is not deconv. Not logging impulse responses')
 
