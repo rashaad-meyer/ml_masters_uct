@@ -18,6 +18,8 @@ def impulse_response_of_model(model, img_size):
     yt = model.layer1_out
     yf = fft2(yt).real
 
+    # TODO output magnitude and phase
+
     return yf
 
 
