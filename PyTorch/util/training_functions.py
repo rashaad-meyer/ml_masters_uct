@@ -63,19 +63,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
 
         wandb.log({"epoch_loss": epoch_loss, "accuracy": epoch_acc}, step=epoch)
 
-        image, _ = next(iter(dataloader))
-
-        try:
-            mag, phase = impulse_response_of_model(model, image.size())
-            mag_images = save_tensor_images(mag)
-            phase_images = save_tensor_images(phase)
-            wandb.log({f"impulse_response_mag": [wandb.Image(image) for image in mag_images]}, step=epoch)
-            wandb.log({f"impulse_response_phase": [wandb.Image(image) for image in phase_images]}, step=epoch)
-            diffs = check_filter_diff(mag)
-            for diff in diffs:
-                print(f'{diff:5.4f}')
-        except:
-            print('First layer is not deconv. Not logging impulse responses')
+        compute_impulse_diffs(dataloader, epoch, model)
 
         now = datetime.now()
         dt_string = now.strftime("%m-%d_%H-%M")
@@ -159,3 +147,23 @@ def save_model(model, name, epoch, loss, folder='saved_models'):
 
     torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
     print(f'Model saved at {file_name}')
+
+
+def compute_impulse_diffs(dataloader, epoch, model):
+    image, _ = next(iter(dataloader))
+    try:
+        mag, phase = impulse_response_of_model(model, image.size())
+        diffs = check_filter_diff(mag)
+
+        mag_images = save_tensor_images(mag)
+        phase_images = save_tensor_images(phase)
+        diffs_images = save_tensor_images(diffs)
+
+        wandb.log({f"impulse_response_mag": [wandb.Image(image) for image in mag_images]}, step=epoch)
+        wandb.log({f"impulse_response_phase": [wandb.Image(image) for image in phase_images]}, step=epoch)
+        wandb.log({f"impulse_response_diffs": [wandb.Image(image) for image in diffs_images]}, step=epoch)
+
+        for diff in diffs:
+            print(f'{diff:5.4f}')
+    except:
+        print('First layer is not deconv. Not logging impulse responses')

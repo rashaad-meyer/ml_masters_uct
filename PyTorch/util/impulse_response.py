@@ -65,4 +65,4 @@ def check_filter_diff(tensor):
             diffs.append(diff)
 
         diff_all.append(diffs)
-    return diff_all
+    return torch.tensor(diff_all)
