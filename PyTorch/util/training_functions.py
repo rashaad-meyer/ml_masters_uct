@@ -29,6 +29,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
     history = {'loss': [], 'accuracy': [], 'time': []}
 
     wandb.watch(model, criterion, log="all", log_freq=10)
+    compute_impulse_diffs(dataloader, 0, model)
 
     for epoch in range(num_epochs):
         print(f'Epoch {epoch + 1:2d}/{num_epochs}')
@@ -63,7 +64,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
 
         wandb.log({"epoch_loss": epoch_loss, "accuracy": epoch_acc}, step=epoch)
 
-        compute_impulse_diffs(dataloader, epoch, model)
+        compute_impulse_diffs(dataloader, epoch+1, model)
 
         now = datetime.now()
         dt_string = now.strftime("%m-%d_%H-%M")
