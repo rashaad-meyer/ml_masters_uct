@@ -163,7 +163,5 @@ def compute_impulse_diffs(dataloader, epoch, model):
         wandb.log({f"impulse_response_phase": [wandb.Image(image) for image in phase_images]}, step=epoch)
         wandb.log({f"impulse_response_diffs": [wandb.Image(image) for image in diffs_images]}, step=epoch)
 
-        for diff in diffs:
-            print(f'{diff:5.4f}')
     except:
         print('First layer is not deconv. Not logging impulse responses')
