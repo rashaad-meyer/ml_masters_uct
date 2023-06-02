@@ -34,7 +34,7 @@ def save_tensor_images(tensor, file_prefix=None, folder=None):
 
     transform = T.ToPILImage()
     # Iterate over the tensor and save each channel as a grayscale image
-    for channel_idx in range(num_channels):
+    for channel_idx in range(batch_size):
         # Extract the channel tensor
         channel_tensor = tensor[0, channel_idx]
 
