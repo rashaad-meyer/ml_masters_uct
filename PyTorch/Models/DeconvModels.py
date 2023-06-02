@@ -17,13 +17,13 @@ class Deconv2D(nn.Module):
 
         if first_elem_trainable:
             # initialise filter as correct shape so that first element is trainable
-            w = torch.rand((out_channels, in_channels,) + kernel_size)
+            w = torch.randn((out_channels, in_channels,) + kernel_size)
             w = w / init_factor
             w[:, :, 0, 0] = 1.0
 
         else:
             # initialise filter as flat to be reshaped after so that first element is not trainable
-            w = torch.rand((out_channels, in_channels,) + (kernel_size[0] * kernel_size[1] - 1,))
+            w = torch.randn((out_channels, in_channels,) + (kernel_size[0] * kernel_size[1] - 1,))
             w = w / init_factor
 
         w = nn.Parameter(data=w, requires_grad=True)
