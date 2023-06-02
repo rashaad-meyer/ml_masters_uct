@@ -45,9 +45,7 @@ def save_tensor_images(tensor, file_prefix=None, folder=None):
         # Convert the channel tensor to a PIL image
         if len(channel_tensor.size()) == 2:
             pil_image = transform(channel_tensor.unsqueeze(0))
-            print(channel_tensor.size())
         else:
-            print(channel_tensor.size())
             pil_image = transform(channel_tensor)
 
         pil_images.append(pil_image)
