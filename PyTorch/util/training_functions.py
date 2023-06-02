@@ -155,17 +155,16 @@ def compute_impulse_diffs(dataloader, epoch, model):
     try:
         mag, phase = impulse_response_of_model(model, image.size())
         diffs = check_filter_diff(mag)
-        diffs_w = check_filter_diff(model.layer1.w)
 
         mag_images = save_tensor_images(mag)
         phase_images = save_tensor_images(phase)
         diffs_images = save_tensor_images(diffs)
-        diffs_w_images = save_tensor_images(diffs_w)
+        w_images = save_tensor_images(model.layer1.w)
 
         wandb.log({f"impulse_response_mag": [wandb.Image(image) for image in mag_images]}, step=epoch)
         wandb.log({f"impulse_response_phase": [wandb.Image(image) for image in phase_images]}, step=epoch)
         wandb.log({f"impulse_response_diffs": [wandb.Image(image) for image in diffs_images]}, step=epoch)
-        wandb.log({f"diffs_w_images": [wandb.Image(image) for image in diffs_w_images]}, step=epoch)
+        wandb.log({f"w_images": [wandb.Image(image) for image in w_images]}, step=epoch)
 
     except:
         print('First layer is not deconv. Not logging impulse responses')

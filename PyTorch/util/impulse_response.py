@@ -23,7 +23,8 @@ def impulse_response_of_model(model, img_size):
 
 def save_tensor_images(tensor, file_prefix=None, folder=None):
     # Get the dimensions of the tensor
-    batch_size, num_channels, height, width = tensor.size()
+    tensor = tensor.squeeze()
+    batch_size = tensor.size(0)
 
     # if folder doesn't exist create it
     if file_prefix is not None and folder is not None:
