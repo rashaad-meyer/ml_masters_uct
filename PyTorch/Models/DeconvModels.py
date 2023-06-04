@@ -55,14 +55,14 @@ class Deconv2D(nn.Module):
         gm1f = 1 / fft2(hm1)
 
         if self.four_factor:
-            gm2f_ = torch.flip(gm1f, (0,))
-            gm2f = torch.roll(gm2f_, shifts=1, dims=0)
+            gm2f_ = torch.flip(gm1f, dims=(-2,))
+            gm2f = torch.roll(gm2f_, shifts=1, dims=-2)
 
-            gm3f_ = torch.flip(gm1f, (1,))
-            gm3f = torch.roll(gm3f_, shifts=1, dims=1)
+            gm3f_ = torch.flip(gm1f, dims=(-1,))
+            gm3f = torch.roll(gm3f_, shifts=1, dims=-1)
 
-            gm4f_ = torch.flip(gm1f, (0, 1))
-            gm4f = torch.roll(gm4f_, shifts=(1, 1), dims=(0, 1))
+            gm4f_ = torch.flip(gm1f, dims=(-2, -1))
+            gm4f = torch.roll(gm4f_, shifts=(1, 1), dims=(-2, -1))
 
             gmf = gm1f * gm2f * gm3f * gm4f
         else:
