@@ -50,8 +50,6 @@ def main():
     else:
         transforms = T.Compose([T.ToTensor()])
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
-        # TODO remove slice
-        training_data = torch.utils.data.Subset(training_data, range(0, 2000))
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
         print('Setting up model, loss, and criterion')
