@@ -22,6 +22,7 @@ from PyTorch.ObjectDetection.utils import (
     load_checkpoint,
 )
 from PyTorch.ObjectDetection.loss import YoloLoss
+from PyTorch.util.helper_functions import get_voc_ds
 
 seed = 123
 torch.manual_seed(seed)
@@ -36,8 +37,10 @@ NUM_WORKERS = 2
 PIN_MEMORY = True
 LOAD_MODEL = False
 LOAD_MODEL_FILE = "overfit.pth.tar"
-IMG_DIR = "data/obj-det/images"
-LABEL_DIR = "data/obj-det/labels"
+
+BASE_DIR = "data/obj-det"
+IMG_DIR = f"{BASE_DIR}/images"
+LABEL_DIR = f"{BASE_DIR}/labels"
 
 
 class Compose(object):
@@ -74,6 +77,7 @@ def train_fn(train_loader, model, optimizer, loss_fn):
 
 
 def main():
+    get_voc_ds(BASE_DIR)
     print('Loading model...')
     model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
     optimizer = optim.Adam(
