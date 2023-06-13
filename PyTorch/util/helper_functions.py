@@ -91,14 +91,11 @@ def download_and_unzip_voc_ds(path='data/obj-det'):
 
     for link, file_name in zip(links, file_names):
         file_path = f'{path}/{file_name}'
-        if not os.path.exists(f'{path}/VOCdevkit'):
-            print(f'Downloading {file_name}...')
-            download_tar(link, f"{file_path}.tar")
-            print(f'Unzipping {file_name}')
-            unzip_data(f"{file_path}.tar", path)
-        else:
-            print(f'{path}/VOCdevkit detected! Download not needed')
-            return
+        print(f'Downloading {file_name}...')
+        download_tar(link, f"{file_path}.tar")
+        print(f'Unzipping {file_name}')
+        unzip_data(f"{file_path}.tar", path)
+
 
 
 def convert(size, box):
