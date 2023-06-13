@@ -1,13 +1,27 @@
 import os
+import re
 import zipfile
-from datetime import datetime
+import tarfile
+import requests
 import pandas as pd
+from datetime import datetime
+import xml.etree.ElementTree as ET
+import shutil
 
 
 def unzip_data(filename, path):
-    zip_ref = zipfile.ZipFile(filename, "r")
-    zip_ref.extractall(path)
-    zip_ref.close()
+    if filename.endswith("zip"):
+        zip_ref = zipfile.ZipFile(filename, "r")
+        zip_ref.extractall(path)
+        zip_ref.close()
+    elif filename.endswith("tar.gz"):
+        tar = tarfile.open(filename, "r:gz")
+        tar.extractall(path)
+        tar.close()
+    elif filename.endswith("tar"):
+        with tarfile.open(filename, 'r') as tar:
+            # Extract all files from the tar file
+            tar.extractall(path)
     os.remove(filename)
 
 
@@ -62,6 +76,172 @@ def download_and_unzip_div2k(path='data', downsample='X2'):
     return lr_path, hr_path
 
 
+def download_and_unzip_voc_ds(path='data/obj-det'):
+    links = [
+        'http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar',
+        'http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar',
+        'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'
+    ]
+    file_names = [link.split('/')[-1][:-4] for link in links]
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+        print(f"Create new path: {path}")
+
+    for link, file_name in zip(links, file_names):
+        file_path = f'{path}/{file_name}'
+        if not os.path.exists(f'{path}/VOCdevkit'):
+            print(f'Downloading {file_name}...')
+            download_tar(link, f"{file_path}.tar")
+            print(f'Unzipping {file_name}')
+            unzip_data(f"{file_path}.tar", path)
+        else:
+            print(f'{path}/VOCdevkit detected! Download not needed')
+            return
+
+
+def convert(size, box):
+    dw = 1. / size[0]
+    dh = 1. / size[1]
+    x = (box[0] + box[1]) / 2.0
+    y = (box[2] + box[3]) / 2.0
+    w = box[1] - box[0]
+    h = box[3] - box[2]
+    x = x * dw
+    w = w * dw
+    y = y * dh
+    h = h * dh
+    return x, y, w, h
+
+
+def convert_annotation(path, year, image_id, classes):
+    in_file = open('%s/VOCdevkit/VOC%s/Annotations/%s.xml' % (path, year, image_id))
+    out_file = open('%s/VOCdevkit/VOC%s/labels/%s.txt' % (path, year, image_id), 'w')
+    tree = ET.parse(in_file)
+    root = tree.getroot()
+    size = root.find('size')
+    w = int(size.find('width').text)
+    h = int(size.find('height').text)
+
+    for obj in root.iter('object'):
+        difficult = obj.find('difficult').text
+        cls = obj.find('name').text
+        if cls not in classes or int(difficult) == 1:
+            continue
+        cls_id = classes.index(cls)
+        xmlbox = obj.find('bndbox')
+        b = (float(xmlbox.find('xmin').text), float(xmlbox.find('xmax').text), float(xmlbox.find('ymin').text),
+             float(xmlbox.find('ymax').text))
+        bb = convert((w, h), b)
+        out_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
+
+
+def get_voc_labels_from_ds(path='data/obj-det'):
+    sets = [('2012', 'train'), ('2012', 'val'), ('2007', 'train'), ('2007', 'val'), ('2007', 'test')]
+
+    classes = ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
+               "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
+
+    for year, image_set in sets:
+        if not os.path.exists(f'%s/VOCdevkit/VOC%s/labels/' % (path, year)):
+            os.makedirs('%s/VOCdevkit/VOC%s/labels/' % (path, year))
+        image_ids = open('%s/VOCdevkit/VOC%s/ImageSets/Main/%s.txt' % (path, year, image_set)).read().strip().split()
+        list_file = open('%s/%s_%s.txt' % (path, year, image_set), 'w')
+        for image_id in image_ids:
+            list_file.write('%s/VOCdevkit/VOC%s/JPEGImages/%s.jpg\n' % (path, year, image_id))
+            convert_annotation(path, year, image_id, classes)
+        list_file.close()
+
+
+def download_tar(url, target_path):
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        with open(target_path, 'wb') as f:
+            f.write(response.raw.read())
+
+
+def clean_voc_ds_text_files(base_dir='data/obj-det'):
+    # Concatenate the text files into train.txt
+    with open(os.path.join(base_dir, "train.txt"), "w") as output_file:
+        txt_files = ["2007_train.txt", "2007_val.txt"]
+        txt_files += [f for f in os.listdir(base_dir) if f.startswith("2012_") and f.endswith(".txt")]
+
+        for file_name in txt_files:
+            with open(os.path.join(base_dir, file_name)) as f:
+                shutil.copyfileobj(f, output_file)
+
+    # Copy 2007_test.txt to test.txt
+    shutil.copy(os.path.join(base_dir, "2007_test.txt"), os.path.join(base_dir, "test.txt"))
+
+    # Move txt files we won't be using to clean up a little bit
+    old_txt_files_dir = os.path.join(base_dir, "old_txt_files")
+    os.makedirs(old_txt_files_dir, exist_ok=True)
+
+    for file_name in os.listdir(base_dir):
+        if file_name.startswith("2007") or file_name.startswith("2012"):
+            shutil.move(os.path.join(base_dir, file_name), old_txt_files_dir)
+
+    # Execute the generate_csv.py script
+    get_voc_labels_from_ds()
+
+    # Create directories
+    os.makedirs(os.path.join(base_dir, "images"), exist_ok=True)
+    os.makedirs(os.path.join(base_dir, "labels"), exist_ok=True)
+
+    # Copy images and labels
+    vocdevkit_dir = os.path.join(base_dir, "VOCdevkit")
+
+    for file_name in os.listdir(vocdevkit_dir):
+        if file_name.endswith(".jpg"):
+            shutil.copy(os.path.join(vocdevkit_dir, file_name), os.path.join(base_dir, "images"))
+
+    for subdir, _, files in os.walk(os.path.join(vocdevkit_dir, "VOC2007/labels")):
+        for file_name in files:
+            shutil.copy(os.path.join(subdir, file_name), os.path.join(base_dir, "labels"))
+
+    for subdir, _, files in os.walk(os.path.join(vocdevkit_dir, "VOC2012/labels")):
+        for file_name in files:
+            shutil.copy(os.path.join(subdir, file_name), os.path.join(base_dir, "labels"))
+
+    # Move images and labels
+    for subdir, _, files in os.walk(os.path.join(vocdevkit_dir, "VOC2007/JPEGImages")):
+        for file_name in files:
+            shutil.move(os.path.join(subdir, file_name), os.path.join(base_dir, "images"))
+
+    for subdir, _, files in os.walk(os.path.join(vocdevkit_dir, "VOC2012/JPEGImages")):
+        for file_name in files:
+            shutil.move(os.path.join(subdir, file_name), os.path.join(base_dir, "images"))
+
+    # Remove VOCdevkit folder
+    shutil.rmtree(vocdevkit_dir)
+
+    # Move test.txt and train.txt to old_txt_files
+    # shutil.move(os.path.join(base_dir, "test.txt"), old_txt_files_dir)
+    # shutil.move(os.path.join(base_dir, "train.txt"), old_txt_files_dir)
+
+
+def update_paths_in_text_files(directory):
+    # This regular expression will match the 'VOCdevkit/.../JPEGImages/' part in the paths
+    pattern = re.compile(r'VOCdevkit\/.*\/JPEGImages\/')
+
+    # Iterate through all files in the directory
+    for file_name in os.listdir(directory):
+        # Process only text files
+        if file_name.endswith('.txt'):
+            file_path = os.path.join(directory, file_name)
+
+            # Read the contents of the file
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+            # Update the paths
+            with open(file_path, 'w') as file:
+                for line in lines:
+                    # Use re.sub() to replace the matching pattern with the new substring
+                    new_line = pattern.sub('images/', line)
+                    file.write(new_line)
+
+
 def write_history_to_csv(path, history: dict, model_name, deconv, loss):
     if deconv:
         deconv = 'deconv'
@@ -97,8 +277,15 @@ def write_history_to_csv_by_experiment_name(path, history: dict, experiment_name
     print(f'Results written to {output_filename}')
 
 
+def get_voc_ds(base_dir='data/obj-det'):
+    download_and_unzip_voc_ds(base_dir)
+    clean_voc_ds_text_files(base_dir)
+    update_paths_in_text_files(base_dir)
+    print('Done')
+
+
 def main():
-    download_and_unzip_div2k(downsample='X2')
+    pass
 
 
 if __name__ == '__main__':
