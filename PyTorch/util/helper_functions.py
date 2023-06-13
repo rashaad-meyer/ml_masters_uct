@@ -1,3 +1,4 @@
+import csv
 import os
 import re
 import zipfile
@@ -161,6 +162,8 @@ def download_tar(url, target_path):
 
 
 def clean_voc_ds_text_files(base_dir='data/obj-det'):
+    get_voc_labels_from_ds()
+
     # Concatenate the text files into train.txt
     with open(os.path.join(base_dir, "train.txt"), "w") as output_file:
         txt_files = ["2007_train.txt", "2007_val.txt"]
@@ -181,8 +184,8 @@ def clean_voc_ds_text_files(base_dir='data/obj-det'):
         if file_name.startswith("2007") or file_name.startswith("2012"):
             shutil.move(os.path.join(base_dir, file_name), old_txt_files_dir)
 
-    # Execute the generate_csv.py script
-    get_voc_labels_from_ds()
+    # Execute the generate_csv function
+    generate_csv(base_dir)
 
     # Create directories
     os.makedirs(os.path.join(base_dir, "images"), exist_ok=True)
@@ -216,30 +219,30 @@ def clean_voc_ds_text_files(base_dir='data/obj-det'):
     shutil.rmtree(vocdevkit_dir)
 
     # Move test.txt and train.txt to old_txt_files
-    # shutil.move(os.path.join(base_dir, "test.txt"), old_txt_files_dir)
-    # shutil.move(os.path.join(base_dir, "train.txt"), old_txt_files_dir)
+    shutil.move(os.path.join(base_dir, "test.txt"), old_txt_files_dir)
+    shutil.move(os.path.join(base_dir, "train.txt"), old_txt_files_dir)
 
 
-def update_paths_in_text_files(directory):
-    # This regular expression will match the 'VOCdevkit/.../JPEGImages/' part in the paths
-    pattern = re.compile(r'VOCdevkit\/.*\/JPEGImages\/')
+def generate_csv(base_dir):
+    read_train = open(f"{base_dir}/train.txt", "r").readlines()
 
-    # Iterate through all files in the directory
-    for file_name in os.listdir(directory):
-        # Process only text files
-        if file_name.endswith('.txt'):
-            file_path = os.path.join(directory, file_name)
+    with open(f"{base_dir}/train.csv", mode="w", newline="") as train_file:
+        for line in read_train:
+            image_file = line.split("/")[-1].replace("\n", "")
+            text_file = image_file.replace(".jpg", ".txt")
+            data = [image_file, text_file]
+            writer = csv.writer(train_file)
+            writer.writerow(data)
 
-            # Read the contents of the file
-            with open(file_path, 'r') as file:
-                lines = file.readlines()
+    read_train = open(f"{base_dir}/test.txt", "r").readlines()
 
-            # Update the paths
-            with open(file_path, 'w') as file:
-                for line in lines:
-                    # Use re.sub() to replace the matching pattern with the new substring
-                    new_line = pattern.sub('images/', line)
-                    file.write(new_line)
+    with open(f"{base_dir}/test.csv", mode="w", newline="") as train_file:
+        for line in read_train:
+            image_file = line.split("/")[-1].replace("\n", "")
+            text_file = image_file.replace(".jpg", ".txt")
+            data = [image_file, text_file]
+            writer = csv.writer(train_file)
+            writer.writerow(data)
 
 
 def write_history_to_csv(path, history: dict, model_name, deconv, loss):
@@ -280,12 +283,12 @@ def write_history_to_csv_by_experiment_name(path, history: dict, experiment_name
 def get_voc_ds(base_dir='data/obj-det'):
     download_and_unzip_voc_ds(base_dir)
     clean_voc_ds_text_files(base_dir)
-    update_paths_in_text_files(base_dir)
+    generate_csv(base_dir)
     print('Done')
 
 
 def main():
-    pass
+    return
 
 
 if __name__ == '__main__':
