@@ -280,7 +280,6 @@ def write_history_to_csv_by_experiment_name(path, history: dict, experiment_name
 def get_voc_ds(base_dir='data/obj-det'):
     download_and_unzip_voc_ds(base_dir)
     clean_voc_ds_text_files(base_dir)
-    generate_csv(base_dir)
     print('Done')
 
 
