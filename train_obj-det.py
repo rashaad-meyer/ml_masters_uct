@@ -61,7 +61,7 @@ transform = Compose([transforms.Resize((448, 448)), transforms.ToTensor(), ])
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dev', dest='dev', action='store_true')
+    parser.add_argument("--ds_len", default=-1, type=int, help="Length of dataset")
 
     args = parser.parse_args()
     return args
@@ -100,8 +100,8 @@ def main():
         load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
 
     ds_length = None
-    if args.dev:
-        ds_length = 32
+    if args.ds_len != -1:
+        ds_length = args.ds_len
 
     print('Loading train dataset...')
     train_dataset = VOCDataset(
