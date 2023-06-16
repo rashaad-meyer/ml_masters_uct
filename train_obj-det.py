@@ -137,7 +137,7 @@ def main():
 
     print('Staring training...')
     for epoch in range(EPOCHS):
-        print(f'Epoch {epoch: 5d}/{EPOCHS}:')
+        print(f'Epoch {epoch + 1: 5d}/{EPOCHS}:')
         train_fn(train_loader, model, optimizer, loss_fn)
 
         print('Computing mAP...')
