@@ -148,7 +148,7 @@ def main():
             pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
         )
         print(f"Train mAP: {mean_avg_prec}")
-        print('==================================================================')
+        print('==================================================================\n')
 
 
 if __name__ == "__main__":
