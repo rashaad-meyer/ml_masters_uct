@@ -97,7 +97,6 @@ def download_and_unzip_voc_ds(path='data/obj-det'):
         unzip_data(f"{file_path}.tar", path)
 
 
-
 def convert(size, box):
     dw = 1. / size[0]
     dh = 1. / size[1]
@@ -156,6 +155,22 @@ def download_tar(url, target_path):
     if response.status_code == 200:
         with open(target_path, 'wb') as f:
             f.write(response.raw.read())
+
+
+def is_obj_det_ds_downloaded(BASE_DIR):
+    obj_det_files = [
+        'images',
+        'labels',
+        'train.csv',
+        'test.csv',
+    ]
+    files_in_dir = os.listdir(BASE_DIR)
+
+    for file in obj_det_files:
+        if file not in files_in_dir:
+            return False
+
+    return True
 
 
 def clean_voc_ds_text_files(base_dir='data/obj-det'):
@@ -278,12 +293,16 @@ def write_history_to_csv_by_experiment_name(path, history: dict, experiment_name
 
 
 def get_voc_ds(base_dir='data/obj-det'):
-    download_and_unzip_voc_ds(base_dir)
-    clean_voc_ds_text_files(base_dir)
-    print('Done')
+    if not is_obj_det_ds_downloaded(base_dir):
+        download_and_unzip_voc_ds(base_dir)
+        clean_voc_ds_text_files(base_dir)
+        print('Dataset files downloaded and unzipped')
+    else:
+        print('Dataset files already downloaded')
 
 
 def main():
+    is_obj_det_ds_downloaded('data/obj-det')
     return
 
 
