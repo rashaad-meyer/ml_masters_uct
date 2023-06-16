@@ -241,8 +241,8 @@ def get_bboxes(
         threshold,
         pred_format="cells",
         box_format="midpoint",
-        device="cuda",
 ):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     all_pred_boxes = []
     all_true_boxes = []
 
