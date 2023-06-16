@@ -10,7 +10,7 @@ from PIL import Image
 
 class VOCDataset(torch.utils.data.Dataset):
     def __init__(
-            self, csv_file, img_dir, label_dir, S=7, B=2, C=20, transform=None,
+            self, csv_file, img_dir, label_dir, S=7, B=2, C=20, transform=None, ds_length=None
     ):
         self.annotations = pd.read_csv(csv_file)
         self.img_dir = img_dir
@@ -19,6 +19,9 @@ class VOCDataset(torch.utils.data.Dataset):
         self.S = S
         self.B = B
         self.C = C
+
+        if ds_length is not None:
+            self.annotations = self.annotations[:ds_length]
 
     def __len__(self):
         return len(self.annotations)

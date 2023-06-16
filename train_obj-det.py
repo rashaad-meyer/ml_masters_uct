@@ -2,6 +2,7 @@
 Main file for training Yolo model on Pascal VOC dataset
 
 """
+import argparse
 
 import torch
 import torchvision.transforms as transforms
@@ -21,6 +22,7 @@ from PyTorch.ObjectDetection.utils import (
     save_checkpoint,
     load_checkpoint,
 )
+import torch.utils.data as data_utils
 from PyTorch.ObjectDetection.loss import YoloLoss
 from PyTorch.util.helper_functions import get_voc_ds
 
@@ -28,11 +30,11 @@ seed = 123
 torch.manual_seed(seed)
 
 # Hyperparameters etc.
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 2e-5
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 32  # 64 in original paper, but I don't have that much vram, grad accum?
 WEIGHT_DECAY = 0
-EPOCHS = 10
+EPOCHS = 100
 NUM_WORKERS = 2
 PIN_MEMORY = True
 LOAD_MODEL = False
@@ -57,6 +59,14 @@ class Compose(object):
 transform = Compose([transforms.Resize((448, 448)), transforms.ToTensor(), ])
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dev', dest='dev', action='store_true')
+
+    args = parser.parse_args()
+    return args
+
+
 def train_fn(train_loader, model, optimizer, loss_fn):
     loop = tqdm(train_loader, leave=True)
     mean_loss = []
@@ -77,6 +87,7 @@ def train_fn(train_loader, model, optimizer, loss_fn):
 
 
 def main():
+    args = parse_args()
     get_voc_ds(BASE_DIR)
     print('Loading model...')
     model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
@@ -88,12 +99,17 @@ def main():
     if LOAD_MODEL:
         load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
 
+    ds_length = None
+    if args.dev:
+        ds_length = 32
+
     print('Loading train dataset...')
     train_dataset = VOCDataset(
         "data/obj-det/train.csv",
         transform=transform,
         img_dir=IMG_DIR,
         label_dir=LABEL_DIR,
+        ds_length=ds_length
     )
 
     print('Loading test dataset...')
