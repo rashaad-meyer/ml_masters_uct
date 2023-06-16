@@ -293,6 +293,8 @@ def write_history_to_csv_by_experiment_name(path, history: dict, experiment_name
 
 
 def get_voc_ds(base_dir='data/obj-det'):
+    os.makedirs(base_dir, exist_ok=True)
+
     if not is_obj_det_ds_downloaded(base_dir):
         download_and_unzip_voc_ds(base_dir)
         clean_voc_ds_text_files(base_dir)
