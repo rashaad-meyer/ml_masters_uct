@@ -36,6 +36,7 @@ IMG_SIZE = (448, 448)
 BASE_DIR = "data/obj-det"
 IMG_DIR = f"{BASE_DIR}/images"
 LABEL_DIR = f"{BASE_DIR}/labels"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class Compose(object):
@@ -131,7 +132,7 @@ def main():
                 S, B, C = 7, 2, 20
                 num_classes = S * S * (C + B * 5)
 
-                model = TwoLayerCNN(**config, num_classes=num_classes, img_size=IMG_SIZE)
+                model = TwoLayerCNN(**config, num_classes=num_classes, img_size=IMG_SIZE).to(DEVICE)
                 optimizer = optim.Adam(
                     model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
                 )
@@ -141,7 +142,7 @@ def main():
                 train_yolo(args, loss_fn, model, optimizer, train_loader)
 
     else:
-        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
         model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(DEVICE)
         optimizer = optim.Adam(
             model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
