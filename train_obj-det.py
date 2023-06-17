@@ -134,7 +134,7 @@ def main():
                 print('Loading model...')
                 model = TwoLayerCNN(**config, num_classes=num_classes, img_size=IMG_SIZE).to(DEVICE)
 
-                print('Loading optimizer')
+                print('Loading optimizer...')
                 optimizer = optim.Adam(
                     model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
                 )
