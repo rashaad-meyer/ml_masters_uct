@@ -157,11 +157,12 @@ def main():
         loss_fn = YoloLoss()
 
         print('Starting training...')
-        train_yolo(args, loss_fn, model, optimizer, train_loader)
+        train_yolo(args, loss_fn, model, optimizer, train_loader, False)
 
 
-def train_yolo(args, loss_fn, model, optimizer, train_loader):
-    wandb.watch(model, loss_fn, log="all", log_freq=10)
+def train_yolo(args, loss_fn, model, optimizer, train_loader, log=True):
+    if log:
+        wandb.watch(model, loss_fn, log="all", log_freq=10)
     compute_impulse_diffs(train_loader, 0, model)
 
     for epoch in range(args.epochs):
@@ -175,7 +176,8 @@ def train_yolo(args, loss_fn, model, optimizer, train_loader):
         mean_avg_prec = mean_average_precision(
             pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
         )
-        wandb.log({"epoch_loss": loss, "mAP": mean_avg_prec}, step=epoch)
+        if log:
+            wandb.log({"epoch_loss": loss, "mAP": mean_avg_prec}, step=epoch)
         compute_impulse_diffs(train_loader, epoch + 1, model)
 
         print(f"Train mAP: {mean_avg_prec}")
