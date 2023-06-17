@@ -7,7 +7,6 @@ import argparse
 import torch
 import torchvision.transforms as transforms
 import torch.optim as optim
-import torchvision.transforms.functional as FT
 import wandb
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -25,7 +24,6 @@ from PyTorch.ObjectDetection.utils import (
     save_checkpoint,
     load_checkpoint,
 )
-import torch.utils.data as data_utils
 from PyTorch.ObjectDetection.loss import YoloLoss
 from PyTorch.util.helper_functions import get_voc_ds
 from PyTorch.util.training_functions import compute_impulse_diffs
@@ -35,9 +33,6 @@ seed = 123
 torch.manual_seed(seed)
 
 IMG_SIZE = (448, 448)
-NUM_WORKERS = 2
-PIN_MEMORY = True
-
 BASE_DIR = "data/obj-det"
 IMG_DIR = f"{BASE_DIR}/images"
 LABEL_DIR = f"{BASE_DIR}/labels"
@@ -118,23 +113,10 @@ def main():
         "data/obj-det/test.csv", transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
     )
 
-    train_loader = DataLoader(
-        dataset=train_dataset,
-        batch_size=args.batch_size,
-        num_workers=NUM_WORKERS,
-        pin_memory=PIN_MEMORY,
-        shuffle=True,
-        drop_last=True,
-    )
+    train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=True)
 
-    test_loader = DataLoader(
-        dataset=test_dataset,
-        batch_size=args.batch_size,
-        num_workers=NUM_WORKERS,
-        pin_memory=PIN_MEMORY,
-        shuffle=True,
-        drop_last=True,
-    )
+    test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, shuffle=True)
+
     if args.multi:
         wandb.login()
 
