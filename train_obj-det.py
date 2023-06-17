@@ -113,8 +113,10 @@ def main():
         "data/obj-det/test.csv", transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
     )
 
+    print('Preparing train_loader')
     train_loader = DataLoader(dataset=train_dataset, batch_size=args.batch_size, shuffle=True)
 
+    print('Preparing train_loader')
     test_loader = DataLoader(dataset=test_dataset, batch_size=args.batch_size, shuffle=True)
 
     if args.multi:
