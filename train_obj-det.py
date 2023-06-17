@@ -129,8 +129,11 @@ def main():
             with wandb.init(project="YoloV1", config=hyperparams):
                 config = wandb.config
 
-                S, B, C = 7, 2, 20
+                S = 7
+                B = 2
+                C = 20
                 num_classes = S * S * (C + B * 5)
+
                 print('Loading model...')
                 model = TwoLayerCNN(**config, num_classes=num_classes, img_size=IMG_SIZE).to(DEVICE)
 
@@ -138,6 +141,8 @@ def main():
                 optimizer = optim.Adam(
                     model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay
                 )
+
+                print('Loading loss function...')
                 loss_fn = YoloLoss()
 
                 print('Starting training...')
