@@ -11,7 +11,7 @@ import wandb
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 
-from PyTorch.Models.CnnModules import TwoLayerCNN
+from PyTorch.Models.CnnModules import ObjDetCNN
 from PyTorch.ObjectDetection.model import Yolov1
 from PyTorch.ObjectDetection.dataset import VOCDataset
 from PyTorch.ObjectDetection.utils import (
@@ -135,7 +135,7 @@ def main():
                 num_classes = S * S * (C + B * 5)
 
                 print('Loading model...')
-                model = TwoLayerCNN(**config, num_classes=num_classes, img_size=IMG_SIZE).to(DEVICE)
+                model = ObjDetCNN(**config, num_classes=num_classes, img_size=IMG_SIZE).to(DEVICE)
 
                 print('Loading optimizer...')
                 optimizer = optim.Adam(
