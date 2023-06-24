@@ -62,12 +62,17 @@ def main():
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False):
-    lr_path, hr_path = helper.download_and_unzip_div2k(path)
+    lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
+    lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
 
     print('Preparing Dataloader...')
     random_crop = RandomCropIsr(IMG_SIZE[0])
-    data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop)
-    dataloader = DataLoader(data, batch_size=16, shuffle=True)
+
+    train_data = ImageSuperResDataset(lr_train_path, hr_train_path, transform=random_crop)
+    train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
+
+    val_data = ImageSuperResDataset(lr_val_path, hr_val_path, transform=random_crop)
+    val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
         model = SRCNN(deconv=deconv, bias=bias, first_elem_trainable=first_elem_trainable)
@@ -99,8 +104,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     model_file_name = f'{model_name}_{loss}_{"deconv" if deconv else "conv"}'
 
     print(f'Training for {num_epochs} epochs...')
-    history = train_regression_model(model, criterion, optimizer, dataloader, num_epochs=num_epochs,
-                                     name=model_file_name)
+    history = train_regression_model(model, criterion, optimizer, train_dataloader, val_dataloader,
+                                     num_epochs=num_epochs, name=model_file_name)
 
     helper.write_history_to_csv(path, history, model_name, deconv, loss)
 

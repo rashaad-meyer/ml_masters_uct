@@ -37,6 +37,9 @@ def main():
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
+        val_data = torchvision.datasets.CIFAR100('data', train=False, download=True, transform=transforms)
+        val_dataloader = DataLoader(val_data, batch_size=64, shuffle=False)
+
         for hyperparams in configs:
             with wandb.init(project="Cifar100-TwoLayerCNN-v2", config=hyperparams):
                 config = wandb.config
@@ -45,7 +48,8 @@ def main():
                 criterion = nn.CrossEntropyLoss()
                 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-                history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=10)
+                history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
+                                                     num_epochs=10)
 
     else:
         transforms = T.Compose([T.ToTensor()])
