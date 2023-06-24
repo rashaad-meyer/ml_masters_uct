@@ -26,16 +26,19 @@ def unzip_data(filename, path):
     os.remove(filename)
 
 
-def download_div2k(path, downsample):
-    hr_url = 'https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_HR.zip'
-    lr_url = f"https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_train_LR_bicubic_{downsample}.zip"
+def download_div2k(path, downsample, dataset_type='train'):
+    if dataset_type not in ['train', 'valid']:
+        raise ValueError("dataset_type should be either 'train' or 'valid'")
+
+    hr_url = f'https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_{dataset_type}_HR.zip'
+    lr_url = f"https://data.vision.ee.ethz.ch/cvl/DIV2K/DIV2K_{dataset_type}_LR_bicubic_{downsample}.zip"
 
     if not os.path.exists(path):
         os.makedirs(path)
         print(f"Create new path: {path}")
 
-    lr_filename = f"{path}/DIV2K_train_LR_bicubic_{downsample}.zip"
-    hr_filename = f"{path}/DIV2K_train_HR.zip"
+    lr_filename = f"{path}/DIV2K_{dataset_type}_LR_bicubic_{downsample}.zip"
+    hr_filename = f"{path}/DIV2K_{dataset_type}_HR.zip"
 
     if not os.path.exists(lr_filename):
         print(f'Downloading {lr_filename}...')
@@ -52,27 +55,27 @@ def download_div2k(path, downsample):
     return lr_filename, hr_filename
 
 
-def download_and_unzip_div2k(path='data', downsample='X2'):
-    lr_path = f'{path}/DIV2K_train_LR_bicubic/{downsample}'
-    hr_path = f'{path}/DIV2K_train_HR'
+def download_and_unzip_div2k(path='data', downsample='X2', dataset_type='train'):
+    lr_path = f'{path}/DIV2K_{dataset_type}_LR_bicubic/{downsample}'
+    hr_path = f'{path}/DIV2K_{dataset_type}_HR'
 
     if os.path.exists(lr_path) and os.path.exists(hr_path):
-        print('HR and LR data are both downloaded and unzipped already!')
+        print(f'{dataset_type.upper()} HR and LR data are both downloaded and unzipped already!')
         return lr_path, hr_path
     else:
-        lr_filename, hr_filename = download_div2k(path, downsample)
+        lr_filename, hr_filename = download_div2k(path, downsample, dataset_type)
 
     if not os.path.exists(lr_path):
-        print('Unzipping LR zip...')
+        print(f'Unzipping {dataset_type.upper()} LR zip...')
         unzip_data(lr_filename, path)
     else:
-        print('LR already unzipped!')
+        print(f'{dataset_type.upper()} LR already unzipped!')
 
     if not os.path.exists(hr_path):
-        print('Unzipping HR zip...')
+        print(f'Unzipping {dataset_type.upper()} HR zip...')
         unzip_data(hr_filename, path)
     else:
-        print('HR already unzipped!')
+        print(f'{dataset_type.upper()} HR already unzipped!')
 
     return lr_path, hr_path
 

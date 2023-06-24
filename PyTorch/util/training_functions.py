@@ -8,28 +8,33 @@ from datetime import datetime
 from PyTorch.util.impulse_response import impulse_response_of_model, save_tensor_images, check_filter_diff
 
 
-def train_classification_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3):
+def train_classification_model(model: nn.Module, criterion, optimizer, train_dataloader, valid_dataloader=None,
+                               num_epochs=3, name='model'):
     """
         Trains NN classifier on classification dataset
         :param model: The NN model that you would like to train must be of type nn.Module
         :param criterion: The loss function that you would like to use
         :param optimizer: The optimizer that will optimize the NN
-        :param dataloader: Dataloader that loads data from classification dataset
+        :param train_dataloader: Dataloader that loads training data from classification dataset
+        :param valid_dataloader: Dataloader that loads validation data from classification dataset
         :param num_epochs: Number of times you want to train the data over
-        :return: A dictionary containing training loss and accuracy for each epoch
+        :param name: name of the model
+        :return: A dictionary containing training and validation loss and accuracy for each epoch
         and list of the kernels after each epoch if the model is a deconv layer
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     criterion = criterion.to(device)
-    if num_epochs > 20:
-        print_epoch_every = num_epochs // 20
-    else:
-        print_epoch_every = 1
-    history = {'loss': [], 'accuracy': [], 'time': []}
+    history = {'train_loss': [], 'train_accuracy': [], 'valid_loss': [], 'valid_accuracy': [], 'time': []}
 
-    wandb.watch(model, criterion, log="all", log_freq=10)
-    compute_impulse_diffs(dataloader, 0, model)
+    start_time = datetime.now().strftime("%m-%d_%H-%M")
+    experiment_name = f'{start_time}_{name}'
+    best_model_path = None
+
+    try:
+        wandb.watch(model, criterion, log="all", log_freq=10)
+    except:
+        print('Something went wrong with wandb')
 
     for epoch in range(num_epochs):
         print(f'Epoch {epoch + 1:2d}/{num_epochs}')
@@ -39,7 +44,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
         running_correct = 0
         data_len = 0
 
-        for X, labels in tqdm(dataloader):
+        for X, labels in tqdm(train_dataloader):
             X = X.to(device)
             labels = labels.to(device)
 
@@ -56,58 +61,102 @@ def train_classification_model(model: nn.Module, criterion, optimizer, dataloade
             running_correct += torch.sum(preds == labels.data).item()
             data_len += X.size(0)
 
-        epoch_loss = running_loss
+        epoch_loss = running_loss / data_len
         epoch_acc = running_correct / data_len
 
-        history['loss'].append(epoch_loss)
-        history['accuracy'].append(epoch_acc)
+        history['train_loss'].append(epoch_loss)
+        history['train_accuracy'].append(epoch_acc)
 
-        wandb.log({"epoch_loss": epoch_loss, "accuracy": epoch_acc}, step=epoch)
+        try:
+            wandb.log({"train_epoch_loss": epoch_loss, "train_accuracy": epoch_acc}, step=epoch)
+        except:
+            print('Something went wrong with wandb')
 
-        compute_impulse_diffs(dataloader, epoch+1, model)
+        print(f'Train Loss: {epoch_loss:.4f}, Train Acc: {epoch_acc:.3f}')
+
+        if valid_dataloader:
+            model.eval()
+            valid_running_loss = 0.0
+            valid_running_correct = 0
+            valid_data_len = 0
+
+            for X, labels in valid_dataloader:
+                X = X.to(device)
+                labels = labels.to(device)
+
+                with torch.no_grad():
+                    outputs = model(X)
+                    loss = criterion(outputs, labels)
+                    _, preds = torch.max(outputs, 1)
+
+                valid_running_loss += loss.item()
+                valid_running_correct += torch.sum(preds == labels.data).item()
+                valid_data_len += X.size(0)
+
+            valid_epoch_loss = valid_running_loss / valid_data_len
+            valid_epoch_acc = valid_running_correct / valid_data_len
+
+            history['valid_loss'].append(valid_epoch_loss)
+            history['valid_accuracy'].append(valid_epoch_acc)
+
+            print(f'Validation Loss: {valid_epoch_loss:.4f}, Validation Acc: {valid_epoch_acc:.3f}')
+
+            try:
+                wandb.log({"valid_epoch_loss": valid_epoch_loss, "valid_accuracy": valid_epoch_acc}, step=epoch)
+            except:
+                print('Something went wrong with wandb')
+
+        if epoch == 0 or min(history['train_loss'][:-1]) > history['train_loss'][-1]:
+            best_model_path = save_model(model, experiment_name)
 
         now = datetime.now()
         dt_string = now.strftime("%m-%d_%H-%M")
         history['time'].append(dt_string)
 
-        if (epoch + 1) % print_epoch_every == 0:
-            print('Loss: {:.4f}, Acc: {:.3f}'.format(epoch_loss, epoch_acc))
+    try:
+        if best_model_path is not None:
+            wandb.save(best_model_path)
+    except:
+        print('Something went wrong when saving best model')
 
-    print('======================================================================================================\n')
+    print('=' * 100, end='\n\n')
 
     return history
 
 
-def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, num_epochs=3, name='model'):
+def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloader, valid_dataloader=None,
+                           num_epochs=3, name='model'):
     """
         Trains NN regression on datasets for deblurring and super image resolution
         :param model: The NN model that you would like to train must be of type nn.Module
         :param criterion: The loss function that you would like to use
         :param optimizer: The optimizer that will optimize the NN
-        :param dataloader: Dataloader that loads data from classification dataset
+        :param train_dataloader: Dataloader that loads training data from dataset
+        :param valid_dataloader: Dataloader that loads validation data from dataset
         :param num_epochs: Number of times you want to train the data over
         :param name: name of model that you will use
-        :return: A dictionary containing training loss for each epoch
+        :return: A dictionary containing training and validation loss for each epoch
         and list of the kernels after each epoch if the model is a deconv layer
     """
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     criterion = criterion.to(device)
-    if num_epochs > 200:
-        print_epoch_every = num_epochs // 20
-    else:
-        print_epoch_every = 1
-    history = {'loss': [], 'time': []}
+
+    history = {'train_loss': [], 'valid_loss': [], 'time': []}
+    best_model_path = None
 
     start_time = datetime.now().strftime("%m-%d_%H-%M")
     experiment_name = f'{start_time}_{name}'
 
-    wandb.watch(model, criterion, log="all", log_freq=10)
+    try:
+        wandb.watch(model, criterion, log="all", log_freq=10)
+    except:
+        print('Something went wrong with wandb')
 
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-        for X, y in tqdm(dataloader):
+        for X, y in tqdm(train_dataloader):
             X = X.to(device)
             y = y.to(device)
 
@@ -121,33 +170,64 @@ def train_regression_model(model: nn.Module, criterion, optimizer, dataloader, n
 
             running_loss += loss.item()
 
-        history['loss'].append(running_loss)
+        history['train_loss'].append(running_loss / len(train_dataloader))
 
-        now = datetime.now()
-        dt_string = now.strftime("%m-%d_%H-%M")
-        history['time'].append(dt_string)
+        try:
+            wandb.log({"train_epoch_loss": running_loss / len(train_dataloader)}, step=epoch)
+        except:
+            print('Something went wrong with wandb')
 
-        wandb.log({"epoch_loss": running_loss}, step=epoch)
+        print(f'Epoch {epoch + 1:04d}')
+        print(f'train loss: {running_loss / len(train_dataloader):.5f}')
 
-        if (epoch + 1) % print_epoch_every == 0:
-            print('Epoch {:04d} loss: {:.5f}'.format(epoch + 1, running_loss))
+        if valid_dataloader:
+            model.eval()
+            valid_running_loss = 0.0
+            for X, y in valid_dataloader:
+                X = X.to(device)
+                y = y.to(device)
 
-        if epoch == 0 or min(history['loss'][:-1]) > history['loss'][-1]:
-            save_model(model, experiment_name, epoch, running_loss)
+                with torch.no_grad():
+                    outputs = model(X)
+                    loss = criterion(outputs, y)
 
-    wandb.log({"best_loss": min(history['loss'])})
+                valid_running_loss += loss.item()
+
+            try:
+                wandb.log({"valid_epoch_loss": valid_running_loss / len(valid_dataloader)}, step=epoch)
+            except:
+                print('Something went wrong with wandb')
+
+            history['valid_loss'].append(valid_running_loss / len(valid_dataloader))
+            print(f'valid loss: {valid_running_loss / len(valid_dataloader):.5f}')
+
+        print('-' * 100)
+
+        if epoch == 0 or min(history['train_loss'][:-1]) > history['train_loss'][-1]:
+            best_model_path = save_model(model, experiment_name)
+
+    try:
+        wandb.log({"best_train_loss": min(history['train_loss'])})
+        if best_model_path:
+            wandb.save(best_model_path)
+
+        wandb.log({"best_valid_loss": min(history['valid_loss'])})
+    except:
+        print('Something went wrong when saving best model or best losses')
 
     return history
 
 
-def save_model(model, name, epoch, loss, folder='saved_models'):
+def save_model(model, name, folder='saved_models'):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    file_name = f'{folder}/{name}'
+    file_name = f'{folder}/{name}.pt'
 
-    torch.save({'epoch': epoch, 'model_state_dict': model.state_dict(), 'loss': loss, }, file_name)
+    torch.save(model.state_dict(), file_name)
     print(f'Model saved at {file_name}')
+
+    return file_name
 
 
 def compute_impulse_diffs(dataloader, epoch, model):
