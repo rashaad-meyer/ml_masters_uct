@@ -107,8 +107,6 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     history = train_regression_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                      num_epochs=num_epochs, name=model_file_name)
 
-    helper.write_history_to_csv(path, history, model_name, deconv, loss)
-
     print('======================================================================================================\n')
 
 

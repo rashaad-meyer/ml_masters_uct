@@ -170,15 +170,15 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
 
             running_loss += loss.item()
 
-        history['train_loss'].append(running_loss / len(train_dataloader))
+        history['train_loss'].append(running_loss)
 
         try:
-            wandb.log({"train_epoch_loss": running_loss / len(train_dataloader)}, step=epoch)
+            wandb.log({"train_epoch_loss": running_loss}, step=epoch)
         except:
             print('Something went wrong with wandb')
 
         print(f'Epoch {epoch + 1:04d}')
-        print(f'train loss: {running_loss / len(train_dataloader):.5f}')
+        print(f'train loss: {running_loss:.5f}')
 
         if valid_dataloader:
             model.eval()
@@ -194,12 +194,12 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
                 valid_running_loss += loss.item()
 
             try:
-                wandb.log({"valid_epoch_loss": valid_running_loss / len(valid_dataloader)}, step=epoch)
+                wandb.log({"valid_epoch_loss": valid_running_loss}, step=epoch)
             except:
                 print('Something went wrong with wandb')
 
-            history['valid_loss'].append(valid_running_loss / len(valid_dataloader))
-            print(f'valid loss: {valid_running_loss / len(valid_dataloader):.5f}')
+            history['valid_loss'].append(valid_running_loss)
+            print(f'valid loss: {valid_running_loss:.5f}')
 
         print('-' * 100)
 
