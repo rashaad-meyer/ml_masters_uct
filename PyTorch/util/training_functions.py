@@ -210,6 +210,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
         wandb.log({"best_train_loss": min(history['train_loss'])})
         if best_model_path:
             wandb.save(best_model_path)
+            print('Model saved to wandb')
 
         wandb.log({"best_valid_loss": min(history['valid_loss'])})
     except:
