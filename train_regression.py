@@ -68,14 +68,15 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print('Preparing Dataloader...')
     random_crop = RandomCropIsr(IMG_SIZE[0])
 
-    train_data = ImageSuperResDataset(lr_train_path, hr_train_path, transform=random_crop)
+    train_data = ImageSuperResDataset(lr_train_path, hr_train_path, rgb=True, transform=random_crop)
     train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
 
     val_data = ImageSuperResDataset(lr_val_path, hr_val_path, transform=random_crop)
     val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
-        model = SRCNN(deconv=deconv, bias=bias, first_elem_trainable=first_elem_trainable)
+        model = SRCNN(num_channels=3, channels_1=128, channels_2=64, deconv=deconv, bias=bias,
+                      first_elem_trainable=first_elem_trainable)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
