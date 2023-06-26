@@ -56,7 +56,7 @@ def main():
         experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
 
     for experiment in experiments:
-        with wandb.init(project="SuperRes-3LayerCNN", config=experiment):
+        with wandb.init(project="SuperRes-3LayerCNN-RGB", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
