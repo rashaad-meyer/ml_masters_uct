@@ -8,3 +8,5 @@ pandas
 pytest
 wandb
 keras
+datasets
+super-image
