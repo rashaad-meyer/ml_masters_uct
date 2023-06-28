@@ -7,6 +7,12 @@ class SRCNN(nn.Module):
                  use_pixel_shuffle=True, bias=True, first_elem_trainable=False):
         super(SRCNN, self).__init__()
 
+        if deconv:
+            self.conv1 = Deconv2D(num_channels, channels_1, (9, 9), bias=bias,
+                                  first_elem_trainable=first_elem_trainable)
+        else:
+            self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=9, padding=4)
+
         self.conv2 = nn.Conv2d(channels_1, channels_2, kernel_size=1, padding=0)
 
         if use_pixel_shuffle:
@@ -17,11 +23,6 @@ class SRCNN(nn.Module):
             self.conv3 = nn.Conv2d(channels_2, num_channels, kernel_size=5, padding=2)
 
         self.relu = nn.ReLU()
-        if deconv:
-            self.conv1 = Deconv2D(num_channels, channels_1, (9, 9), bias=bias,
-                                  first_elem_trainable=first_elem_trainable)
-        else:
-            self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=9, padding=4)
 
     def forward(self, x):
         x = self.relu(self.conv1(x))
