@@ -41,7 +41,7 @@ def main():
         val_dataloader = DataLoader(val_data, batch_size=64, shuffle=False)
 
         for hyperparams in configs:
-            with wandb.init(project="Cifar100-TwoLayerCNN-v2", config=hyperparams):
+            with wandb.init(project="Cifar100-TwoLayerCNN-v3", config=hyperparams):
                 config = wandb.config
                 model = TwoLayerCNN(**config)
 
