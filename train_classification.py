@@ -41,7 +41,7 @@ def main():
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
-        val_data = torchvision.datasets.CIFAR100('data', train=False, download=True, transform=transforms)
+        val_data = torchvision.datasets.CIFAR100('data', train=False, download=True, transform=T.ToTensor())
         val_dataloader = DataLoader(val_data, batch_size=64, shuffle=False)
 
         for hyperparams in configs:
