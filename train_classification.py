@@ -38,16 +38,18 @@ def main():
             T.ToTensor(),
         ])
 
-        training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
+        training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
-        val_data = torchvision.datasets.CIFAR100('data', train=False, download=True, transform=T.ToTensor())
+        val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
         val_dataloader = DataLoader(val_data, batch_size=64, shuffle=False)
 
+        num_classes = len(training_data.classes)
+
         for hyperparams in configs:
-            with wandb.init(project="Cifar100-TwoLayerCNN-v3", config=hyperparams):
+            with wandb.init(project="Cifar10-TwoLayerCNN-v3", config=hyperparams):
                 config = wandb.config
-                model = TwoLayerCNN(**config)
+                model = TwoLayerCNN(**config, num_classes=num_classes)
 
                 criterion = nn.CrossEntropyLoss()
                 optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.0005)
