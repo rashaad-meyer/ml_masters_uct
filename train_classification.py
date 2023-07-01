@@ -32,7 +32,11 @@ def main():
 
         configs = read_json_objects('experiment_csv/classification.txt')
 
-        transforms = T.Compose([T.ToTensor()])
+        transforms = T.Compose([
+            T.RandomHorizontalFlip(),
+            T.RandomCrop(32, padding=4),
+            T.ToTensor(),
+        ])
 
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
@@ -46,13 +50,18 @@ def main():
                 model = TwoLayerCNN(**config)
 
                 criterion = nn.CrossEntropyLoss()
-                optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+                optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.0005)
 
                 history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                                      num_epochs=10)
 
     else:
-        transforms = T.Compose([T.ToTensor()])
+        transforms = T.Compose([
+            T.RandomHorizontalFlip(),
+            T.RandomCrop(32, padding=4),
+            T.ToTensor(),
+        ])
+
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
         train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
 
