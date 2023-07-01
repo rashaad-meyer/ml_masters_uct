@@ -39,10 +39,10 @@ def main():
         ])
 
         training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
-        train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
+        train_dataloader = DataLoader(training_data, batch_size=32, shuffle=False)
 
         val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
-        val_dataloader = DataLoader(val_data, batch_size=64, shuffle=False)
+        val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
 
         num_classes = len(training_data.classes)
 
@@ -52,7 +52,7 @@ def main():
                 model = TwoLayerCNN(**config, num_classes=num_classes)
 
                 criterion = nn.CrossEntropyLoss()
-                optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.0005)
+                optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.001)
 
                 history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                                      num_epochs=10)
