@@ -1,6 +1,7 @@
 import torch
 import wandb
 import torch.nn as nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 import os
 from datetime import datetime
@@ -141,6 +142,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     criterion = criterion.to(device)
+    scheduler = ReduceLROnPlateau(optimizer, 'min')
 
     history = {'train_loss': [], 'valid_loss': [], 'time': []}
     best_model_path = None
@@ -200,6 +202,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
 
             history['valid_loss'].append(valid_running_loss / len(valid_dataloader))
             print(f'valid loss: {valid_running_loss / len(valid_dataloader):.5f}')
+            scheduler.step(history['valid_loss'][-1])
 
         print('-' * 100)
 
