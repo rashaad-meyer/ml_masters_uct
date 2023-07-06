@@ -75,7 +75,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
-        model = SRCNN(num_channels=3, channels_1=256, channels_2=128, deconv=deconv, bias=bias,
+        model = SRCNN(num_channels=3, channels_1=1024, channels_2=512, deconv=deconv, bias=bias,
                       first_elem_trainable=first_elem_trainable)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
