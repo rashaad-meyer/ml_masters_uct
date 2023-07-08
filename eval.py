@@ -1,20 +1,21 @@
 import argparse
 
 import pandas as pd
+import torch
 
 from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from PyTorch.Models.ResNet import ResNet
-from PyTorch.Models.SRCNN import SRCNN
+from PyTorch.Models.SRCNN import SRCNN, BicubicInterpolation
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
 
 import PyTorch.util.helper_functions as helper
 from PyTorch.util.data_augmentation import RandomCropIsr
 from PyTorch.util.evaluation_functions import load_weights, evaluate_regression_model
 
-from PyTorch.Datasets.Datasets import ImageSuperResDataset
+from PyTorch.Datasets.Datasets import Div2k, IsrEvalDatasets
 
 IMG_SIZE = (96, 96)
 
@@ -57,7 +58,7 @@ def run_evaluation(lr_path, hr_path, model_path, loss):
     deconv = True if model_name_split[-1] == 'deconv' else False
 
     random_crop = RandomCropIsr(IMG_SIZE[0], train=False)
-    data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop)
+    data = Div2k(lr_path, hr_path, transform=random_crop)
     dataloader = DataLoader(data, batch_size=16, shuffle=False)
 
     if model_name == 'srcnn':
@@ -85,5 +86,40 @@ def run_evaluation(lr_path, hr_path, model_path, loss):
     evaluate_regression_model(model, criterion, dataloader, name=model_file_name)
 
 
+def eval_on_ds(model, ds_name='Set5', rgb=False):
+    ds_path = helper.download_and_unzip_sr_ds(ds_name=ds_name)
+    data = IsrEvalDatasets(ds_path, rgb=rgb)
+    dataloader = DataLoader(data, batch_size=1, shuffle=False)
+
+    running_loss = {
+        'L1': 0.0,
+        'MSE': 0.0,
+    }
+    loss_fns = {
+        'L1': nn.L1Loss(),
+        'MSE': nn.MSELoss(),
+    }
+    for x, y in dataloader:
+
+        with torch.no_grad():
+            y_pred = model(x)
+
+        for loss_name, loss_fn in loss_fns.items():
+            running_loss[loss_name] += loss_fn(y_pred, y).item() / len(dataloader)
+
+    return running_loss
+
+
 if __name__ == '__main__':
-    main()
+    model = SRCNN()
+    running_losses = eval_on_ds(model, 'Set5')
+
+    print('SRCNN')
+    print(running_losses)
+    print('===========================================================')
+
+    model = BicubicInterpolation()
+    running_losses = eval_on_ds(model, 'Set5')
+    print('Bicubic')
+    print(running_losses)
+    print('===========================================================')

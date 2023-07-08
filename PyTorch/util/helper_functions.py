@@ -100,6 +100,31 @@ def download_and_unzip_voc_ds(path='data/obj-det'):
         unzip_data(f"{file_path}.tar", path)
 
 
+def download_and_unzip_sr_ds(path='data/sr', ds_name='Set5'):
+    links = {
+        'Set5': 'https://uofi.box.com/shared/static/kfahv87nfe8ax910l85dksyl2q212voc.zip',
+        'Set14': 'https://uofi.box.com/shared/static/igsnfieh4lz68l926l8xbklwsnnk8we9.zip',
+        'BSD100': 'https://uofi.box.com/shared/static/qgctsplb8txrksm9to9x01zfa4m61ngq.zip'
+    }
+    link = links[ds_name]
+    os.makedirs(path, exist_ok=True)
+    file_path = f'{path}/{ds_name}'
+
+    if not os.path.exists(file_path):
+        print(f'Downloading {ds_name}...')
+        download_tar(link, f"{file_path}.zip")
+
+        print(f'Unzipping {file_path}.zip')
+        if ds_name == 'BSD100':
+            unzip_data(f"{file_path}.zip", file_path)
+        else:
+            unzip_data(f"{file_path}.zip", path)
+
+    else:
+        print(f'Files found for {ds_name}')
+    return file_path
+
+
 def convert(size, box):
     dw = 1. / size[0]
     dh = 1. / size[1]
@@ -307,7 +332,9 @@ def get_voc_ds(base_dir='data/obj-det'):
 
 
 def main():
-    is_obj_det_ds_downloaded('data/obj-det')
+    download_and_unzip_sr_ds(ds_name='set5')
+    download_and_unzip_sr_ds(ds_name='set14')
+    download_and_unzip_sr_ds(ds_name='bsd100')
     return
 
 

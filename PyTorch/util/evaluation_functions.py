@@ -37,6 +37,6 @@ def load_weights(model, model_name, folder='saved_models'):
     model_path = f'{folder}/{model_name}'
 
     checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint)
 
     return model

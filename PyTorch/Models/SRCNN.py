@@ -1,4 +1,5 @@
 import torch.nn as nn
+from torchvision import transforms as T
 from PyTorch.Models.DeconvModels import Deconv2D
 
 
@@ -29,4 +30,15 @@ class SRCNN(nn.Module):
         x = self.relu(self.conv2(x))
         x = self.conv3(x)
         x = self.pixel_shuffle(x)
+        return x
+
+
+class BicubicInterpolation(nn.Module):
+    def __init__(self):
+        super(BicubicInterpolation, self).__init__()
+
+    def forward(self, x):
+        resize = T.Resize((int(x.size(-2) * 2), int(x.size(-1) * 2)),
+                          interpolation=T.InterpolationMode.BICUBIC)
+        x = resize(x)
         return x

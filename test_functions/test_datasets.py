@@ -1,4 +1,4 @@
-from PyTorch.Datasets.Datasets import ImageSuperResDataset
+from PyTorch.Datasets.Datasets import Div2k
 from PyTorch.util.data_augmentation import RandomCropIsr
 from torch.utils.data import DataLoader
 
@@ -9,7 +9,7 @@ def test_isr_data():
 
     random_crop = RandomCropIsr(96)
 
-    data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop, ds_length=80)
+    data = Div2k(lr_path, hr_path, transform=random_crop, ds_length=80)
     dataloader = DataLoader(data, batch_size=16, shuffle=True)
 
     x_batch, y_batch = next(iter(dataloader))

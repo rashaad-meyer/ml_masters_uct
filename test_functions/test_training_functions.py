@@ -5,7 +5,7 @@ import torchvision.transforms as T
 from torch import optim
 from torch.utils.data import DataLoader
 
-from PyTorch.Datasets.Datasets import ImageSuperResDataset
+from PyTorch.Datasets.Datasets import Div2k
 import PyTorch.util.helper_functions as helper
 from PyTorch.Models.CnnModules import TwoLayerCNN
 from PyTorch.Models.SRCNN import SRCNN
@@ -38,7 +38,7 @@ def test_train_regression():
     IMG_SIZE = (96, 96)
     lr_path, hr_path = helper.download_and_unzip_div2k('data')
     random_crop = RandomCropIsr(IMG_SIZE[0])
-    data = ImageSuperResDataset(lr_path, hr_path, transform=random_crop, ds_length=100)
+    data = Div2k(lr_path, hr_path, transform=random_crop, ds_length=100)
 
     train_dataloader = DataLoader(data, batch_size=16, shuffle=True)
     val_dataloader = DataLoader(data, batch_size=16, shuffle=True)
