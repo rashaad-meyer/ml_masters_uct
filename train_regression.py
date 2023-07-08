@@ -56,7 +56,7 @@ def main():
         experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
 
     for experiment in experiments:
-        with wandb.init(project="SuperRes-3LayerCNN-RGB", config=experiment):
+        with wandb.init(project="SuperRes-3LayerCNN-v2", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
@@ -68,14 +68,14 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print('Preparing Dataloader...')
     random_crop = RandomCropIsr(IMG_SIZE[0])
 
-    train_data = Div2k(lr_train_path, hr_train_path, rgb=True, transform=random_crop)
+    train_data = Div2k(lr_train_path, hr_train_path, rgb=False, transform=random_crop)
     train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
 
-    val_data = Div2k(lr_val_path, hr_val_path, rgb=True, transform=random_crop)
+    val_data = Div2k(lr_val_path, hr_val_path, rgb=False, transform=random_crop)
     val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
-        model = SRCNN(num_channels=3, channels_1=1024, channels_2=512, deconv=deconv, bias=bias,
+        model = SRCNN(num_channels=1, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
                       first_elem_trainable=first_elem_trainable)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
