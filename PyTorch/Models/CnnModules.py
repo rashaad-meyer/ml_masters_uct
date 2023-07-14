@@ -26,6 +26,7 @@ class TwoLayerCNN(nn.Module):
 
         self.relu = nn.ReLU()
         self.flatten = nn.Flatten()
+        self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         x = self.layer1(x)
@@ -37,6 +38,7 @@ class TwoLayerCNN(nn.Module):
         x = self.relu(x)
 
         x = self.flatten(x)
+        x = self.dropout(x)
         x = self.fc1(x)
         return x
 
