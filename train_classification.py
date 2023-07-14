@@ -33,8 +33,8 @@ def main():
         configs = read_json_objects('experiment_csv/classification.txt')
 
         transforms = T.Compose([
-            T.RandomHorizontalFlip(),
-            T.RandomCrop(32, padding=4),
+            # T.RandomHorizontalFlip(),
+            # T.RandomCrop(32, padding=4),
             T.ToTensor(),
         ])
 
@@ -47,12 +47,12 @@ def main():
         num_classes = len(training_data.classes)
 
         for hyperparams in configs:
-            with wandb.init(project="Cifar10-TwoLayerCNN-v3", config=hyperparams):
+            with wandb.init(project="Cifar10-TwoLayerCNN-exp", config=hyperparams):
                 config = wandb.config
                 model = TwoLayerCNN(**config, num_classes=num_classes)
 
                 criterion = nn.CrossEntropyLoss()
-                optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=0.001)
+                optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
                 history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                                      num_epochs=10)
