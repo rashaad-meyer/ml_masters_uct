@@ -33,8 +33,7 @@ def evaluate_regression_model(model: nn.Module, criterion, dataloader, name='mod
     return running_loss
 
 
-def load_weights(model, model_name, folder='saved_models'):
-    model_path = f'{folder}/{model_name}'
+def load_weights(model, model_path):
 
     checkpoint = torch.load(model_path)
     model.load_state_dict(checkpoint)
