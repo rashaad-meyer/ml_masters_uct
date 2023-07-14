@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 import torch
 
+import wandb
 from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -49,7 +50,6 @@ def main():
         run_evaluation(lr_path, hr_path, experiment['model_path'], args.loss)
 
 
-# BigNoob
 def run_evaluation(lr_path, hr_path, model_path, loss):
     model_path, model_file_name = model_path.split('/')
     model_name_split = model_file_name.split('_')
@@ -81,14 +81,34 @@ def run_evaluation(lr_path, hr_path, model_path, loss):
         print('Loss function specified not supported')
         return
 
-    model = load_weights(model, model_file_name, model_path)
+    model = load_weights(model, f'{model_path}/{model_file_name}')
 
     evaluate_regression_model(model, criterion, dataloader, name=model_file_name)
 
 
+def super_resolve_patches(input_images, model, patch_height, patch_width, scale):
+    batch_size, channels, height, width = input_images.shape
+
+    # Reshape images into patches
+    patches = input_images.unfold(2, patch_height, patch_height).unfold(3, patch_width, patch_width)
+    patches = patches.contiguous().view(-1, channels, patch_height, patch_width)
+
+    # Pass patches through model
+    output_patches = model(patches)
+
+    # Reshape output patches back into images
+    output_images = output_patches.view(batch_size, channels, height // patch_height, width // patch_width,
+                                        scale * patch_height, scale * patch_width)
+    output_images = output_images.permute(0, 1, 2, 4, 3, 5).contiguous().view(batch_size, channels, scale * height,
+                                                                              scale * width)
+
+    return output_images
+
+
 def eval_on_ds(model, ds_name='Set5', rgb=False):
+    random_crop = RandomCropIsr(IMG_SIZE[0], train=False)
     ds_path = helper.download_and_unzip_sr_ds(ds_name=ds_name)
-    data = IsrEvalDatasets(ds_path, rgb=rgb)
+    data = IsrEvalDatasets(ds_path, rgb=rgb, transform=random_crop)
     dataloader = DataLoader(data, batch_size=1, shuffle=False)
 
     running_loss = {
@@ -110,16 +130,48 @@ def eval_on_ds(model, ds_name='Set5', rgb=False):
     return running_loss
 
 
-if __name__ == '__main__':
-    model = SRCNN()
-    running_losses = eval_on_ds(model, 'Set5')
+def download_model_from_wandb(run_path="viibrem/SuperRes-3LayerCNN-v2/8bb45qep"):
+    api = wandb.Api()
+
+    # Retrieve the run
+    run = api.run(run_path)
+
+    file_name = None
+
+    # get file names
+    files = run.files()
+
+    for f in files:
+        if f.name.endswith('.pt'):
+            file_name = f.name
+            break
+
+    # Download the file
+    if file_name is not None:
+        file = run.file(file_name)
+        file.download(replace=True)
+        return file_name
+    else:
+        print('Pytorch model was not found in run')
+        return None
+
+
+def eval_model(model):
+    running_losses = eval_on_ds(model, 'BSD100')
 
     print('SRCNN')
     print(running_losses)
     print('===========================================================')
 
-    model = BicubicInterpolation()
-    running_losses = eval_on_ds(model, 'Set5')
+    bicubic = BicubicInterpolation()
+    running_losses = eval_on_ds(bicubic, 'BSD100')
     print('Bicubic')
     print(running_losses)
     print('===========================================================')
+
+
+if __name__ == '__main__':
+    model = SRCNN(deconv=True, bias=True, first_elem_trainable=True)
+    model_path = download_model_from_wandb("viibrem/SuperRes-3LayerCNN-v2/8bb45qep")
+    model = load_weights(model, model_path)
+    eval_model(model)
