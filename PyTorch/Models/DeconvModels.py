@@ -73,6 +73,6 @@ class Deconv2D(nn.Module):
         y = ifft2(ymf).real
 
         # sum along input channels dim to reduce dims to standard image dims (batch x channels x height x width)
-        y = torch.mean(y, dim=-3) + self.b
+        y = torch.sum(y, dim=-3) / (self.in_channels ** 0.5) + self.b
 
         return y
