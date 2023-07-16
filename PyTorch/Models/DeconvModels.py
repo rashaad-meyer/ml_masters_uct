@@ -34,6 +34,7 @@ class Deconv2D(nn.Module):
         self.w = w
         self.first_elem_trainable = first_elem_trainable
         self.four_factor = four_factor
+        self.conv = nn.Conv2d(3, 1, 3, padding='same')
 
         if bias:
             self.b = nn.Parameter(data=torch.rand(1, out_channels, 1, 1) - 0.5, requires_grad=True)
@@ -72,6 +73,8 @@ class Deconv2D(nn.Module):
         y = ifft2(ymf).real
 
         # sum along input channels dim to reduce dims to standard image dims (batch x channels x height x width)
-        y = torch.sum(y, dim=-3) / (self.in_channels ** 0.5) + self.b
+        batch, in_channels, out_channels, img_height, img_width = y.size()
+        y = self.conv(y.view(-1, in_channels, img_height, img_width))
+        y = y.view(batch, out_channels, img_height, img_width)
 
         return y
