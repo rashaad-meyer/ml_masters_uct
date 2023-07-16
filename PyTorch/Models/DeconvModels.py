@@ -8,7 +8,6 @@ def __init__():
 
 
 class Deconv2D(nn.Module):
-    # TODO fix symmetry issue
     def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), bias=True, first_elem_trainable=False,
                  four_factor=True):
         super(Deconv2D, self).__init__()
