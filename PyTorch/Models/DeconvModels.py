@@ -73,7 +73,7 @@ class Deconv2D(nn.Module):
         y = ifft2(ymf).real
 
         # sum along input channels dim to reduce dims to standard image dims (batch x channels x height x width)
-        batch, in_channels, out_channels, img_height, img_width = y.size()
+        batch, out_channels, in_channels,  img_height, img_width = y.size()
         y = self.conv(y.view(-1, in_channels, img_height, img_width))
         y = y.view(batch, out_channels, img_height, img_width)
 
