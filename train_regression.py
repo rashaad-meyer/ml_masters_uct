@@ -64,7 +64,7 @@ def main():
         experiment.update({
             'rgb': args.rgb,
         })
-        with wandb.init(project="SuperRes-3LayerCNN-v2", config=experiment):
+        with wandb.init(project="SuperRes-3LayerCNN-exp", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
@@ -109,6 +109,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print(f'Deconv set to {deconv}...')
     print(f'Loss set to {loss}...')
     print(f'Learning rate {learning_rate}...')
+    print(f'Set image type to {"RGB" if rgb else "grayscale"}')
 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
