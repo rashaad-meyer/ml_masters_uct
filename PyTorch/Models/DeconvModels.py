@@ -34,7 +34,7 @@ class Deconv2D(nn.Module):
         self.w = w
         self.first_elem_trainable = first_elem_trainable
         self.four_factor = four_factor
-        self.conv = nn.Conv2d(3, 1, 3, padding='same')
+        self.conv = nn.Conv2d(in_channels, 1, (3, 3), padding='same')
 
         if bias:
             self.b = nn.Parameter(data=torch.rand(1, out_channels, 1, 1) - 0.5, requires_grad=True)
