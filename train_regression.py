@@ -76,11 +76,12 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
 
     print('Preparing Dataloader...')
     random_crop = RandomCropIsr(IMG_SIZE[0])
+    val_random_crop = RandomCropIsr(256, train=False)
 
     train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=random_crop)
     train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
 
-    val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=random_crop)
+    val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=val_random_crop)
     val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
