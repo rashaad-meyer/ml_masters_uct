@@ -18,7 +18,7 @@ from PyTorch.util.training_functions import train_regression_model
 from PyTorch.Datasets.Datasets import Div2k
 
 # Global variables
-IMG_SIZE = (32, 32)
+IMG_SIZE = (96, 96)
 
 
 def main():
