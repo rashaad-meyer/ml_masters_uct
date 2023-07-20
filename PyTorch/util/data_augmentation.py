@@ -1,4 +1,5 @@
 import torch
+from torch.nn.functional import pad
 
 
 class RandomCropIsr(object):
@@ -27,7 +28,37 @@ class RandomCropIsr(object):
         return lr_crop, hr_crop
 
 
-def test():
+class PadIsr(object):
+    def __init__(self, padding):
+        self.padding = padding
+
+    def __call__(self, lr_img, hr_img):
+        lr_shape = lr_img.shape[-2:]
+        hr_shape = hr_img.shape[-2:]
+        scale = hr_shape[-1] // lr_shape[-1]
+
+        lr_padding_size = self.padding
+        hr_padding_size = self.padding * scale
+
+        lr_pad = pad(lr_img, (lr_padding_size, lr_padding_size, lr_padding_size, lr_padding_size))
+        hr_pad = pad(hr_img, (hr_padding_size, hr_padding_size, hr_padding_size, hr_padding_size))
+
+        return lr_pad, hr_pad
+
+
+def test_pad():
+    pad_isr = PadIsr(32)
+    hr = torch.randn((3, 64, 64))
+    lr = torch.randn((3, 32, 32))
+    lr_pad, hr_pad = pad_isr(lr, hr)
+
+    print('LR function output shape', lr_pad.shape)
+    print('LR expected output shape', (3, 32 + 32 * 2, 32 + 32 * 2))
+    print('HR function output shape', hr_pad.shape)
+    print('HR expected output shape', (3, 64 + 32 * 2 * 2, 64 + 32 * 2 * 2))
+
+
+def test_random_crop():
     random_crop_isr = RandomCropIsr(32)
     hr = torch.randn((3, 64, 64))
     lr = torch.randn((3, 32, 32))
@@ -40,4 +71,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    test_pad()
