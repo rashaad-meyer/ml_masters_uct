@@ -17,6 +17,8 @@ class Div2k(Dataset):
         :param transform: transformation object that takes in LR image and HR image respectively
         :param ds_length: Length that you would like the dataset to be
         """
+        if transform is None:
+            transform = []
         self.hr_path = hr_path
         self.lr_path = lr_path
         self.transform = transform
@@ -52,8 +54,8 @@ class Div2k(Dataset):
         hr_img = io.read_image(hr_path, self.color_mode)
         lr_img = io.read_image(lr_path, self.color_mode)
 
-        if self.transform:
-            lr_img, hr_img = self.transform(lr_img, hr_img)
+        for transform in self.transform:
+            lr_img, hr_img = transform(lr_img, hr_img)
 
         if self.resize_lr:
             if self.resize is None:

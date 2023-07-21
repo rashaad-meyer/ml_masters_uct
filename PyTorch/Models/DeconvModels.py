@@ -81,8 +81,8 @@ class Deconv2D(nn.Module):
 
 def deconv_multi_filter_dim():
     filters = 128
-    deconv = Deconv2D(in_channels=10, out_channels=filters, kernel_size=(4, 4))
-    x = torch.rand((8, 10, 18, 18))
+    deconv = Deconv2D(in_channels=3, out_channels=filters, kernel_size=(4, 4))
+    x = torch.rand((8, 3, 18, 18))
 
     y = deconv(x)
     expected_size = (8, filters, 18, 18)

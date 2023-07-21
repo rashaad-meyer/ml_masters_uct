@@ -5,6 +5,7 @@ import pandas as pd
 
 from torch import nn
 import torch.optim as optim
+import torchvision.transforms as T
 from torch.utils.data import DataLoader
 
 from PyTorch.Models.ResNet import ResNet
@@ -12,7 +13,7 @@ from PyTorch.Models.SRCNN import SRCNN
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
 
 import PyTorch.util.helper_functions as helper
-from PyTorch.util.data_augmentation import RandomCropIsr
+from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr
 from PyTorch.util.training_functions import train_regression_model
 
 from PyTorch.Datasets.Datasets import Div2k
@@ -75,13 +76,17 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
 
     print('Preparing Dataloader...')
-    random_crop = RandomCropIsr(IMG_SIZE[0])
-    val_random_crop = RandomCropIsr(256, train=False)
+    train_transforms = [RandomCropIsr(IMG_SIZE[0])]
+    val_transforms = [RandomCropIsr(256, train=False)]
 
-    train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=random_crop)
+    if deconv:
+        train_transforms += [PadIsr(IMG_SIZE[0] // 4)]
+        val_transforms += [PadIsr(IMG_SIZE[0] // 4)]
+
+    train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=train_transforms)
     train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
 
-    val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=val_random_crop)
+    val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=val_transforms)
     val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     if model_name == 'srcnn':
