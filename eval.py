@@ -13,7 +13,7 @@ from PyTorch.Models.SRCNN import SRCNN, BicubicInterpolation
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
 
 import PyTorch.util.helper_functions as helper
-from PyTorch.util.data_augmentation import RandomCropIsr
+from PyTorch.util.data_augmentation import RandomCropIsr, UnpadIsr, PadIsr
 from PyTorch.util.evaluation_functions import load_weights, evaluate_regression_model
 
 from PyTorch.Datasets.Datasets import Div2k, IsrEvalDatasets
@@ -105,11 +105,15 @@ def super_resolve_patches(input_images, model, patch_height, patch_width, scale)
     return output_images
 
 
-def eval_on_ds(model, ds_name='Set5', rgb=False):
-    random_crop = RandomCropIsr(IMG_SIZE[0], train=False)
+def eval_on_ds(model, ds_name='Set5', transforms=None, rgb=True, trim_padding=True):
     ds_path = helper.download_and_unzip_sr_ds(ds_name=ds_name)
-    data = IsrEvalDatasets(ds_path, rgb=rgb, transform=random_crop)
+    data = IsrEvalDatasets(ds_path, rgb=rgb, transform=transforms)
     dataloader = DataLoader(data, batch_size=1, shuffle=False)
+
+    if trim_padding:
+        for transform in transforms:
+            if isinstance(transform, PadIsr):
+                UnpadIsr(transform)
 
     running_loss = {
         'L1': 0.0,

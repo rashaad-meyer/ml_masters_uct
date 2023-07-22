@@ -17,6 +17,7 @@ from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr
 from PyTorch.util.training_functions import train_regression_model
 
 from PyTorch.Datasets.Datasets import Div2k
+from eval import eval_on_ds
 
 # Global variables
 IMG_SIZE = (96, 96)
@@ -124,6 +125,18 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print(f'Training for {num_epochs} epochs...')
     history = train_regression_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                      num_epochs=num_epochs, name=model_file_name)
+    if deconv:
+        eval_transforms = [PadIsr(IMG_SIZE[0] // 4)]
+    else:
+        eval_transforms = None
+
+    print('Evaluating on Set5')
+    eval_loss = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, rgb=rgb, trim_padding=deconv)
+
+    try:
+        wandb.log({"set5_loss": eval_loss})
+    except:
+        print('Something went wrong when saving set5 loss when')
 
     print('======================================================================================================\n')
 

@@ -83,6 +83,8 @@ class IsrEvalDatasets(Dataset):
         :param transform: transformation object that takes in LR image and HR image respectively
         :param ds_length: Length that you would like the dataset to be
         """
+        if transform is None:
+            transform = []
         self.transform = transform
         self.resize = None
 
@@ -113,6 +115,7 @@ class IsrEvalDatasets(Dataset):
         return len(self.hr_paths)
 
     def __getitem__(self, idx):
+
         hr_path = self.hr_paths[idx]
 
         hr_img = io.read_image(hr_path, self.color_mode)
@@ -121,8 +124,8 @@ class IsrEvalDatasets(Dataset):
                                interpolation=T.InterpolationMode.BICUBIC)
         lr_img = self.resize(hr_img)
 
-        if self.transform:
-            lr_img, hr_img = self.transform(lr_img, hr_img)
+        for transform in self.transform:
+            lr_img, hr_img = transform(lr_img, hr_img)
 
         # Preprocess HR image
         hr_img = hr_img / 255.0

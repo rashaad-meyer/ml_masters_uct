@@ -46,6 +46,18 @@ class PadIsr(object):
         return lr_pad, hr_pad
 
 
+class UnpadIsr(object):
+    def __init__(self, pad_isr):
+        self.pad_isr = pad_isr
+
+    def __call__(self, hr_img):
+        hr_padding_size = self.pad_isr.padding * 2  # 2 is because padding is added on both sides of the image
+
+        # numpy slicing to remove the padding from all sides
+        unpadded_hr_img = hr_img[hr_padding_size:-hr_padding_size, hr_padding_size:-hr_padding_size]
+
+        return unpadded_hr_img
+
 def test_pad():
     pad_isr = PadIsr(32)
     hr = torch.randn((3, 64, 64))
