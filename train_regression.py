@@ -81,8 +81,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     val_transforms = [RandomCropIsr(256, train=False)]
 
     if deconv:
-        train_transforms += [PadIsr(IMG_SIZE[0] // 4)]
-        val_transforms += [PadIsr(IMG_SIZE[0] // 4)]
+        train_transforms += [PadIsr(10)]
+        val_transforms += [PadIsr(10)]
 
     train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=train_transforms)
     train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
