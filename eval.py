@@ -105,15 +105,16 @@ def super_resolve_patches(input_images, model, patch_height, patch_width, scale)
     return output_images
 
 
-def eval_on_ds(model, ds_name='Set5', transforms=None, rgb=True, trim_padding=True):
+def eval_on_ds(model: nn.Module, ds_name='Set5', transforms=None, rgb=True, trim_padding=True):
     ds_path = helper.download_and_unzip_sr_ds(ds_name=ds_name)
     data = IsrEvalDatasets(ds_path, rgb=rgb, transform=transforms)
     dataloader = DataLoader(data, batch_size=1, shuffle=False)
+    unpad_transform = None
 
     if trim_padding:
         for transform in transforms:
             if isinstance(transform, PadIsr):
-                UnpadIsr(transform)
+                unpad_transform = UnpadIsr(transform)
 
     running_loss = {
         'L1': 0.0,
@@ -123,15 +124,23 @@ def eval_on_ds(model, ds_name='Set5', transforms=None, rgb=True, trim_padding=Tr
         'L1': nn.L1Loss(),
         'MSE': nn.MSELoss(),
     }
+
+    y_preds = []
+
     for x, y in dataloader:
 
         with torch.no_grad():
             y_pred = model(x)
+        if unpad_transform is not None:
+            y_pred = unpad_transform(y_pred)
+            y = unpad_transform(y)
+
+        y_preds.append(y_pred.detach().numpy())
 
         for loss_name, loss_fn in loss_fns.items():
             running_loss[loss_name] += loss_fn(y_pred, y).item() / len(dataloader)
 
-    return running_loss
+    return running_loss, y_preds
 
 
 def download_model_from_wandb(run_path="viibrem/SuperRes-3LayerCNN-v2/8bb45qep"):
@@ -174,8 +183,12 @@ def eval_model(model):
     print('===========================================================')
 
 
-if __name__ == '__main__':
+def test_eval_model():
     model = SRCNN(deconv=True, bias=True, first_elem_trainable=True)
     model_path = download_model_from_wandb("viibrem/SuperRes-3LayerCNN-v2/8bb45qep")
     model = load_weights(model, model_path)
     eval_model(model)
+
+
+if __name__ == '__main__':
+    main()

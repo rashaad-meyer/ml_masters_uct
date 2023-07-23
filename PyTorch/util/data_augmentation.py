@@ -54,9 +54,10 @@ class UnpadIsr(object):
         hr_padding_size = self.pad_isr.padding * 2  # 2 is because padding is added on both sides of the image
 
         # numpy slicing to remove the padding from all sides
-        unpadded_hr_img = hr_img[hr_padding_size:-hr_padding_size, hr_padding_size:-hr_padding_size]
+        unpadded_hr_img = hr_img[..., hr_padding_size:-hr_padding_size, hr_padding_size:-hr_padding_size]
 
         return unpadded_hr_img
+
 
 def test_pad():
     pad_isr = PadIsr(32)
