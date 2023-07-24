@@ -66,7 +66,7 @@ def main():
         experiment.update({
             'rgb': args.rgb,
         })
-        with wandb.init(project="SuperRes-3LayerCNN-exp", config=experiment):
+        with wandb.init(project="SuperRes-3LayerCNN-conv-dev", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
