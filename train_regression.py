@@ -133,6 +133,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print('Evaluating on Set5')
     eval_loss, y_preds = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, rgb=rgb, trim_padding=deconv)
 
+    wandb.log({"Set5 prediction": [wandb.Image(image) for image in y_preds]})
+
     try:
         wandb.log({"set5_loss": eval_loss})
     except:

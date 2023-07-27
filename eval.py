@@ -7,6 +7,7 @@ import wandb
 from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torchvision.transforms.functional import to_pil_image
 
 from PyTorch.Models.ResNet import ResNet
 from PyTorch.Models.SRCNN import SRCNN, BicubicInterpolation
@@ -135,7 +136,7 @@ def eval_on_ds(model: nn.Module, ds_name='Set5', transforms=None, rgb=True, trim
             y_pred = unpad_transform(y_pred)
             y = unpad_transform(y)
 
-        y_preds.append(y_pred.detach().numpy())
+        y_preds.append(to_pil_image(y_pred.squeeze()))
 
         for loss_name, loss_fn in loss_fns.items():
             running_loss[loss_name] += loss_fn(y_pred, y).item() / len(dataloader)
