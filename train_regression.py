@@ -5,7 +5,6 @@ import pandas as pd
 
 from torch import nn
 import torch.optim as optim
-import torchvision.transforms as T
 from torch.utils.data import DataLoader
 
 from PyTorch.Models.ResNet import ResNet
@@ -133,7 +132,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print('Evaluating on Set5')
     eval_loss, y_preds = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, rgb=rgb, trim_padding=deconv)
 
-    wandb.log({"Set5 prediction": [wandb.Image(image) for image in y_preds]})
+    log_predictions_to_wandb(y_preds)
 
     try:
         wandb.log({"set5_loss": eval_loss})
@@ -141,6 +140,14 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         print('Something went wrong when saving set5 loss when')
 
     print('======================================================================================================\n')
+
+
+def log_predictions_to_wandb(y_preds):
+    np_preds = []
+    for pred in y_preds:
+        np_preds += [pred.permute(1, 2, 0).cpu().numpy()]
+
+    wandb.log({"Set5 prediction": [wandb.Image(image) for image in np_preds]})
 
 
 if __name__ == '__main__':

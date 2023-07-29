@@ -10,3 +10,4 @@ wandb
 keras
 datasets
 super-image
+pyyaml

@@ -1,11 +1,16 @@
 import argparse
 
+import numpy as np
+import yaml
 import pandas as pd
 import torch
+import torchvision
 
 import wandb
 from torch import nn
+from PIL import Image
 import torch.optim as optim
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision.transforms.functional import to_pil_image
 
@@ -136,7 +141,7 @@ def eval_on_ds(model: nn.Module, ds_name='Set5', transforms=None, rgb=True, trim
             y_pred = unpad_transform(y_pred)
             y = unpad_transform(y)
 
-        y_preds.append(to_pil_image(y_pred.squeeze()))
+        y_preds += [y_pred.squeeze()]
 
         for loss_name, loss_fn in loss_fns.items():
             running_loss[loss_name] += loss_fn(y_pred, y).item() / len(dataloader)
@@ -164,10 +169,61 @@ def download_model_from_wandb(run_path="viibrem/SuperRes-3LayerCNN-v2/8bb45qep")
     if file_name is not None:
         file = run.file(file_name)
         file.download(replace=True)
-        return file_name
+
+        # download config
+        file = run.file('config.yaml')
+        file.download(root='saved_models', replace=True)
+        with open("saved_models/config.yaml", "r") as stream:
+            config = yaml.safe_load(stream)
+        model = load_model_with_config(config, file_name)
+        return model
     else:
-        print('Pytorch model was not found in run')
-        return None
+        raise ValueError('Pytorch model was not found in run')
+
+
+def load_model_with_config(config, model_path):
+    model_name = config['model_name']['value']
+    if model_name == 'srcnn':
+        model = SRCNN(
+            num_channels=3 if config['rgb']['value'] else 1,
+            deconv=config['deconv']['value'],
+            first_elem_trainable=config['first_elem_trainable']['value'],
+            bias=config['bias']['value'],
+        )
+        model = load_weights(model, model_path)
+    else:
+        raise ValueError(f'{model_name} not supported not supported')
+    return model
+
+
+def display_images(images_tensor):
+    if len(images_tensor) % 5 != 0:
+        raise ValueError(f"List should be a multiple of 5. List length: {len(images_tensor)}")
+
+    fig, axes = plt.subplots(5, len(images_tensor) // 5, figsize=(10, 12))
+
+    for i, ax in enumerate(axes.flatten()):
+        image = images_tensor[i].permute(1, 2, 0).cpu().numpy()
+        ax.imshow(image)
+        ax.axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+
+def display_pil_images(image_list):
+    if len(image_list) % 5 != 0:
+        raise ValueError(f"List should be a multiple of 5. List length: {len(image_list)}")
+
+    fig, axes = plt.subplots(5, len(image_list) // 5, figsize=(10, 12))
+
+    for i, ax in enumerate(axes.flatten()):
+        image = image_list[i]
+        ax.imshow(image)
+        ax.axis("off")
+
+    plt.tight_layout()
+    plt.show()
 
 
 def eval_model(model):
@@ -184,12 +240,11 @@ def eval_model(model):
     print('===========================================================')
 
 
-def test_eval_model():
-    model = SRCNN(deconv=True, bias=True, first_elem_trainable=True)
-    model_path = download_model_from_wandb("viibrem/SuperRes-3LayerCNN-v2/8bb45qep")
-    model = load_weights(model, model_path)
-    eval_model(model)
+def load_and_eval_model(run_id):
+    model = download_model_from_wandb(run_id)
+    running_loss, y_preds = eval_on_ds(model, ds_name='Set5', rgb=True, trim_padding=False)
+    return running_loss, y_preds
 
 
 if __name__ == '__main__':
-    main()
+    load_and_eval_model("viibrem/SuperRes-3LayerCNN-conv-dev/xksdm60k")
