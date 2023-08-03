@@ -1,5 +1,7 @@
-from torch.utils.data import Dataset
+import h5py
+import numpy as np
 from torchvision import io
+from torch.utils.data import Dataset
 from torchvision import transforms as T
 
 import os
@@ -77,11 +79,8 @@ class IsrEvalDatasets(Dataset):
         Class for Image Super Resolution Dataset. It takes path for high resolution images
         and path for low resolution images. You can also transform data, specify amount of images
         you want in the dataset, and add padding if necessary.
-        :param hr_path: path to folder containing high resolution images
-        :param lr_path: path to folder containing low resolution images
         :param rgb: True for dataset to be RGB images. False for dataset to be Grayscale images
         :param transform: transformation object that takes in LR image and HR image respectively
-        :param ds_length: Length that you would like the dataset to be
         """
         if transform is None:
             transform = []
@@ -134,3 +133,31 @@ class IsrEvalDatasets(Dataset):
         lr_img = lr_img / 255.0
 
         return lr_img, hr_img
+
+
+class TrainDataset(Dataset):
+    def __init__(self, h5_file):
+        super(TrainDataset, self).__init__()
+        self.h5_file = h5_file
+
+    def __getitem__(self, idx):
+        with h5py.File(self.h5_file, 'r') as f:
+            return np.expand_dims(f['lr'][idx] / 255., 0), np.expand_dims(f['hr'][idx] / 255., 0)
+
+    def __len__(self):
+        with h5py.File(self.h5_file, 'r') as f:
+            return len(f['lr'])
+
+
+class EvalDataset(Dataset):
+    def __init__(self, h5_file):
+        super(EvalDataset, self).__init__()
+        self.h5_file = h5_file
+
+    def __getitem__(self, idx):
+        with h5py.File(self.h5_file, 'r') as f:
+            return np.expand_dims(f['lr'][str(idx)][:, :] / 255., 0), np.expand_dims(f['hr'][str(idx)][:, :] / 255., 0)
+
+    def __len__(self):
+        with h5py.File(self.h5_file, 'r') as f:
+            return len(f['lr'])

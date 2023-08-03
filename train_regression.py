@@ -15,7 +15,7 @@ import PyTorch.util.helper_functions as helper
 from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr
 from PyTorch.util.training_functions import train_regression_model
 
-from PyTorch.Datasets.Datasets import Div2k
+from PyTorch.Datasets.Datasets import Div2k, TrainDataset, EvalDataset
 from eval import eval_on_ds
 
 # Global variables
@@ -43,6 +43,8 @@ def main():
 
     parser.add_argument('--rgb', dest='rgb', action='store_true')
 
+    parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
+
     args = parser.parse_args()
     wandb.login()
 
@@ -56,7 +58,8 @@ def main():
             'learning_rate': 10 ** (-args.learning_rate),
             'bias': True,
             'first_elem_trainable': True,
-            'rgb': args.rgb
+            'rgb': args.rgb,
+            'dataset': args.ds,
         }]
     else:
         experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
@@ -64,6 +67,7 @@ def main():
     for experiment in experiments:
         experiment.update({
             'rgb': args.rgb,
+            'dataset': args.ds,
         })
         with wandb.init(project="SuperRes-3LayerCNN-conv-dev", config=experiment):
             config = wandb.config
@@ -71,28 +75,51 @@ def main():
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   rgb=False):
-    lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
-    lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
+                   rgb=False, dataset='div2k'):
+    if dataset == 'div2k':
+        lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
+        lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
 
-    print('Preparing Dataloader...')
-    train_transforms = [RandomCropIsr(IMG_SIZE[0])]
-    val_transforms = [RandomCropIsr(256, train=False)]
+        print('Preparing Dataloader...')
+        train_transforms = [RandomCropIsr(IMG_SIZE[0])]
+        val_transforms = [RandomCropIsr(256, train=False)]
 
-    if deconv:
-        train_transforms += [PadIsr(10)]
-        val_transforms += [PadIsr(10)]
+        if deconv:
+            train_transforms += [PadIsr(10)]
+            val_transforms += [PadIsr(10)]
 
-    train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=train_transforms)
-    train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
+        train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=train_transforms)
+        val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=val_transforms)
 
-    val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=val_transforms)
-    val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
+        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
+        val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
+
+    elif dataset == '91-image':
+        ds_path = helper.download_91_image_and_set5_ds('data/sr/srcnn')
+
+        train_path = ds_path['91-image']
+        val_path = ds_path['Set5']
+
+        train_data = TrainDataset(train_path)
+        val_data = EvalDataset(val_path)
+
+        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
+        val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
+
+    else:
+        raise ValueError('Dataset specified not supported choose div2k or 91-image')
 
     if model_name == 'srcnn':
-        num_channels = 3 if rgb else 1
+
+        if dataset == '91-image':
+            num_channels = 1
+            use_pixel_shuffle = False
+        else:
+            num_channels = 3 if rgb else 1
+            use_pixel_shuffle = True
+
         model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
-                      first_elem_trainable=first_elem_trainable)
+                      first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
@@ -115,9 +142,18 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print(f'Deconv set to {deconv}...')
     print(f'Loss set to {loss}...')
     print(f'Learning rate {learning_rate}...')
-    print(f'Set image type to {"RGB" if rgb else "grayscale"}')
+    if dataset == 'div2k':
+        print(f'Set image type to {"RGB" if rgb else "grayscale"}')
+    print(f'Dataset set to {dataset}')
 
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    if model_name == 'srcnn':
+        optimizer = optim.Adam([
+            {'params': model.conv1.parameters()},
+            {'params': model.conv2.parameters()},
+            {'params': model.conv3.parameters(), 'lr': learning_rate * 0.1}
+        ], lr=learning_rate)
+    else:
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     model_file_name = f'{model_name}_{loss}_{"deconv" if deconv else "conv"}'
 

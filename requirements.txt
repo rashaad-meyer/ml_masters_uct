@@ -11,3 +11,4 @@ keras
 datasets
 super-image
 pyyaml
+h5py

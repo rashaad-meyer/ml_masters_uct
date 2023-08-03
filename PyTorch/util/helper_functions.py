@@ -125,6 +125,39 @@ def download_and_unzip_sr_ds(path='data/sr', ds_name='Set5'):
     return file_path
 
 
+def download_91_image_and_set5_ds(path='data/sr/srcnn', scale=2):
+    download_urls = {
+        '91-image': [
+            'https://www.dropbox.com/s/2hsah93sxgegsry/91-image_x2.h5?dl=1',
+            'https://www.dropbox.com/s/curldmdf11iqakd/91-image_x3.h5?dl=1',
+            'https://www.dropbox.com/s/22afykv4amfxeio/91-image_x4.h5?dl=1'
+        ],
+        'Set5': [
+            'https://www.dropbox.com/s/r8qs6tp395hgh8g/Set5_x2.h5?dl=1',
+            'https://www.dropbox.com/s/58ywjac4te3kbqq/Set5_x3.h5?dl=1',
+            'https://www.dropbox.com/s/0rz86yn3nnrodlb/Set5_x4.h5?dl=1'
+        ],
+
+    }
+
+    # Create the directory if it doesn't exist
+    os.makedirs(path, exist_ok=True)
+    output_files = {}
+
+    for dataset, urls in download_urls.items():
+        url = urls[scale - 2]
+        file_name = url.split('/')[-1].split('?')[0]  # Extract the file name from the URL
+        output_files[dataset] = os.path.join(path, file_name)
+        command = f"curl -L -o {output_files[dataset]} {url}"
+        if not os.path.exists(output_files[dataset]):
+            os.system(command)
+        else:
+            print(f'{output_files[dataset]} already downloaded')
+
+    print("Download completed.")
+    return output_files
+
+
 def convert(size, box):
     dw = 1. / size[0]
     dh = 1. / size[1]
@@ -339,4 +372,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    download_91_image_and_set5_ds()
