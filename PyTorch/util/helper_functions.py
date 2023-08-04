@@ -125,7 +125,7 @@ def download_and_unzip_sr_ds(path='data/sr', ds_name='Set5'):
     return file_path
 
 
-def download_91_image_and_set5_ds(path='data/sr/srcnn', scale=2):
+def download_91_image_and_set5_ds(path='data/sr/srcnn', scale=3):
     download_urls = {
         '91-image': [
             'https://www.dropbox.com/s/2hsah93sxgegsry/91-image_x2.h5?dl=1',
