@@ -69,7 +69,7 @@ def main():
             'rgb': args.rgb,
             'dataset': args.ds,
         })
-        with wandb.init(project="SuperRes-3LayerCNN-conv-dev", config=experiment):
+        with wandb.init(project="SRCNN-dev-v00", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
@@ -165,10 +165,12 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     else:
         eval_transforms = None
 
-    print('Evaluating on Set5')
-    eval_loss, y_preds = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, rgb=rgb, trim_padding=deconv)
-
-    log_predictions_to_wandb(y_preds)
+    try:
+        print('Evaluating on Set5')
+        eval_loss, y_preds = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, rgb=rgb, trim_padding=deconv)
+        log_predictions_to_wandb(y_preds)
+    except Exception as e:
+        print(f"Couldn't log predicted images to wandb:\n{e}")
 
     try:
         wandb.log({"set5_loss": eval_loss})

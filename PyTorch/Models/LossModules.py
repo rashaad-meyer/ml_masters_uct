@@ -73,7 +73,7 @@ class PSNR(nn.Module):
         self.mse = nn.MSELoss()
 
     def forward(self, x, y):
-        loss = 10 * torch.log(1 / self.mse(x, y))
+        loss = 10. * torch.log10(1. / torch.mean((x - y) ** 2))
         return loss
 
 

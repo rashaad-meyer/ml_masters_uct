@@ -178,7 +178,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
                 running_psnr += metric(outputs, y).item()
 
             running_loss += loss.item()
-            break
+
         history['train_loss'].append(running_loss / len(train_dataloader))
         history['psnr'].append(running_psnr / len(train_dataloader))
 
