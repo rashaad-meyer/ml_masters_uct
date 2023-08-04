@@ -6,6 +6,7 @@ from tqdm import tqdm
 import os
 from datetime import datetime
 
+from PyTorch.Models.LossModules import PSNR
 from PyTorch.util.impulse_response import impulse_response_of_model, save_tensor_images, check_filter_diff
 
 
@@ -142,9 +143,11 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
     criterion = criterion.to(device)
-    scheduler = ReduceLROnPlateau(optimizer, 'min')
+    # scheduler = ReduceLROnPlateau(optimizer, 'min')
 
-    history = {'train_loss': [], 'valid_loss': [], 'time': []}
+    metric = PSNR()
+
+    history = {'train_loss': [], 'valid_loss': [], 'psnr': [], 'valid_psnr': []}
     best_model_path = None
 
     start_time = datetime.now().strftime("%m-%d_%H-%M")
@@ -158,6 +161,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
+        running_psnr = 0.0
         for X, y in tqdm(train_dataloader):
             X = X.to(device)
             y = y.to(device)
@@ -170,21 +174,28 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
                 loss.backward()
                 optimizer.step()
 
-            running_loss += loss.item()
+            with torch.no_grad():
+                running_psnr += metric(outputs, y).item()
 
+            running_loss += loss.item()
+            break
         history['train_loss'].append(running_loss / len(train_dataloader))
+        history['psnr'].append(running_psnr / len(train_dataloader))
 
         try:
             wandb.log({"train_epoch_loss": running_loss / len(train_dataloader)}, step=epoch)
+            wandb.log({"psnr": running_psnr / len(train_dataloader)}, step=epoch)
         except:
             print('Something went wrong with wandb')
 
         print(f'Epoch {epoch + 1:04d}')
         print(f'train loss: {running_loss / len(train_dataloader):.5f}')
+        print(f'train psnr: {history["psnr"][-1]:.5f}')
 
         if valid_dataloader:
             model.eval()
             valid_running_loss = 0.0
+            valid_running_psnr = 0.0
             for X, y in valid_dataloader:
                 X = X.to(device)
                 y = y.to(device)
@@ -192,17 +203,21 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
                 with torch.no_grad():
                     outputs = model(X)
                     loss = criterion(outputs, y)
+                    valid_running_psnr += metric(outputs, y).item()
 
                 valid_running_loss += loss.item()
 
             try:
                 wandb.log({"valid_epoch_loss": valid_running_loss / len(valid_dataloader)}, step=epoch)
+                wandb.log({"valid_psnr": valid_running_psnr / len(valid_dataloader)}, step=epoch)
             except:
                 print('Something went wrong with wandb')
 
             history['valid_loss'].append(valid_running_loss / len(valid_dataloader))
             print(f'valid loss: {valid_running_loss / len(valid_dataloader):.5f}')
-            scheduler.step(history['valid_loss'][-1])
+            # scheduler.step(history['valid_loss'][-1])
+            history['valid_psnr'].append(valid_running_psnr / len(valid_dataloader))
+            print(f'valid psnr: {history["valid_psnr"][-1]:.5f}')
 
         print('-' * 100)
 
