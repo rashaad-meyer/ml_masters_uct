@@ -44,6 +44,7 @@ def main():
     parser.add_argument('--rgb', dest='rgb', action='store_true')
 
     parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
+    parser.add_argument("-s", "--scale", default=3, type=int, help="Upsampling scale")
 
     args = parser.parse_args()
     wandb.login()
@@ -60,6 +61,7 @@ def main():
             'first_elem_trainable': True,
             'rgb': args.rgb,
             'dataset': args.ds,
+            'scale': args.scale,
         }]
     else:
         experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
@@ -68,14 +70,15 @@ def main():
         experiment.update({
             'rgb': args.rgb,
             'dataset': args.ds,
+            'scale': args.scale,
         })
-        with wandb.init(project="SRCNN-dev-v00", config=experiment):
+        with wandb.init(project=f"SRCNN-x{args.scale}-dev-v00", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   rgb=False, dataset='div2k'):
+                   rgb=False, dataset='div2k', scale=3):
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
         lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
@@ -95,7 +98,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
 
     elif dataset == '91-image':
-        ds_path = helper.download_91_image_and_set5_ds('data/sr/srcnn')
+        ds_path = helper.download_91_image_and_set5_ds('data/sr/srcnn', scale=scale)
 
         train_path = ds_path['91-image']
         val_path = ds_path['Set5']
