@@ -1,5 +1,6 @@
 from typing import Any
 import torch
+import torchvision.transforms
 from torch.nn.functional import pad
 
 
@@ -63,9 +64,8 @@ class UnpadIsr(object):
 class RgbToYCbCr(object):
     def __init__(self, return_only_y=False):
         self.return_only_y = return_only_y
-        pass
 
-    def __call__(self, image, *args: Any, **kwds: Any) -> Any:
+    def convert_image(self, image, *args: Any, **kwds: Any) -> Any:
         """Convert an RGB image to YCbCr.
 
         Args:
@@ -96,6 +96,17 @@ class RgbToYCbCr(object):
         cb: torch.Tensor = (b - y) * .564 + delta
         cr: torch.Tensor = (r - y) * .713 + delta
         return torch.stack((y, cb, cr), -3)
+
+    def __call__(self, *images):
+        return tuple(self.convert_image(img) for img in images)
+
+
+class RgbToGrayscale(object):
+    def __init__(self):
+        self.convert_image = torchvision.transforms.Grayscale()
+
+    def __call__(self, *images):
+        return tuple(self.convert_image(img) for img in images)
 
 
 def test_pad():
