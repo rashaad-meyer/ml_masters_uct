@@ -44,7 +44,7 @@ def main():
     parser.add_argument("--color", default='rgb', help="Select color space rgb/gray/ycbcr")
 
     parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
-    parser.add_argument("-s", "--scale", default=3, type=int, help="Upsampling scale")
+    parser.add_argument("-s", "--scale", default=2, type=int, help="Upsampling scale")
 
     args = parser.parse_args()
     wandb.login()
@@ -78,7 +78,7 @@ def main():
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   color='rgb', dataset='div2k', scale=3, padding=False):
+                   color='rgb', dataset='div2k', scale=2, padding=False):
     # FIXME add padding to list of arguments
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
