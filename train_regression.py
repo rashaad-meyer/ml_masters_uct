@@ -12,7 +12,7 @@ from PyTorch.Models.SRCNN import SRCNN
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
 
 import PyTorch.util.helper_functions as helper
-from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr
+from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr, RgbToYCbCr, RgbToGrayscale
 from PyTorch.util.training_functions import train_regression_model
 
 from PyTorch.Datasets.Datasets import Div2k, TrainDataset, EvalDataset
@@ -41,7 +41,7 @@ def main():
                                                        "Csv file must be provided in the following columns:\n"
                                                        "path, model_name, deconv, loss, num_epochs, learning_rate")
 
-    parser.add_argument('--rgb', dest='rgb', action='store_true')
+    parser.add_argument("--color", default='rgb', help="Select color space rgb/gray/ycbcr")
 
     parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
     parser.add_argument("-s", "--scale", default=3, type=int, help="Upsampling scale")
@@ -59,7 +59,7 @@ def main():
             'learning_rate': 10 ** (-args.learning_rate),
             'bias': True,
             'first_elem_trainable': True,
-            'rgb': args.rgb,
+            'color': args.color,
             'dataset': args.ds,
             'scale': args.scale,
         }]
@@ -68,7 +68,7 @@ def main():
 
     for experiment in experiments:
         experiment.update({
-            'rgb': args.rgb,
+            'color': args.color,
             'dataset': args.ds,
             'scale': args.scale,
         })
@@ -78,7 +78,8 @@ def main():
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   rgb=False, dataset='div2k', scale=3):
+                   color='rgb', dataset='div2k', scale=3, padding=False):
+    # FIXME add padding to list of arguments
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
         lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
@@ -87,12 +88,21 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_transforms = [RandomCropIsr(IMG_SIZE[0])]
         val_transforms = [RandomCropIsr(256, train=False)]
 
-        if deconv:
+        if color == 'ycbcr':
+            train_transforms += [RgbToYCbCr(return_only_y=True)]
+            val_transforms += [RgbToYCbCr(return_only_y=True)]
+        elif color == 'grayscale':
+            train_transforms += [RgbToGrayscale()]
+            val_transforms += [RgbToGrayscale()]
+        elif color != 'rgb':
+            raise ValueError('Incorrect color space specified. Please choose between rgb, ycbcr, and grayscale')
+
+        if deconv and padding:
             train_transforms += [PadIsr(10)]
             val_transforms += [PadIsr(10)]
 
-        train_data = Div2k(lr_train_path, hr_train_path, rgb=rgb, transform=train_transforms)
-        val_data = Div2k(lr_val_path, hr_val_path, rgb=rgb, transform=val_transforms)
+        train_data = Div2k(lr_train_path, hr_train_path, transform=train_transforms)
+        val_data = Div2k(lr_val_path, hr_val_path, transform=val_transforms)
 
         train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
         val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
@@ -118,7 +128,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
             num_channels = 1
             use_pixel_shuffle = False
         else:
-            num_channels = 3 if rgb else 1
+            num_channels = 3 if color == 'rgb' else 1
             use_pixel_shuffle = True
 
         model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
@@ -146,7 +156,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print(f'Loss set to {loss}...')
     print(f'Learning rate {learning_rate}...')
     if dataset == 'div2k':
-        print(f'Set image type to {"RGB" if rgb else "grayscale"}')
+        print(f'Set image type to {color}')
     print(f'Dataset set to {dataset}')
 
     if model_name == 'srcnn':
@@ -163,22 +173,25 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     print(f'Training for {num_epochs} epochs...')
     history = train_regression_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                      num_epochs=num_epochs, name=model_file_name)
-    if deconv:
+    if deconv and padding:
         eval_transforms = [PadIsr(IMG_SIZE[0] // 4)]
     else:
-        eval_transforms = None
+        eval_transforms = []
+
+    if color == 'ycbcr':
+        eval_transforms += [RgbToYCbCr(return_only_y=True)]
+    elif color == 'grayscale':
+        eval_transforms += [RgbToGrayscale()]
+    elif color != 'rgb':
+        raise ValueError('Incorrect color space specified. Please choose between rgb, ycbcr, and grayscale')
 
     try:
         print('Evaluating on Set5')
-        eval_loss, y_preds = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, rgb=rgb, trim_padding=deconv)
+        eval_loss, y_preds = eval_on_ds(model, ds_name='Set5', transforms=eval_transforms, trim_padding=padding)
         log_predictions_to_wandb(y_preds)
+        wandb.log({"set5_loss": eval_loss})
     except Exception as e:
         print(f"Couldn't log predicted images to wandb:\n{e}")
-
-    try:
-        wandb.log({"set5_loss": eval_loss})
-    except:
-        print('Something went wrong when saving set5 loss when')
 
     print('======================================================================================================\n')
 

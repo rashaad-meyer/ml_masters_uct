@@ -8,14 +8,14 @@ import os
 
 
 class Div2k(Dataset):
-    def __init__(self, lr_path, hr_path, resize_lr=False, rgb=False, transform=None, ds_length=None):
+    def __init__(self, lr_path, hr_path, resize_lr=False, transform=None, ds_length=None):
         """
         Class for Image Super Resolution Dataset. It takes path for high resolution images
         and path for low resolution images. You can also transform data, specify amount of images
         you want in the dataset, and add padding if necessary.
         :param hr_path: path to folder containing high resolution images
         :param lr_path: path to folder containing low resolution images
-        :param rgb: True for dataset to be RGB images. False for dataset to be Grayscale images
+        :param color: True for dataset to be RGB images. False for dataset to be Grayscale images
         :param transform: transformation object that takes in LR image and HR image respectively
         :param ds_length: Length that you would like the dataset to be
         """
@@ -26,11 +26,6 @@ class Div2k(Dataset):
         self.transform = transform
         self.resize_lr = resize_lr
         self.resize = None
-
-        if rgb:
-            self.color_mode = io.ImageReadMode.UNCHANGED
-        else:
-            self.color_mode = io.ImageReadMode.GRAY
 
         y_imgs = os.listdir(hr_path)
         x_imgs = os.listdir(lr_path)
@@ -53,8 +48,8 @@ class Div2k(Dataset):
         hr_path = self.hr_paths[idx]
         lr_path = self.lr_paths[idx]
 
-        hr_img = io.read_image(hr_path, self.color_mode)
-        lr_img = io.read_image(lr_path, self.color_mode)
+        hr_img = io.read_image(hr_path)
+        lr_img = io.read_image(lr_path)
 
         for transform in self.transform:
             lr_img, hr_img = transform(lr_img, hr_img)
@@ -74,23 +69,18 @@ class Div2k(Dataset):
 
 
 class IsrEvalDatasets(Dataset):
-    def __init__(self, ds_path, rgb=False, transform=None):
+    def __init__(self, ds_path, transform=None):
         """
         Class for Image Super Resolution Dataset. It takes path for high resolution images
         and path for low resolution images. You can also transform data, specify amount of images
         you want in the dataset, and add padding if necessary.
-        :param rgb: True for dataset to be RGB images. False for dataset to be Grayscale images
+        :param color: True for dataset to be RGB images. False for dataset to be Grayscale images
         :param transform: transformation object that takes in LR image and HR image respectively
         """
         if transform is None:
             transform = []
         self.transform = transform
         self.resize = None
-
-        if rgb:
-            self.color_mode = io.ImageReadMode.UNCHANGED
-        else:
-            self.color_mode = io.ImageReadMode.GRAY
 
         y_imgs = []
 
@@ -117,7 +107,7 @@ class IsrEvalDatasets(Dataset):
 
         hr_path = self.hr_paths[idx]
 
-        hr_img = io.read_image(hr_path, self.color_mode)
+        hr_img = io.read_image(hr_path)
 
         self.resize = T.Resize((hr_img.size()[-2] // 2, hr_img.size()[-1] // 2),
                                interpolation=T.InterpolationMode.BICUBIC)

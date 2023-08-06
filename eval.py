@@ -111,9 +111,9 @@ def super_resolve_patches(input_images, model, patch_height, patch_width, scale)
     return output_images
 
 
-def eval_on_ds(model: nn.Module, ds_name='Set5', transforms=None, rgb=True, trim_padding=True):
+def eval_on_ds(model: nn.Module, ds_name='Set5', transforms=None, trim_padding=True):
     ds_path = helper.download_and_unzip_sr_ds(ds_name=ds_name)
-    data = IsrEvalDatasets(ds_path, rgb=rgb, transform=transforms)
+    data = IsrEvalDatasets(ds_path, transform=transforms)
     dataloader = DataLoader(data, batch_size=1, shuffle=False)
     unpad_transform = None
 
@@ -242,7 +242,7 @@ def eval_model(model):
 
 def load_and_eval_model(run_id):
     model = download_model_from_wandb(run_id)
-    running_loss, y_preds = eval_on_ds(model, ds_name='Set5', rgb=True, trim_padding=False)
+    running_loss, y_preds = eval_on_ds(model, ds_name='Set5', color='rgb', trim_padding=False)
     return running_loss, y_preds
 
 
