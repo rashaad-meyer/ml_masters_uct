@@ -37,7 +37,7 @@ def main():
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
 
-    parser.add_argument("--multi", default='', dest='deconv', action='store_true')
+    parser.add_argument("--multi", default='', dest='multi', action='store_true')
 
     parser.add_argument("--color", default='rgb', help="Select color space rgb/gray/ycbcr")
 
