@@ -75,9 +75,11 @@ class Deconv2D(nn.Module):
         y = ifft2(ymf).real
 
         # sum along input channels dim to reduce dims to standard image dims (batch x channels x height x width)
-        batch, out_channels, in_channels, img_height, img_width = y.size()
-        y = self.conv(y.view(-1, in_channels, img_height, img_width))
-        y = y.view(batch, out_channels, img_height, img_width)
+        # batch, out_channels, in_channels, img_height, img_width = y.size()
+        # y = self.conv(y.view(-1, in_channels, img_height, img_width))
+        # y = y.view(batch, out_channels, img_height, img_width)
+
+        y = torch.sum(y, dim=-3) / (self.in_channels ** 0.5) + self.b
 
         return y
 

@@ -113,8 +113,9 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_path = ds_path['91-image']
         val_path = ds_path['Set5']
 
-        train_data = TrainDataset(train_path)
-        val_data = EvalDataset(val_path)
+        # TODO resizing
+        train_data = TrainDataset(train_path, same_size=False)
+        val_data = EvalDataset(val_path, same_size=False)
 
         train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
         val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
@@ -126,7 +127,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
 
         if dataset == '91-image':
             num_channels = 1
-            use_pixel_shuffle = False
+            use_pixel_shuffle = True
+            # TODO resizing
         else:
             num_channels = 3 if color == 'rgb' else 1
             use_pixel_shuffle = True
@@ -164,6 +166,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
             {'params': model.conv1.parameters()},
             {'params': model.conv2.parameters()},
             {'params': model.conv3.parameters(), 'lr': learning_rate * 0.1}
+            # TODO add other learnable parameters
         ], lr=learning_rate)
     else:
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)

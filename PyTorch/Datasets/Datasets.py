@@ -1,4 +1,5 @@
 import h5py
+import torch
 import numpy as np
 from torchvision import io
 from torch.utils.data import Dataset
@@ -126,13 +127,27 @@ class IsrEvalDatasets(Dataset):
 
 
 class TrainDataset(Dataset):
-    def __init__(self, h5_file):
+    def __init__(self, h5_file, same_size=True):
         super(TrainDataset, self).__init__()
         self.h5_file = h5_file
+        self.scale = int(h5_file[-4])
+        self.same_size = same_size
 
     def __getitem__(self, idx):
         with h5py.File(self.h5_file, 'r') as f:
-            return np.expand_dims(f['lr'][idx] / 255., 0), np.expand_dims(f['hr'][idx] / 255., 0)
+            hr_img = torch.from_numpy(np.expand_dims(f['hr'][idx] / 255., 0))
+
+            if self.same_size:
+                lr_img = torch.from_numpy(np.expand_dims(f['lr'][idx] / 255., 0))
+            else:
+                if self.scale % 2 == 0:
+                    hr_img = hr_img[..., :32, :32]
+
+                resize = T.Resize((hr_img.size()[-2] // self.scale, hr_img.size()[-1] // self.scale),
+                                  interpolation=T.InterpolationMode.BICUBIC)
+
+                lr_img = resize(hr_img)
+            return lr_img, hr_img
 
     def __len__(self):
         with h5py.File(self.h5_file, 'r') as f:
@@ -140,14 +155,44 @@ class TrainDataset(Dataset):
 
 
 class EvalDataset(Dataset):
-    def __init__(self, h5_file):
+    def __init__(self, h5_file, same_size=True):
         super(EvalDataset, self).__init__()
         self.h5_file = h5_file
+        self.scale = int(h5_file[-4])
+        self.same_size = same_size
 
     def __getitem__(self, idx):
         with h5py.File(self.h5_file, 'r') as f:
-            return np.expand_dims(f['lr'][str(idx)][:, :] / 255., 0), np.expand_dims(f['hr'][str(idx)][:, :] / 255., 0)
+            hr_img = torch.from_numpy(np.expand_dims(f['hr'][str(idx)][:, :] / 255., 0))
+
+            if self.same_size:
+                lr_img = torch.from_numpy(np.expand_dims(f['lr'][str(idx)][:, :] / 255., 0))
+            else:
+                if self.scale % 2 == 0:
+                    crop_size_h = hr_img.size()[-2] - (hr_img.size()[-2] % self.scale)
+                    crop_size_w = hr_img.size()[-1] - (hr_img.size()[-1] % self.scale)
+                    hr_img = hr_img[..., :crop_size_h, :crop_size_w]
+
+                resize = T.Resize((hr_img.size()[-2] // self.scale, hr_img.size()[-1] // self.scale),
+                                  interpolation=T.InterpolationMode.BICUBIC)
+
+                lr_img = resize(hr_img)
+            return lr_img, hr_img
 
     def __len__(self):
         with h5py.File(self.h5_file, 'r') as f:
             return len(f['lr'])
+
+
+if __name__ == '__main__':
+    # print(os.listdir(''))
+    ds = TrainDataset('../../data/sr/srcnn/91-image_x2.h5', same_size=False)
+    val_ds = EvalDataset('../../data/sr/srcnn/Set5_x2.h5', same_size=False)
+
+    for i in range(10):
+        HR_img, LR_img = ds[i]
+        print(HR_img.shape, LR_img.shape)
+
+    for i in range(5):
+        HR_img, LR_img = val_ds[i]
+        print(HR_img.shape, LR_img.shape)
