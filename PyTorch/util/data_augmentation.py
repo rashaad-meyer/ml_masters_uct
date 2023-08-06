@@ -1,3 +1,4 @@
+from typing import Any
 import torch
 from torch.nn.functional import pad
 
@@ -59,6 +60,44 @@ class UnpadIsr(object):
         return unpadded_hr_img
 
 
+class RgbToYCbCr(object):
+    def __init__(self, return_only_y=False):
+        self.return_only_y = return_only_y
+        pass
+
+    def __call__(self, image, *args: Any, **kwds: Any) -> Any:
+        """Convert an RGB image to YCbCr.
+
+        Args:
+            image (torch.Tensor): RGB Image to be converted to YCbCr.
+
+        Returns:
+            torch.Tensor: YCbCr version of the image.
+        """
+
+        if not torch.is_tensor(image):
+            raise TypeError("Input type is not a torch.Tensor. Got {}".format(
+                type(image)))
+
+        if len(image.shape) < 3 or image.shape[-3] != 3:
+            raise ValueError("Input size must have a shape of (*, 3, H, W). Got {}"
+                             .format(image.shape))
+
+        r: torch.Tensor = image[..., 0, :, :]
+        g: torch.Tensor = image[..., 1, :, :]
+        b: torch.Tensor = image[..., 2, :, :]
+
+        delta = .5
+        y: torch.Tensor = .299 * r + .587 * g + .114 * b
+
+        if self.return_only_y:
+            return y.unsqueeze(0)
+
+        cb: torch.Tensor = (b - y) * .564 + delta
+        cr: torch.Tensor = (r - y) * .713 + delta
+        return torch.stack((y, cb, cr), -3)
+
+
 def test_pad():
     pad_isr = PadIsr(32)
     hr = torch.randn((3, 64, 64))
@@ -83,5 +122,12 @@ def test_random_crop():
     print('HR actual output shape', (3, 32, 32))
 
 
+def test_rgb_to_ycbcr():
+    rgb_to_ycbcr = RgbToYCbCr()
+    image = torch.randn((3, 64, 64))
+    rgb_to_ycbcr(image)
+    print(image.size())
+
+
 if __name__ == '__main__':
-    test_pad()
+    test_rgb_to_ycbcr()
