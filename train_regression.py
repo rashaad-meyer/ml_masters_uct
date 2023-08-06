@@ -37,9 +37,7 @@ def main():
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
 
-    parser.add_argument("--multiple", default='', help="Run with multiple experiments. "
-                                                       "Csv file must be provided in the following columns:\n"
-                                                       "path, model_name, deconv, loss, num_epochs, learning_rate")
+    parser.add_argument("--multi", default='', dest='deconv', action='store_true')
 
     parser.add_argument("--color", default='rgb', help="Select color space rgb/gray/ycbcr")
 
@@ -49,7 +47,7 @@ def main():
     args = parser.parse_args()
     wandb.login()
 
-    if args.multiple == '':
+    if args.multi:
         experiments = [{
             'path': args.path,
             'model_name': args.model,
@@ -64,7 +62,8 @@ def main():
             'scale': args.scale,
         }]
     else:
-        experiments = pd.read_csv(args.multiple, dtype={'deconv': bool}).to_dict('records')
+        experiments = pd.read_csv('experiment_csv/regression.csv',
+                                  dtype={'deconv': bool}).to_dict('records')
 
     for experiment in experiments:
         experiment.update({
