@@ -47,7 +47,7 @@ def main():
     args = parser.parse_args()
     wandb.login()
 
-    if args.multi:
+    if not args.multi:
         experiments = [{
             'path': args.path,
             'model_name': args.model,
