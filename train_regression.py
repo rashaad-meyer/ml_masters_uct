@@ -115,9 +115,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_path = ds_path['91-image']
         val_path = ds_path['Set5']
 
-        # TODO resizing
-        train_data = TrainDataset(train_path, same_size=False)
-        val_data = EvalDataset(val_path, same_size=False)
+        train_data = TrainDataset(train_path, same_size=same_size)
+        val_data = EvalDataset(val_path, same_size=same_size)
 
         train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
         val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
@@ -130,7 +129,6 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         if dataset == '91-image':
             num_channels = 1
             use_pixel_shuffle = not same_size
-            # TODO resizing
         else:
             num_channels = 3 if color == 'rgb' else 1
             use_pixel_shuffle = not same_size
@@ -162,6 +160,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     if dataset == 'div2k':
         print(f'Set image type to {color}')
     print(f'Dataset set to {dataset}')
+    if dataset == '91-image':
+        print('LR are being upscaled before being passed to network')
 
     if model_name == 'srcnn':
         optimizer = optim.Adam([
