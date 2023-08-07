@@ -43,6 +43,7 @@ def main():
 
     parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
     parser.add_argument("-s", "--scale", default=2, type=int, help="Upsampling scale")
+    parser.add_argument("--same_size", default='', dest='same_size', action='store_true')
 
     args = parser.parse_args()
     wandb.login()
@@ -60,6 +61,7 @@ def main():
             'color': args.color,
             'dataset': args.ds,
             'scale': args.scale,
+            'same_size': args.same_size,
         }]
     else:
         experiments = pd.read_csv('experiment_csv/regression.csv',
@@ -70,6 +72,7 @@ def main():
             'color': args.color,
             'dataset': args.ds,
             'scale': args.scale,
+            'same_size': args.same_size,
         })
         with wandb.init(project=f"SRCNN-x{args.scale}-dev-v00", config=experiment):
             config = wandb.config
@@ -77,7 +80,7 @@ def main():
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   color='rgb', dataset='div2k', scale=2, padding=False):
+                   color='rgb', dataset='div2k', scale=2, padding=False, same_size=False):
     # FIXME add padding to list of arguments
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
@@ -126,11 +129,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
 
         if dataset == '91-image':
             num_channels = 1
-            use_pixel_shuffle = True
+            use_pixel_shuffle = not same_size
             # TODO resizing
         else:
             num_channels = 3 if color == 'rgb' else 1
-            use_pixel_shuffle = True
+            use_pixel_shuffle = not same_size
 
         model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
                       first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle)
