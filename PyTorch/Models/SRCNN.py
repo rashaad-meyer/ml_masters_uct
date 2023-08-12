@@ -5,12 +5,12 @@ from PyTorch.Models.DeconvModels import Deconv2D
 
 class SRCNN(nn.Module):
     def __init__(self, num_channels=1, channels_1=64, channels_2=32, upscale_factor=2, deconv=False,
-                 use_pixel_shuffle=True, bias=True, first_elem_trainable=False):
+                 use_pixel_shuffle=True, bias=True, first_elem_trainable=False, pad_inner=None):
         super(SRCNN, self).__init__()
 
         if deconv:
             self.conv1 = Deconv2D(num_channels, channels_1, (9, 9), bias=bias,
-                                  first_elem_trainable=first_elem_trainable)
+                                  first_elem_trainable=first_elem_trainable, pad_inner=pad_inner)
         else:
             self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=9, padding=4)
 

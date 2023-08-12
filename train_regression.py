@@ -80,7 +80,7 @@ def main():
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   color='rgb', dataset='div2k', scale=2, padding=False, same_size=False):
+                   color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None):
     # FIXME add padding to list of arguments
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
@@ -131,10 +131,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
             use_pixel_shuffle = not same_size
         else:
             num_channels = 3 if color == 'rgb' else 1
-            use_pixel_shuffle = not same_size
+            use_pixel_shuffle = True
 
         model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
-                      first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle)
+                      first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle,
+                      pad_inner=pad_inner)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
@@ -160,6 +161,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     if dataset == 'div2k':
         print(f'Set image type to {color}')
     print(f'Dataset set to {dataset}')
+    print(f'Inner padding (deconv) equal set to {pad_inner}')
     if dataset == '91-image':
         print('LR are being upscaled before being passed to network')
 
