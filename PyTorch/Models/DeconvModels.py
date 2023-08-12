@@ -9,7 +9,7 @@ def __init__():
 
 class Deconv2D(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, kernel_size=(2, 4), bias=True, first_elem_trainable=False,
-                 four_factor=True):
+                 four_factor=True, pad_inner=None):
         super(Deconv2D, self).__init__()
 
         init_factor = (kernel_size[0] * kernel_size[1] * (in_channels + out_channels))
@@ -34,6 +34,7 @@ class Deconv2D(nn.Module):
         self.w = w
         self.first_elem_trainable = first_elem_trainable
         self.four_factor = four_factor
+        self.pad_inner = pad_inner
         self.conv = nn.Conv2d(in_channels, 1, (3, 3), padding='same')
         self.w_chan_attn = nn.Parameter(data=torch.randn(in_channels, 1, 1), requires_grad=False)
         self.conv = nn.Conv2d(in_channels, 1, (3, 3), padding='same')
@@ -44,6 +45,18 @@ class Deconv2D(nn.Module):
             self.b = nn.Parameter(data=torch.tensor([0.0]), requires_grad=False)
 
     def forward(self, x):
+        # Calculate padding amounts
+        if self.pad_inner:
+            pad_height = int(self.pad_inner * x.size(-2))
+            pad_width = int(self.pad_inner * x.size(-1))
+            padding = (pad_width, pad_width, pad_height, pad_height)  # (left, right, top, bottom)
+
+            # Pad the input
+            x = nn.functional.pad(x, padding)
+        else:
+            pad_height = None
+            pad_width = None
+
         # add dimension so that we can broadcast it later
         x = x.unsqueeze(dim=1)
 
@@ -80,13 +93,15 @@ class Deconv2D(nn.Module):
         # y = y.view(batch, out_channels, img_height, img_width)
 
         y = torch.sum(y, dim=-3) / (self.in_channels ** 0.5) + self.b
+        if self.pad_inner:
+            y = y[:, :, pad_height:-pad_height, pad_width:-pad_width]
 
         return y
 
 
 def deconv_multi_filter_dim():
     filters = 128
-    deconv = Deconv2D(in_channels=3, out_channels=filters, kernel_size=(4, 4))
+    deconv = Deconv2D(in_channels=3, out_channels=filters, kernel_size=(4, 4), pad_inner=0.5)
     x = torch.rand((8, 3, 18, 18))
 
     y = deconv(x)
