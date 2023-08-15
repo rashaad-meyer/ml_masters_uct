@@ -166,7 +166,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         print('LR are being upscaled before being passed to network')
 
     if model_name == 'srcnn':
-        optimizer = optim.Adam([
+        optimizer = optim.AdamW([
             {'params': model.conv1.parameters()},
             {'params': model.conv2.parameters()},
             {'params': model.conv3.parameters(), 'lr': learning_rate * 0.1}

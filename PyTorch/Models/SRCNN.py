@@ -14,7 +14,7 @@ class SRCNN(nn.Module):
         else:
             self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=9, padding=4)
 
-        self.conv2 = nn.Conv2d(channels_1, channels_2, kernel_size=1, padding=0)
+        self.conv2 = nn.Conv2d(channels_1, channels_2, kernel_size=5, padding='same')
 
         if use_pixel_shuffle:
             self.pixel_shuffle = nn.PixelShuffle(upscale_factor)
