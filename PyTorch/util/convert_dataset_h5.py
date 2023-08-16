@@ -1,23 +1,19 @@
 import os
-import h5py
-from matplotlib.scale import scale_factory
-from requests import patch
 import torch
-import numpy as np
 from torchvision import io
 from torchvision import transforms as T
+from torchvision.utils import save_image
 from tqdm import tqdm
 
 from PyTorch.util.data_augmentation import RgbToYCbCr, RgbToGrayscale
 
 
-def convert_div2k_to_h5(path, scale, color, output_filename, patch_size=32):
+def convert_div2k_to_h5(path, scale, color, output_dir, patch_size=32):
     img_names = os.listdir(path)
     img_paths = list(map(lambda img_name: f'{path}/{img_name}', img_names))
     transforms = []
 
     if color == 'ycbcr':
-        
         transforms += [RgbToYCbCr(return_only_y=True)]
     elif color == 'grayscale':
         transforms += [RgbToGrayscale()]
@@ -27,13 +23,19 @@ def convert_div2k_to_h5(path, scale, color, output_filename, patch_size=32):
     hr_patches_list = []
     lr_patches_list = []
 
-    output_dir = '/'.join(output_filename.split('/')[:-1])
-    if output_dir and not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(f'{output_dir}/hr')
+        os.makedirs(f'{output_dir}/lr')
+    else:
+        print('Folder for patches already created. If you would like to regenerate the patche delete the folder: '
+              f'{output_dir}')
+        return output_dir
 
     print('Processing HR into LR and ')
-    for step, img_path in tqdm(enumerate(img_paths)):
+    for step, img_path in enumerate(img_paths):
+        print(f'Processing {step:04d}/{len(img_paths)}')
         hr_img = io.read_image(img_path)
+        img_name = img_path.split('/')[-1]
 
         resize = T.Resize((hr_img.shape[-2] // scale, hr_img.shape[-1] // scale),
                           interpolation=T.InterpolationMode.BICUBIC)
@@ -47,24 +49,12 @@ def convert_div2k_to_h5(path, scale, color, output_filename, patch_size=32):
         hr_img_patches = extract_patches(hr_img, patch_size)
         lr_img_patches = extract_patches(lr_img, patch_size // scale)
 
-        hr_patches_list.append(hr_img_patches)
-        lr_patches_list.append(lr_img_patches)
+        for i, (hr_img_patch, lr_img_patch) in enumerate(zip(hr_img_patches, lr_img_patches)):
+            # save patches
+            save_image(hr_img_patch, f'{output_dir}/hr/{img_name[:-4]}_{i:04d}.png')
+            save_image(lr_img_patch, f'{output_dir}/lr/{img_name[:-4]}_{i:04d}.png')
 
-        if not step < 100:
-            break
-    
-    print('Concatenating all images patches into one tensor...')
-    hr_patches = torch.cat(hr_patches_list, dim=0)
-    lr_patches = torch.cat(lr_patches_list, dim=0)
-
-    # Save to h5 file
-    print(f'Saving to H5 file')
-    output_filename = f'{output_filename}_x{scale}_{color}_{patch_size}.h5'
-    with h5py.File(output_filename, 'w') as f:
-        f.create_dataset("HR", data=hr_patches.numpy(), compression='gzip')
-        f.create_dataset("LR", data=lr_patches.numpy(), compression='gzip')
-
-    print(f'File saved to : {output_filename}...')
+    return f'{output_dir}/lr', f'{output_dir}/hr'
 
 
 def extract_patches(img_tensor, patch_size=32, stride=14):
@@ -103,4 +93,4 @@ def main():
 
 
 if __name__ == '__main__':
-    convert_div2k_to_h5('data/DIV2K_train_HR', scale=2, color='ycbcr', output_filename='data/h5_datasets/div2k')
+    convert_div2k_to_h5('../../data/DIV2K_train_HR', scale=2, color='ycbcr', output_dir='../../data/div2k_y')
