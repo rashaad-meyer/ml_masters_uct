@@ -79,7 +79,7 @@ def extract_patches(img_tensor, patch_size=32, stride=14):
     # Reshaping the patches tensor to the desired output shape
     patches = patches.contiguous().view(-1, img_tensor.size(0), patch_size, patch_size)
 
-    return patches
+    return patches / 255.0
 
 
 def main():
