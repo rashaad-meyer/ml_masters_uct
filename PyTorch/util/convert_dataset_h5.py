@@ -1,60 +1,101 @@
-import os
-import torch
-from torchvision import io
-from torchvision import transforms as T
-from torchvision.utils import save_image
-from tqdm import tqdm
-
 from PyTorch.util.data_augmentation import RgbToYCbCr, RgbToGrayscale
 
+import os
+import h5py
+from tqdm import tqdm
+import torch
+from torchvision import io, transforms as T
 
-def convert_div2k_to_h5(path, scale, color, output_dir, patch_size=32):
+
+# ... Your previous functions and imports ...
+
+def convert_div2k_to_h5(path, scale, color, output_filename, patch_size=32, stride=32):
     img_names = os.listdir(path)
     img_paths = list(map(lambda img_name: f'{path}/{img_name}', img_names))
     transforms = []
 
+    num_channels = 3
     if color == 'ycbcr':
         transforms += [RgbToYCbCr(return_only_y=True)]
+        num_channels = 1
     elif color == 'grayscale':
         transforms += [RgbToGrayscale()]
+        num_channels = 1
     elif color != 'rgb':
         raise ValueError('Please choose a valid color space ie rgb, ycbcr, grayscale')
 
-    hr_patches_list = []
-    lr_patches_list = []
+    output_dir = os.path.dirname(output_filename)
+    if output_dir and not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    if not os.path.exists(output_dir):
-        os.makedirs(f'{output_dir}/hr')
-        os.makedirs(f'{output_dir}/lr')
-    else:
-        print('Folder for patches already created. If you would like to regenerate the patche delete the folder: '
-              f'{output_dir}')
-        return output_dir
+    output_filename = f'{output_filename}_x{scale}_{color}_{patch_size}.h5'
 
-    print('Processing HR into LR and ')
-    for step, img_path in enumerate(img_paths):
-        print(f'Processing {step:04d}/{len(img_paths)}')
+    if os.path.exists(output_filename):
+        print(f'{output_filename.split("/")[-1]} already exists in {output_dir}')
+        return output_filename
+
+    print('Computing max size of h5 dataset')
+    max_size = calculate_total_patches(img_paths, patch_size, stride)
+    # Open the HDF5 file
+    with h5py.File(output_filename, 'w') as f:
+
+        # Create empty datasets for HR and LR with maximum possible size
+        hr_dset = f.create_dataset("HR",
+                                   (max_size, num_channels, patch_size, patch_size),
+                                   dtype='float32',
+                                   compression='gzip',
+                                   maxshape=(None, num_channels, patch_size, patch_size))
+        lr_dset = f.create_dataset("LR",
+                                   (max_size, num_channels, patch_size // scale, patch_size // scale),
+                                   dtype='float32',
+                                   compression='gzip',
+                                   maxshape=(None, num_channels, patch_size // scale, patch_size // scale))
+
+        count_hr = 0
+        count_lr = 0
+
+        for counter, img_path in enumerate(img_paths):
+            print(f'Processing image {counter + 1:03d}/{len(img_paths)}')
+
+            hr_img = io.read_image(img_path)
+
+            resize = T.Resize((hr_img.shape[-2] // scale, hr_img.shape[-1] // scale),
+                              interpolation=T.InterpolationMode.BICUBIC)
+
+            for transform in transforms:
+                hr_img = transform(hr_img)[0]
+
+            lr_img = resize(hr_img)
+
+            # Extract patches from HR and LR image
+            hr_img_patches = extract_patches(hr_img, patch_size, stride=stride)
+            lr_img_patches = extract_patches(lr_img, patch_size // scale, stride=stride // scale)
+
+            # Try to write patches directly to the HDF5 datasets
+            try:
+                hr_dset[count_hr: count_hr + hr_img_patches.size(0)] = hr_img_patches.numpy()
+                lr_dset[count_lr: count_lr + lr_img_patches.size(0)] = lr_img_patches.numpy()
+            except Exception as e:
+                print(e)
+                break
+
+            count_hr += hr_img_patches.size(0)
+            count_lr += lr_img_patches.size(0)
+
+        # Resize datasets to fit the actual size
+        hr_dset.resize(count_hr, axis=0)
+        lr_dset.resize(count_lr, axis=0)
+
+
+def calculate_total_patches(img_paths, patch_size, stride):
+    total_patches = 0
+    for img_path in tqdm(img_paths):
         hr_img = io.read_image(img_path)
-        img_name = img_path.split('/')[-1]
-
-        resize = T.Resize((hr_img.shape[-2] // scale, hr_img.shape[-1] // scale),
-                          interpolation=T.InterpolationMode.BICUBIC)
-
-        for transform in transforms:
-            hr_img = transform(hr_img)[0]
-
-        lr_img = resize(hr_img)
-
-        # Extract patches from HR and LR image
-        hr_img_patches = extract_patches(hr_img, patch_size)
-        lr_img_patches = extract_patches(lr_img, patch_size // scale)
-
-        for i, (hr_img_patch, lr_img_patch) in enumerate(zip(hr_img_patches, lr_img_patches)):
-            # save patches
-            save_image(hr_img_patch, f'{output_dir}/hr/{img_name[:-4]}_{i:04d}.png')
-            save_image(lr_img_patch, f'{output_dir}/lr/{img_name[:-4]}_{i:04d}.png')
-
-    return f'{output_dir}/lr', f'{output_dir}/hr'
+        h, w = hr_img.shape[-2], hr_img.shape[-1]
+        num_patches_h = (h - patch_size) // stride + 1
+        num_patches_w = (w - patch_size) // stride + 1
+        total_patches += num_patches_h * num_patches_w
+    return total_patches
 
 
 def extract_patches(img_tensor, patch_size=32, stride=14):
@@ -93,4 +134,4 @@ def main():
 
 
 if __name__ == '__main__':
-    convert_div2k_to_h5('../../data/DIV2K_train_HR', scale=2, color='ycbcr', output_dir='../../data/div2k_y')
+    convert_div2k_to_h5('../../data/DIV2K_train_HR', scale=2, color='ycbcr', output_filename='../../data/div2k_patches')
