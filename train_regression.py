@@ -15,7 +15,7 @@ import PyTorch.util.helper_functions as helper
 from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr, RgbToYCbCr, RgbToGrayscale
 from PyTorch.util.training_functions import train_regression_model
 
-from PyTorch.Datasets.Datasets import Div2k, TrainDataset, EvalDataset
+from PyTorch.Datasets.Datasets import Div2k, NinetyOneImageDataset, EvalDataset
 from eval import eval_on_ds
 
 # Global variables
@@ -115,7 +115,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_path = ds_path['91-image']
         val_path = ds_path['Set5']
 
-        train_data = TrainDataset(train_path, same_size=same_size)
+        train_data = NinetyOneImageDataset(train_path, same_size=same_size)
         val_data = EvalDataset(val_path, same_size=same_size)
 
         train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
