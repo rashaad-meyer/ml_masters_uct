@@ -127,7 +127,7 @@ def train_classification_model(model: nn.Module, criterion, optimizer, train_dat
 
 
 def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloader, valid_dataloader=None,
-                           num_epochs=3, name='model'):
+                           num_epochs=3, name='model', log_interval=10):
     """
         Trains NN regression on datasets for deblurring and super image resolution
         :param model: The NN model that you would like to train must be of type nn.Module
@@ -160,9 +160,16 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
 
     for epoch in range(num_epochs):
         model.train()
+
         running_loss = 0.0
         running_psnr = 0.0
-        for X, y in tqdm(train_dataloader):
+
+        interval_loss = 0.0
+        interval_psnr = 0.0
+
+        pbar = tqdm(enumerate(train_dataloader), total=len(train_dataloader))
+
+        for batch_idx, (X, y) in pbar:
             X = X.to(device)
             y = y.to(device)
 
@@ -176,8 +183,26 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
 
             with torch.no_grad():
                 running_psnr += metric(outputs, y).item()
+                interval_psnr += metric(outputs, y).item()
 
             running_loss += loss.item()
+            interval_loss += loss.item()
+
+            if log_interval is not None and (batch_idx + 1) % log_interval == 0:
+                avg_train_loss = interval_loss / log_interval
+                avg_train_psnr = interval_psnr / log_interval
+
+                pbar.set_postfix({"train_batch_loss": avg_train_loss, "train_batch_psnr": avg_train_psnr})
+
+                try:
+                    wandb.log({"train_batch_loss": avg_train_loss, "train_batch_psnr": avg_train_psnr},
+                              step=epoch * len(train_dataloader) + batch_idx)
+                except:
+                    print('Something went wrong with wandb')
+
+                # Reset running loss and PSNR for next log interval
+                interval_loss = 0.0
+                interval_psnr = 0.0
 
         history['train_loss'].append(running_loss / len(train_dataloader))
         history['psnr'].append(running_psnr / len(train_dataloader))
@@ -227,6 +252,8 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
     try:
         wandb.log({"best_train_loss": min(history['train_loss'])})
         wandb.log({"best_valid_loss": min(history['valid_loss'])})
+        wandb.log({"best_train_psnr": max(history['train_loss'])})
+        wandb.log({"best_valid_psnr": max(history['valid_loss'])})
     except:
         print('Something went wrong when saving best model or best losses')
 
