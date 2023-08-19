@@ -2,6 +2,7 @@ from PyTorch.util.data_augmentation import RgbToYCbCr, RgbToGrayscale
 
 import os
 import h5py
+import numpy as np
 from tqdm import tqdm
 import torch
 from torchvision import io, transforms as T
@@ -40,15 +41,17 @@ def convert_div2k_to_h5(path, scale, color, output_filename, patch_size=32, stri
     with h5py.File(output_filename, 'w') as f:
 
         # Create empty datasets for HR and LR with maximum possible size
+        hr_chunk_size = (1, num_channels, patch_size, patch_size)
+        lr_chunk_size = (1, num_channels, patch_size // scale, patch_size // scale)
         hr_dset = f.create_dataset("HR",
                                    (max_size, num_channels, patch_size, patch_size),
-                                   dtype='float32',
-                                   compression='gzip',
+                                   chunks=hr_chunk_size,
+                                   dtype='uint8',
                                    maxshape=(None, num_channels, patch_size, patch_size))
         lr_dset = f.create_dataset("LR",
                                    (max_size, num_channels, patch_size // scale, patch_size // scale),
-                                   dtype='float32',
-                                   compression='gzip',
+                                   chunks=lr_chunk_size,
+                                   dtype='uint8',
                                    maxshape=(None, num_channels, patch_size // scale, patch_size // scale))
 
         count_hr = 0
@@ -73,8 +76,8 @@ def convert_div2k_to_h5(path, scale, color, output_filename, patch_size=32, stri
 
             # Try to write patches directly to the HDF5 datasets
             try:
-                hr_dset[count_hr: count_hr + hr_img_patches.size(0)] = hr_img_patches.numpy()
-                lr_dset[count_lr: count_lr + lr_img_patches.size(0)] = lr_img_patches.numpy()
+                hr_dset[count_hr: count_hr + hr_img_patches.size(0)] = hr_img_patches.numpy().astype(np.uint8)
+                lr_dset[count_lr: count_lr + lr_img_patches.size(0)] = lr_img_patches.numpy().astype(np.uint8)
             except Exception as e:
                 print(e)
                 break
@@ -120,7 +123,7 @@ def extract_patches(img_tensor, patch_size=32, stride=14):
     # Reshaping the patches tensor to the desired output shape
     patches = patches.contiguous().view(-1, img_tensor.size(0), patch_size, patch_size)
 
-    return patches / 255.0
+    return patches.type(torch.uint8)
 
 
 def main():
@@ -134,4 +137,5 @@ def main():
 
 
 if __name__ == '__main__':
-    convert_div2k_to_h5('../../data/DIV2K_train_HR', scale=2, color='ycbcr', output_filename='../../data/div2k_patches')
+    convert_div2k_to_h5('../../data/DIV2K_train_HR', scale=2, color='ycbcr',
+                        output_filename='../../data/h5/div2k')

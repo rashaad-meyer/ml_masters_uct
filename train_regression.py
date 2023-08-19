@@ -15,7 +15,7 @@ import PyTorch.util.helper_functions as helper
 from PyTorch.util.data_augmentation import RandomCropIsr, PadIsr, RgbToYCbCr, RgbToGrayscale
 from PyTorch.util.training_functions import train_regression_model
 
-from PyTorch.Datasets.Datasets import Div2k, NinetyOneImageDataset, EvalDataset
+from PyTorch.Datasets.Datasets import Div2k, NinetyOneImageDataset, EvalDataset, IsrEvalDatasets, H5Dataset
 from eval import eval_on_ds
 
 # Global variables
@@ -121,6 +121,20 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
         val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
 
+    elif dataset == 'h5':
+        train_path = 'data/h5/div2k_x2_ycbcr_32.h5'
+        helper.download_div2k_h5(train_path)
+
+        val_path = helper.download_and_unzip_sr_ds(path='data/sr', ds_name='Set5')
+
+        val_transforms = [RgbToYCbCr(return_only_y=True)]
+
+        train_data = H5Dataset(train_path)
+        val_data = IsrEvalDatasets(val_path, transform=val_transforms)
+
+        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
+        val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
+
     else:
         raise ValueError('Dataset specified not supported choose div2k or 91-image')
 
@@ -129,6 +143,9 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         if dataset == '91-image':
             num_channels = 1
             use_pixel_shuffle = not same_size
+        elif dataset == 'h5':
+            num_channels = 1
+            use_pixel_shuffle = True
         else:
             num_channels = 3 if color == 'rgb' else 1
             use_pixel_shuffle = True
@@ -161,7 +178,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     if dataset == 'div2k':
         print(f'Set image type to {color}')
     print(f'Dataset set to {dataset}')
-    print(f'Inner padding (deconv) equal set to {pad_inner}')
+    print(f'Inner padding (deconv) set to {pad_inner}')
     if dataset == '91-image':
         print('LR are being upscaled before being passed to network')
 
@@ -185,7 +202,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     else:
         eval_transforms = []
 
-    if color == 'ycbcr':
+    if color == 'ycbcr' or dataset == 'h5':
         eval_transforms += [RgbToYCbCr(return_only_y=True)]
     elif color == 'grayscale':
         eval_transforms += [RgbToGrayscale()]

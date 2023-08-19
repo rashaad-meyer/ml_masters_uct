@@ -1,6 +1,7 @@
 import csv
 import os
 import re
+import gdown
 import zipfile
 import tarfile
 import requests
@@ -98,6 +99,30 @@ def download_and_unzip_voc_ds(path='data/obj-det'):
         download_tar(link, f"{file_path}.tar")
         print(f'Unzipping {file_name}')
         unzip_data(f"{file_path}.tar", path)
+
+
+def download_div2k_h5(output_file):
+    file_name = output_file.split('/')[-1]
+
+    # check if path exists
+    output_dir = os.path.dirname(output_file)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"Created new path: {output_dir}")
+    elif os.path.exists(output_file):
+        print('Div2k file already downloaded!')
+        return
+
+    download_ids = {
+
+        'div2k_patches_x2_ycbcr_32.h5': '1CFCAE5XSIfViZx6YiqKRCgbGigp3-GOg',
+        'div2k_x2_ycbcr_32.h5': '1t_1wuZOaEF1SA6ppbnISVopki7XD5LU_',
+    }
+    try:
+        download_url = f'https://drive.google.com/uc?id={download_ids[file_name]}'
+    except:
+        raise ValueError(f'Please select a output file name {download_ids.keys()}')
+    gdown.download(download_url, output_file, quiet=False)
 
 
 def download_and_unzip_sr_ds(path='data/sr', ds_name='Set5'):
@@ -372,4 +397,5 @@ def main():
 
 
 if __name__ == '__main__':
-    download_91_image_and_set5_ds()
+    output_file = '../../data/test/div2k_patches_x2_ycbcr_32.h5'
+    download_div2k_h5(output_file)

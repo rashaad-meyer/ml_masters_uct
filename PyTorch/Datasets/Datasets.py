@@ -4,6 +4,7 @@ import numpy as np
 from torchvision import io
 from torch.utils.data import Dataset
 from torchvision import transforms as T
+from time import time
 
 import os
 
@@ -184,17 +185,17 @@ class EvalDataset(Dataset):
             return len(f['lr'])
 
 
-class Div2kH5(Dataset):
+class H5Dataset(Dataset):
     def __init__(self, h5_file):
-        super(Div2kH5, self).__init__()
+        super(H5Dataset, self).__init__()
         self.h5_file = h5_file
+        self.file = h5py.File(self.h5_file, 'r')
 
     def __getitem__(self, idx):
-        with h5py.File(self.h5_file, 'r') as f:
-            hr_img = torch.from_numpy(f['HR'][idx])
-            lr_img = torch.from_numpy(f['LR'][idx])
+        hr_img = torch.from_numpy(self.file['HR'][idx]) / 255.0
+        lr_img = torch.from_numpy(self.file['LR'][idx]) / 255.0
 
-            return lr_img, hr_img
+        return lr_img, hr_img
 
     def __len__(self):
         with h5py.File(self.h5_file, 'r') as f:
@@ -203,14 +204,21 @@ class Div2kH5(Dataset):
 
 if __name__ == '__main__':
     # print(os.listdir(''))
-    ds = Div2kH5('../../data/div2k_patches_x2_ycbcr_32.h5')
+    ds = H5Dataset('../../data/h5/div2k_x2_ycbcr_32.h5')
+    # ds = H5Dataset('../../data/h5/bsd300_x2_ycbcr_32.h5')
+
     val_ds = EvalDataset('../../data/sr/srcnn/Set5_x2.h5', same_size=False)
-
-    for i in range(10):
+    start = time()
+    for i in range(16):
         HR_img, LR_img = ds[i]
-        print(HR_img.shape, LR_img.shape)
+    end = time()
+    print(end - start)
     print(len(ds))
-
-    # for i in range(5):
-    #     HR_img, LR_img = val_ds[i]
-    #     print(HR_img.shape, LR_img.shape)
+    print('-' * 30)
+    ds = NinetyOneImageDataset('../../data/sr/srcnn/91-image_x2.h5')
+    start = time()
+    for i in range(16):
+        HR_img, LR_img = ds[i]
+    end = time()
+    print(end - start)
+    print(len(ds))
