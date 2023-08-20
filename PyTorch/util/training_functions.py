@@ -188,7 +188,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
             running_loss += loss.item()
             interval_loss += loss.item()
 
-            if log_interval is not None and (batch_idx + 1) % log_interval == 0:
+            if log_interval != 0 and (batch_idx + 1) % log_interval == 0:
                 avg_train_loss = interval_loss / log_interval
                 avg_train_psnr = interval_psnr / log_interval
 

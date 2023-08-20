@@ -39,11 +39,13 @@ def main():
 
     parser.add_argument("--multi", default='', dest='multi', action='store_true')
 
-    parser.add_argument("--color", default='rgb', help="Select color space rgb/gray/ycbcr")
+    parser.add_argument("--color", default='ycbcr', help="Select color space rgb/gray/ycbcr")
 
     parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
     parser.add_argument("-s", "--scale", default=2, type=int, help="Upsampling scale")
     parser.add_argument("--same_size", default='', dest='same_size', action='store_true')
+    parser.add_argument("-li", "--log_int", default=0, type=int, help="Log interval: After how many batches "
+                                                                      "should metrics be logged")
 
     args = parser.parse_args()
     wandb.login()
@@ -62,6 +64,7 @@ def main():
             'dataset': args.ds,
             'scale': args.scale,
             'same_size': args.same_size,
+            'log_int': args.log_int,
         }]
     else:
         experiments = pd.read_csv('experiment_csv/regression.csv',
@@ -73,14 +76,16 @@ def main():
             'dataset': args.ds,
             'scale': args.scale,
             'same_size': args.same_size,
+            'log_int': args.log_int,
         })
-        with wandb.init(project=f"SRCNN-x{args.scale}-dev-v00", config=experiment):
+        with wandb.init(project=f"SRCNN-x{args.scale}-dev-v01", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
-                   color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None):
+                   color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None,
+                   four_factor=True, log_interval=0):
     # FIXME add padding to list of arguments
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
@@ -152,7 +157,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
 
         model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
                       first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle,
-                      pad_inner=pad_inner)
+                      pad_inner=pad_inner, four_factor=four_factor)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
@@ -187,7 +192,6 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
             {'params': model.conv1.parameters()},
             {'params': model.conv2.parameters()},
             {'params': model.conv3.parameters(), 'lr': learning_rate * 0.1}
-            # TODO add other learnable parameters
         ], lr=learning_rate)
     else:
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -196,7 +200,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
 
     print(f'Training for {num_epochs} epochs...')
     history = train_regression_model(model, criterion, optimizer, train_dataloader, val_dataloader,
-                                     num_epochs=num_epochs, name=model_file_name)
+                                     num_epochs=num_epochs, name=model_file_name, log_interval=log_interval)
     if deconv and padding:
         eval_transforms = [PadIsr(IMG_SIZE[0] // 4)]
     else:
