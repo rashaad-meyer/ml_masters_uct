@@ -64,7 +64,7 @@ def main():
             'dataset': args.ds,
             'scale': args.scale,
             'same_size': args.same_size,
-            'log_int': args.log_int,
+            'log_interval': args.log_int,
         }]
     else:
         experiments = pd.read_csv('experiment_csv/regression.csv',
@@ -76,7 +76,7 @@ def main():
             'dataset': args.ds,
             'scale': args.scale,
             'same_size': args.same_size,
-            'log_int': args.log_int,
+            'log_interval': args.log_int,
         })
         with wandb.init(project=f"SRCNN-x{args.scale}-dev-v01", config=experiment):
             config = wandb.config
