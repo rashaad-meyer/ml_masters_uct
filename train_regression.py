@@ -78,7 +78,7 @@ def main():
             'same_size': args.same_size,
             'log_interval': args.log_int,
         })
-        with wandb.init(project=f"SRCNN-x{args.scale}-dev-v01", config=experiment):
+        with wandb.init(project=f"SRCNN-x{args.scale}-dct-v01", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
