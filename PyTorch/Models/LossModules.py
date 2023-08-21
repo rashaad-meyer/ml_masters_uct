@@ -55,12 +55,17 @@ class DCT(nn.Module):
 
 
 class MSE_WITH_DCT(nn.Module):
-    def __init__(self, img_size=(96, 96)):
+    def __init__(self, loss_type='mse'):
         super(MSE_WITH_DCT, self).__init__()
-        self.mse = nn.MSELoss()
-        self.dct = DCT(img_size)
+        if loss_type == 'mse':
+            self.mse = nn.MSELoss()
+        elif loss_type == 'l1':
+            self.mse = nn.MSELoss()
+        self.dct = None
 
     def forward(self, x, y):
+        if self.dct is None:
+            self.dct = DCT((x.size(-2), x.size(-1)))
         x = self.dct(x)
         y = self.dct(y)
         loss = self.mse(x, y)

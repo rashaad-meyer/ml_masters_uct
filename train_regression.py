@@ -169,7 +169,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
     elif loss == 'MSE':
         criterion = nn.MSELoss()
     elif loss == 'DCT':
-        criterion = MSE_WITH_DCT(IMG_SIZE)
+        criterion = MSE_WITH_DCT('l1')
     elif loss == 'SSIM':
         criterion = SSIM()
     else:

@@ -221,13 +221,17 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
             model.eval()
             valid_running_loss = 0.0
             valid_running_psnr = 0.0
-            for X, y in valid_dataloader:
+            for i, (X, y) in enumerate(valid_dataloader):
                 X = X.to(device)
                 y = y.to(device)
 
                 with torch.no_grad():
                     outputs = model(X)
-                    loss = criterion(outputs, y)
+                    try:
+                        loss = criterion(outputs, y)
+                    except:
+                        if i == 0:
+                            print('Validation set couldn\'t be evaluated on training criterion')
                     valid_running_psnr += metric(outputs, y).item()
 
                 valid_running_loss += loss.item()
