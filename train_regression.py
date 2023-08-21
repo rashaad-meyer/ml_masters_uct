@@ -41,7 +41,7 @@ def main():
 
     parser.add_argument("--color", default='ycbcr', help="Select color space rgb/gray/ycbcr")
 
-    parser.add_argument("--ds", default='div2k', help="Select dataset div2k/91-image")
+    parser.add_argument("--ds", default='91-image', help="Select dataset div2k/91-image")
     parser.add_argument("-s", "--scale", default=2, type=int, help="Upsampling scale")
     parser.add_argument("--same_size", default='', dest='same_size', action='store_true')
     parser.add_argument("-li", "--log_int", default=0, type=int, help="Log interval: After how many batches "
