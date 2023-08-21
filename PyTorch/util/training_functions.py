@@ -147,7 +147,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
 
     metric = PSNR()
 
-    history = {'train_loss': [], 'valid_loss': [], 'psnr': [], 'valid_psnr': []}
+    history = {'train_loss': [], 'valid_loss': [], 'train_psnr': [], 'valid_psnr': []}
     best_model_path = None
 
     start_time = datetime.now().strftime("%m-%d_%H-%M")
@@ -205,7 +205,7 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
                 interval_psnr = 0.0
 
         history['train_loss'].append(running_loss / len(train_dataloader))
-        history['psnr'].append(running_psnr / len(train_dataloader))
+        history['train_psnr'].append(running_psnr / len(train_dataloader))
 
         try:
             wandb.log({"train_epoch_loss": running_loss / len(train_dataloader)}, step=epoch)
@@ -252,8 +252,8 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
     try:
         wandb.log({"best_train_loss": min(history['train_loss'])})
         wandb.log({"best_valid_loss": min(history['valid_loss'])})
-        wandb.log({"best_train_psnr": max(history['train_loss'])})
-        wandb.log({"best_valid_psnr": max(history['valid_loss'])})
+        wandb.log({"best_train_psnr": max(history['train_psnr'])})
+        wandb.log({"best_valid_psnr": max(history['valid_psnr'])})
     except:
         print('Something went wrong when saving best model or best losses')
 
