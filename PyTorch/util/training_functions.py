@@ -209,13 +209,13 @@ def train_regression_model(model: nn.Module, criterion, optimizer, train_dataloa
 
         try:
             wandb.log({"train_epoch_loss": running_loss / len(train_dataloader)}, step=epoch)
-            wandb.log({"psnr": running_psnr / len(train_dataloader)}, step=epoch)
+            wandb.log({"train_psnr": running_psnr / len(train_dataloader)}, step=epoch)
         except:
             print('Something went wrong with wandb')
 
         print(f'Epoch {epoch + 1:04d}')
         print(f'train loss: {running_loss / len(train_dataloader):.5f}')
-        print(f'train psnr: {history["psnr"][-1]:.5f}')
+        print(f'train psnr: {history["train_psnr"][-1]:.5f}')
 
         if valid_dataloader:
             model.eval()
