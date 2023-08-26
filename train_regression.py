@@ -157,7 +157,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
 
         model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
                       first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle,
-                      pad_inner=pad_inner, four_factor=four_factor)
+                      pad_inner=pad_inner, four_factor=four_factor, upscale_factor=scale)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:
