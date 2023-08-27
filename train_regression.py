@@ -3,6 +3,7 @@ import argparse
 import wandb
 import pandas as pd
 
+import torch
 from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -87,6 +88,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
                    color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None,
                    four_factor=True, log_interval=0):
     # FIXME add padding to list of arguments
+    torch.manual_seed(42)
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
         lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
@@ -111,8 +113,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_data = Div2k(lr_train_path, hr_train_path, transform=train_transforms)
         val_data = Div2k(lr_val_path, hr_val_path, transform=val_transforms)
 
-        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
-        val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True)
+        g = torch.Generator()
+        g.manual_seed(42)
+
+        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True, generator=g)
+        val_dataloader = DataLoader(val_data, batch_size=16, shuffle=True, generator=g)
 
     elif dataset == '91-image':
         ds_path = helper.download_91_image_and_set5_ds('data/sr/srcnn', scale=scale)
@@ -123,8 +128,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_data = NinetyOneImageDataset(train_path, same_size=same_size)
         val_data = EvalDataset(val_path, same_size=same_size)
 
-        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
-        val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
+        g = torch.Generator()
+        g.manual_seed(0)
+
+        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True, generator=g)
+        val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True, generator=g)
 
     elif dataset == 'h5':
         train_path = 'data/h5/div2k_x2_ycbcr_32.h5'
@@ -137,8 +145,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         train_data = H5Dataset(train_path)
         val_data = IsrEvalDatasets(val_path, transform=val_transforms)
 
-        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True)
-        val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True)
+        g = torch.Generator()
+        g.manual_seed(0)
+
+        train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True, generator=g)
+        val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True, generator=g)
 
     else:
         raise ValueError('Dataset specified not supported choose div2k or 91-image')
