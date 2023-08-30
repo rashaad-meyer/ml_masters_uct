@@ -27,6 +27,8 @@ def main():
     num_epochs = args.num_epochs
     DECONV = args.deconv
 
+    torch.manual_seed(42)
+
     if args.multi:
         wandb.login()
 
@@ -38,8 +40,11 @@ def main():
             T.ToTensor(),
         ])
 
+        g = torch.Generator()
+        g.manual_seed(42)
+
         training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
-        train_dataloader = DataLoader(training_data, batch_size=32, shuffle=False)
+        train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
 
         val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
         val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
@@ -47,6 +52,8 @@ def main():
         num_classes = len(training_data.classes)
 
         for hyperparams in configs:
+            for key, item in hyperparams.items():
+                print(f'{key} is set to {item}')
             with wandb.init(project="Cifar10-TwoLayerCNN-exp", config=hyperparams):
                 config = wandb.config
                 model = TwoLayerCNN(**config, num_classes=num_classes)
@@ -64,8 +71,11 @@ def main():
             T.ToTensor(),
         ])
 
+        g = torch.Generator()
+        g.manual_seed(42)
+
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
-        train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False)
+        train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False, generator=g)
 
         print('Setting up model, loss, and criterion')
         print(f'Use deconv module set to {DECONV}')
