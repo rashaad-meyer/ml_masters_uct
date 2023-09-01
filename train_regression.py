@@ -9,7 +9,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from PyTorch.Models.ResNet import ResNet
-from PyTorch.Models.SRCNN import SRCNN
+from PyTorch.Models.SRCNN import SRCNN, SrCnnPixelShuffle
 from PyTorch.Models.LossModules import MSE_WITH_DCT, SSIM
 
 import PyTorch.util.helper_functions as helper
@@ -166,9 +166,14 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
             num_channels = 3 if color == 'rgb' else 1
             use_pixel_shuffle = True
 
-        model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
-                      first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle,
-                      pad_inner=pad_inner, four_factor=four_factor, upscale_factor=scale)
+        if use_pixel_shuffle:
+            model = SrCnnPixelShuffle(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
+                                      first_elem_trainable=first_elem_trainable, pad_inner=pad_inner,
+                                      four_factor=four_factor, upscale_factor=scale)
+        else:
+            model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
+                          first_elem_trainable=first_elem_trainable, use_pixel_shuffle=use_pixel_shuffle,
+                          pad_inner=pad_inner, four_factor=four_factor, upscale_factor=scale)
     elif model_name == 'resnet':
         model = ResNet(32, 128)
     else:

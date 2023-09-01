@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torchvision import transforms as T
 from PyTorch.Models.DeconvModels import Deconv2D
+import torch.nn.functional as F
 
 
 class SRCNN(nn.Module):
@@ -30,6 +31,31 @@ class SRCNN(nn.Module):
         x = self.relu(self.conv2(x))
         x = self.conv3(x)
         x = self.pixel_shuffle(x)
+        return x
+
+
+class SrCnnPixelShuffle(nn.Module):
+    def __init__(self, num_channels=1, channels_1=64, channels_2=32, upscale_factor=2, deconv=False,
+                 bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True):
+        super(SrCnnPixelShuffle, self).__init__()
+
+        if deconv:
+            self.conv1 = Deconv2D(num_channels, channels_1, (5, 5), bias=bias, four_factor=four_factor,
+                                  first_elem_trainable=first_elem_trainable, pad_inner=pad_inner)
+        else:
+            self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=5, padding=4)
+
+        self.conv2 = nn.Conv2d(channels_1, channels_2, kernel_size=3, padding='same')
+
+        self.pixel_shuffle = nn.PixelShuffle(upscale_factor)
+        self.conv3 = nn.Conv2d(channels_2, num_channels * upscale_factor ** 2, kernel_size=3, padding='same')
+
+    def forward(self, x):
+        x = F.tanh(self.conv1(x))
+        x = F.tanh(self.conv2(x))
+        x = self.conv3(x)
+        x = self.pixel_shuffle(x)
+        x = F.sigmoid(x)
         return x
 
 
