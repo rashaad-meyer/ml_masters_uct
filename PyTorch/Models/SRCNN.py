@@ -1,7 +1,9 @@
+import logging
+import os
+
 import torch.nn as nn
 from torchvision import transforms as T
 from PyTorch.Models.DeconvModels import Deconv2D
-import torch.nn.functional as F
 
 
 class SRCNN(nn.Module):
@@ -37,6 +39,17 @@ class SRCNN(nn.Module):
 class SrCnnPixelShuffle(nn.Module):
     def __init__(self, num_channels=1, channels_1=64, channels_2=32, upscale_factor=2, deconv=False,
                  bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True):
+
+        # Configure logging
+        log_path = 'logs/output.log'
+        os.makedirs('/'.join(log_path.split('/')[:-1]), exist_ok=True)
+        self.logger = logging.getLogger(__name__)
+        handler = logging.FileHandler(log_path)
+        formatter = logging.Formatter('%(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.INFO)
+
         super(SrCnnPixelShuffle, self).__init__()
 
         if deconv:
@@ -50,12 +63,23 @@ class SrCnnPixelShuffle(nn.Module):
         self.pixel_shuffle = nn.PixelShuffle(upscale_factor)
         self.conv3 = nn.Conv2d(channels_2, num_channels * upscale_factor ** 2, kernel_size=3, padding='same')
 
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+
     def forward(self, x):
-        x = F.tanh(self.conv1(x))
-        x = F.tanh(self.conv2(x))
+        x = self.tanh(self.conv1(x))
+        self.logger.info('conv1 output: {:.3f}'.format(x.mean().item()))
+
+        x = self.tanh(self.conv2(x))
+        self.logger.info('conv2 output: {:.3f}'.format(x.mean().item()))
+
         x = self.conv3(x)
+        self.logger.info('conv3 output: {:.3f}'.format(x.mean().item()))
+
         x = self.pixel_shuffle(x)
-        x = F.sigmoid(x)
+        x = self.sigmoid(x)
+        self.logger.info('PsSig output: {:.3f}'.format(x.mean().item()))
+        self.logger.info('=' * 30)
         return x
 
 
