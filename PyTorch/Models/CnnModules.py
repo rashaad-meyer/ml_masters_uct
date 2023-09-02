@@ -5,7 +5,7 @@ from PyTorch.Models.DeconvModels import Deconv2D
 
 class TwoLayerCNN(nn.Module):
     def __init__(self, img_size=(32, 32), layer_1='conv', layer_2='conv', layer_1_in=3, layer_1_out=32, layer_2_out=32,
-                 num_classes=100, deconv_bias=True, first_elem_trainable=True, four_factor=True):
+                 num_classes=100, deconv_bias=True, first_elem_trainable=True, four_factor=True, dropout=0.5):
         super(TwoLayerCNN, self).__init__()
 
         if layer_1 == 'conv':
@@ -30,7 +30,7 @@ class TwoLayerCNN(nn.Module):
 
         self.relu = nn.ReLU()
         self.flatten = nn.Flatten()
-        self.dropout = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
         x = self.layer1(x)

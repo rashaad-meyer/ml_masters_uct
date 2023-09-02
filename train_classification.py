@@ -56,7 +56,7 @@ def main():
                 print(f'{key} is set to {item}')
             with wandb.init(project="Cifar10-TwoLayerCNN-exp", config=hyperparams):
                 config = wandb.config
-                model = TwoLayerCNN(**config, num_classes=num_classes)
+                model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
 
                 criterion = nn.CrossEntropyLoss()
                 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
