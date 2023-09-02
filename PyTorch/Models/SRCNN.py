@@ -67,18 +67,20 @@ class SrCnnPixelShuffle(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        x = self.tanh(self.conv1(x))
+        x = self.conv1(x)
         self.logger.info('conv1 output: {:.3f}'.format(x.mean().item()))
+        x = self.tanh(x)
+        self.logger.info('tanh1 output: {:.3f}'.format(x.mean().item()))
 
         x = self.tanh(self.conv2(x))
-        self.logger.info('conv2 output: {:.3f}'.format(x.mean().item()))
+        # self.logger.info('conv2 output: {:.3f}'.format(x.mean().item()))
 
         x = self.conv3(x)
-        self.logger.info('conv3 output: {:.3f}'.format(x.mean().item()))
+        # self.logger.info('conv3 output: {:.3f}'.format(x.mean().item()))
 
         x = self.pixel_shuffle(x)
         x = self.sigmoid(x)
-        self.logger.info('PsSig output: {:.3f}'.format(x.mean().item()))
+        # self.logger.info('PsSig output: {:.3f}'.format(x.mean().item()))
         self.logger.info('=' * 30)
         return x
 
