@@ -1,7 +1,7 @@
 path,model_name,deconv,loss,num_epochs,learning_rate,bias,first_elem_trainable,four_factor
+data,srcnn,True,L1,400,0.0001,True,False,False
 data,srcnn,True,L1,400,0.0001,True,True,False
 data,srcnn,False,L1,400,0.0001,False,False,False
-data,srcnn,True,L1,400,0.0001,True,False,False
 data,srcnn,True,L1,400,0.0001,True,True,True
 data,srcnn,False,L1,400,0.0001,False,False,True
 data,srcnn,True,L1,400,0.0001,True,False,True
