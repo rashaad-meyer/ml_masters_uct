@@ -14,3 +14,4 @@ saved_models
 wandb
 .pytest_cache
 logs
+/dev/
