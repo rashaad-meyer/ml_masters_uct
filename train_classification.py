@@ -54,7 +54,7 @@ def main():
         for hyperparams in configs:
             for key, item in hyperparams.items():
                 print(f'{key} is set to {item}')
-            with wandb.init(project="Cifar10-TwoLayerCNN-exp", config=hyperparams):
+            with wandb.init(project="Cifar10-TwoLayerCNN-exp-v0.0", config=hyperparams):
                 config = wandb.config
                 model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
 
