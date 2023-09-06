@@ -97,21 +97,39 @@ class ObjDetCNN(nn.Module):
 
 
 class LeNet5(nn.Module):
-    def __init__(self, num_classes=10, input_size=(1, 32, 32),):
+    def __init__(self, layer_1, layer_2, layer_3='deconv', num_classes=10, input_size=(1, 32, 32),):
         super(LeNet5, self).__init__()
-
+        
         # 1st Convolutional Layer
-        self.conv1 = nn.Conv2d(input_size[0], 6, kernel_size=5, stride=1, padding=2)
+        if layer_1 == 'conv':
+            self.conv1 = nn.Conv2d(input_size[0], 6, kernel_size=5, stride=1, padding='same')
+        elif layer_1 == 'deconv':
+            self.conv1 = Deconv2D(input_size[0], 6, kernel_size=(5, 5))
+        else:
+            raise NameError('Conv1: Proper module not selected')
+        
         self.tanh1 = nn.Tanh()
         self.avgpool1 = nn.AvgPool2d(kernel_size=2, stride=2)
 
         # 2nd Convolutional Layer
-        self.conv2 = nn.Conv2d(6, 16, kernel_size=5, stride=1)
+        if layer_2 == 'conv':
+            self.conv2 = nn.Conv2d(6, 16, kernel_size=5, padding='same')
+        elif layer_2 == 'deconv':
+            self.conv2 = Deconv2D(6, 16, kernel_size=(5, 5))
+        else:
+            raise NameError('Conv2: Proper module not selected')
+        
         self.tanh2 = nn.Tanh()
         self.avgpool2 = nn.AvgPool2d(kernel_size=2, stride=2)
 
         # 3rd Convolutional Layer
-        self.conv3 = nn.Conv2d(16, 120, kernel_size=5, stride=1)
+        if layer_3 == 'conv':
+            self.conv3 = nn.Conv2d(16, 120, kernel_size=5, stride=1, padding='same')
+        elif layer_2 == 'deconv':
+            self.conv3 = Deconv2D(16, 120, kernel_size=(5, 5))
+        else:
+            raise NameError('Conv3: Proper module not selected')
+        
         self.tanh3 = nn.Tanh()
 
         # Fully Connected Layers
@@ -148,14 +166,12 @@ class LeNet5(nn.Module):
         return x
 
 
-def test_two_layer_cnn():
+def test_cnn():
     img = torch.rand((1, 1, 28, 28))
-    model = LeNet5(input_size=img.size()[1:])
-
+    model = LeNet5('conv', 'conv', 'conv', input_size=img.size()[1:])
     y = model(img)
-
     print(y.size())
 
 
 if __name__ == '__main__':
-    test_two_layer_cnn()
+    test_cnn()
