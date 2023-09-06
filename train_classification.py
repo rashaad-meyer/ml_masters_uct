@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as T
 
-from PyTorch.Models.CnnModules import TwoLayerCNN
+from PyTorch.Models.CnnModules import LeNet5, TwoLayerCNN
 from PyTorch.Models.SRCNN import SRCNN
 import PyTorch.util.helper_functions as helper
 from PyTorch.util.training_functions import train_classification_model
@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--deconv', dest='deconv', action='store_true')
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=3, type=int, help="Learning rate")
+    parser.add_argument("-m", "--model", default='lenet', type=str, help="Choose between two model: lenet or twolayer")
     parser.add_argument('--multi', dest='multi', action='store_true')
     args = parser.parse_args()
 
@@ -56,7 +57,12 @@ def main():
                 print(f'{key} is set to {item}')
             with wandb.init(project="Cifar10-TwoLayerCNN-exp-v0.0", config=hyperparams):
                 config = wandb.config
-                model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
+                if args.model == 'twolayer':
+                    model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
+                elif args.model == 'lenet':
+                    model = LeNet5(**config, num_classes=num_classes, input_size=training_data[0].size())
+                else:
+                    raise NameError('Please pick valid model: lenet or twolayer')
 
                 criterion = nn.CrossEntropyLoss()
                 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
