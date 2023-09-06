@@ -63,24 +63,21 @@ class SrCnnPixelShuffle(nn.Module):
         self.pixel_shuffle = nn.PixelShuffle(upscale_factor)
         self.conv3 = nn.Conv2d(channels_2, num_channels * upscale_factor ** 2, kernel_size=3, padding='same')
 
+        self.batch_norm = nn.BatchNorm2d(channels_1)
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.conv1(x)
-        self.logger.info('conv1 output: {:.3f}'.format(x.mean().item()))
+        x = self.batch_norm(x)
         x = self.tanh(x)
-        self.logger.info('tanh1 output: {:.3f}'.format(x.mean().item()))
 
         x = self.tanh(self.conv2(x))
-        # self.logger.info('conv2 output: {:.3f}'.format(x.mean().item()))
 
         x = self.conv3(x)
-        # self.logger.info('conv3 output: {:.3f}'.format(x.mean().item()))
 
         x = self.pixel_shuffle(x)
         x = self.sigmoid(x)
-        # self.logger.info('PsSig output: {:.3f}'.format(x.mean().item()))
         self.logger.info('=' * 30)
         return x
 
