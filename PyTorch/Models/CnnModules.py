@@ -97,7 +97,7 @@ class ObjDetCNN(nn.Module):
 
 
 class LeNet5(nn.Module):
-    def __init__(self, layer_1, layer_2, layer_3='deconv', num_classes=10, input_size=(1, 32, 32),
+    def __init__(self, layer_1, layer_2, layer_3='conv', num_classes=10, input_size=(1, 32, 32),
                  deconv_bias= False, first_elem_trainable= False, four_factor = True, **kwargs):
         super(LeNet5, self).__init__()
         
@@ -128,7 +128,7 @@ class LeNet5(nn.Module):
         # 3rd Convolutional Layer
         if layer_3 == 'conv':
             self.conv3 = nn.Conv2d(16, 120, kernel_size=5, stride=1, padding='same')
-        elif layer_2 == 'deconv':
+        elif layer_3 == 'deconv':
             self.conv3 = Deconv2D(16, 120, kernel_size=(5, 5), bias=deconv_bias,
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
