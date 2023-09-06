@@ -60,7 +60,7 @@ def main():
                 if args.model == 'twolayer':
                     model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
                 elif args.model == 'lenet':
-                    model = LeNet5(**config, num_classes=num_classes, input_size=training_data[0].size())
+                    model = LeNet5(**config, num_classes=num_classes, input_size=tuple(training_data[0].size()))
                 else:
                     raise NameError('Please pick valid model: lenet or twolayer')
 
