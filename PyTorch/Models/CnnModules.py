@@ -97,11 +97,11 @@ class ObjDetCNN(nn.Module):
 
 
 class LeNet5(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, input_size=(1, 32, 32),):
         super(LeNet5, self).__init__()
 
         # 1st Convolutional Layer
-        self.conv1 = nn.Conv2d(1, 6, kernel_size=5, stride=1, padding=2)
+        self.conv1 = nn.Conv2d(input_size[0], 6, kernel_size=5, stride=1, padding=2)
         self.tanh1 = nn.Tanh()
         self.avgpool1 = nn.AvgPool2d(kernel_size=2, stride=2)
 
@@ -115,11 +115,15 @@ class LeNet5(nn.Module):
         self.tanh3 = nn.Tanh()
 
         # Fully Connected Layers
-        self.fc1 = nn.Linear(120 * 1 * 1, 84)
+        with torch.no_grad():
+            dummy_data = torch.zeros(1, *input_size)
+            fc1_input_size = self._forward_features(dummy_data).numel()
+
+        self.fc1 = nn.Linear(fc1_input_size, 84)
         self.tanh4 = nn.Tanh()
         self.fc2 = nn.Linear(84, num_classes)
 
-    def forward(self, x):
+    def _forward_features(self, x):
         x = self.conv1(x)
         x = self.tanh1(x)
         x = self.avgpool1(x)
@@ -131,6 +135,11 @@ class LeNet5(nn.Module):
         x = self.conv3(x)
         x = self.tanh3(x)
 
+        return x
+
+    def forward(self, x):
+        x = self._forward_features(x)
+
         x = x.view(x.size(0), -1)  # Flatten the tensor
         x = self.fc1(x)
         x = self.tanh4(x)
@@ -139,14 +148,9 @@ class LeNet5(nn.Module):
         return x
 
 
-# Test the LeNet5
-net = LeNet5()
-print(net)
-
-
 def test_two_layer_cnn():
-    img = torch.rand((1, 3, 32, 32))
-    model = TwoLayerCNN()
+    img = torch.rand((1, 1, 28, 28))
+    model = LeNet5(input_size=img.size()[1:])
 
     y = model(img)
 
