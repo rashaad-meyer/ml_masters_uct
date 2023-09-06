@@ -55,12 +55,13 @@ def main():
         for hyperparams in configs:
             for key, item in hyperparams.items():
                 print(f'{key} is set to {item}')
-            with wandb.init(project="Cifar10-TwoLayerCNN-exp-v0.0", config=hyperparams):
+            with wandb.init(project="Cifar10-LeNet5-exp-v0.0", config=hyperparams):
                 config = wandb.config
                 if args.model == 'twolayer':
                     model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
                 elif args.model == 'lenet':
-                    model = LeNet5(**config, num_classes=num_classes, input_size=tuple(training_data[0].size()))
+                    example, _ = training_data[0]
+                    model = LeNet5(**config, num_classes=num_classes, input_size=example.size())
                 else:
                     raise NameError('Please pick valid model: lenet or twolayer')
 
