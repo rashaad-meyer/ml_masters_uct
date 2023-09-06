@@ -97,14 +97,16 @@ class ObjDetCNN(nn.Module):
 
 
 class LeNet5(nn.Module):
-    def __init__(self, layer_1, layer_2, layer_3='deconv', num_classes=10, input_size=(1, 32, 32),):
+    def __init__(self, layer_1, layer_2, layer_3='deconv', num_classes=10, input_size=(1, 32, 32),
+                 deconv_bias= False, first_elem_trainable= False, four_factor = True, **kwargs):
         super(LeNet5, self).__init__()
         
         # 1st Convolutional Layer
         if layer_1 == 'conv':
             self.conv1 = nn.Conv2d(input_size[0], 6, kernel_size=5, stride=1, padding='same')
         elif layer_1 == 'deconv':
-            self.conv1 = Deconv2D(input_size[0], 6, kernel_size=(5, 5))
+            self.conv1 = Deconv2D(input_size[0], 6, kernel_size=(5, 5), bias=deconv_bias,
+                                  first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv1: Proper module not selected')
         
@@ -115,7 +117,8 @@ class LeNet5(nn.Module):
         if layer_2 == 'conv':
             self.conv2 = nn.Conv2d(6, 16, kernel_size=5, padding='same')
         elif layer_2 == 'deconv':
-            self.conv2 = Deconv2D(6, 16, kernel_size=(5, 5))
+            self.conv2 = Deconv2D(6, 16, kernel_size=(5, 5), bias=deconv_bias,
+                                  first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv2: Proper module not selected')
         
@@ -126,7 +129,8 @@ class LeNet5(nn.Module):
         if layer_3 == 'conv':
             self.conv3 = nn.Conv2d(16, 120, kernel_size=5, stride=1, padding='same')
         elif layer_2 == 'deconv':
-            self.conv3 = Deconv2D(16, 120, kernel_size=(5, 5))
+            self.conv3 = Deconv2D(16, 120, kernel_size=(5, 5), bias=deconv_bias,
+                                  first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv3: Proper module not selected')
         
