@@ -38,7 +38,7 @@ class SRCNN(nn.Module):
 
 class SrCnnPixelShuffle(nn.Module):
     def __init__(self, num_channels=1, channels_1=64, channels_2=32, upscale_factor=2, deconv=False,
-                 bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True):
+                 bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True, activation='relu'):
 
         # Configure logging
         log_path = 'logs/output.log'
@@ -64,15 +64,21 @@ class SrCnnPixelShuffle(nn.Module):
         self.conv3 = nn.Conv2d(channels_2, num_channels * upscale_factor ** 2, kernel_size=3, padding='same')
 
         self.batch_norm = nn.BatchNorm2d(channels_1)
-        self.tanh = nn.Tanh()
+
+        if activation == 'tanh':
+            self.activation = nn.Tanh()
+        elif activation == 'relu':
+            self.activation = nn.ReLU()
+        else:
+            raise NameError('Invalid activation function picked')
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.conv1(x)
+        x = self.activation(x)
         x = self.batch_norm(x)
-        x = self.tanh(x)
 
-        x = self.tanh(self.conv2(x))
+        x = self.activation(self.conv2(x))
 
         x = self.conv3(x)
 

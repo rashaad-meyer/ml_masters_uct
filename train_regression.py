@@ -230,7 +230,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         raise ValueError('Incorrect color space specified. Please choose between rgb, ycbcr, and grayscale')
 
     try:
-        wandb.log({'batch_norm': 'before tanh'})
+        wandb.log({'batch_norm': 'after activation'})
     except Exception as e:
         print(f"Couldn't batch_norm to wandb:\n{e}")
 
