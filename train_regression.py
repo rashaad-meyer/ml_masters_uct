@@ -78,7 +78,6 @@ def main():
             'scale': args.scale,
             'same_size': args.same_size,
             'log_interval': args.log_int,
-            'batch_norm': 'before tanh'
         })
         with wandb.init(project=f"SRCNN-x{args.scale}-batchnorm-v01", config=experiment):
             config = wandb.config
@@ -229,6 +228,11 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         eval_transforms += [RgbToGrayscale()]
     elif color != 'rgb':
         raise ValueError('Incorrect color space specified. Please choose between rgb, ycbcr, and grayscale')
+
+    try:
+        wandb.log({'batch_norm': 'before tanh'})
+    except Exception as e:
+        print(f"Couldn't batch_norm to wandb:\n{e}")
 
     try:
         print('Evaluating on Set5')
