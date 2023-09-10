@@ -1,0 +1,4 @@
+{"layer_1": "conv",     "layer_2": "conv",      "layer_3": "conv",    "deconv_bias": true,    "first_elem_trainable": true,   "four_factor": true}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",    "deconv_bias": true,    "first_elem_trainable": true,   "four_factor": true}
+{"layer_1": "deconv",   "layer_2": "deconv",    "layer_3": "conv",    "deconv_bias": true,    "first_elem_trainable": true,   "four_factor": true}
+{"layer_1": "deconv",   "layer_2": "deconv",      "layer_3": "deconv",    "deconv_bias": true,    "first_elem_trainable": true,   "four_factor": true}

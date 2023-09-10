@@ -66,7 +66,7 @@ class Deconv2D(nn.Module):
             w = torch.reshape(w, (self.out_channels, self.in_channels,) + self.kernel_size)
 
         hm1 = nn.functional.pad(w, (0, x.size(-1) - w.size(-1), 0, x.size(-2) - w.size(-2)))
-
+        # todo add offset param
         gm1f = 1 / fft2(hm1)
 
         if self.four_factor:

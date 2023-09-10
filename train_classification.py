@@ -21,7 +21,9 @@ def main():
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=3, type=int, help="Learning rate")
     parser.add_argument("-m", "--model", default='lenet', type=str, help="Choose between two model: lenet or twolayer")
-    parser.add_argument('--multi', dest='multi', action='store_true')
+    parser.add_argument('--multi', default='experiment_csv/img_class/dev.txt',
+                        help="Choose which file the experiments are contained in. "
+                             "Set to false if you want to use single")
     args = parser.parse_args()
 
     learning_rate = 10 ** -args.learning_rate
@@ -30,10 +32,10 @@ def main():
 
     torch.manual_seed(42)
 
-    if args.multi:
+    if args.multi != 'false':
         wandb.login()
 
-        configs = read_json_objects('experiment_csv/classification.txt')
+        configs = read_json_objects(args.multi)
 
         transforms = T.Compose([
             # T.RandomHorizontalFlip(),
@@ -53,9 +55,14 @@ def main():
         num_classes = len(training_data.classes)
 
         for hyperparams in configs:
+
+            hyperparams.update({
+                'experiment_type': args.multi.split('/')[-1][:-4],
+            })
+
             for key, item in hyperparams.items():
                 print(f'{key} is set to {item}')
-            with wandb.init(project="Cifar10-LeNet5-exp-v0.0", config=hyperparams):
+            with wandb.init(project="Cifar-final-dev-v0.1", config=hyperparams):
                 config = wandb.config
                 if args.model == 'twolayer':
                     model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)

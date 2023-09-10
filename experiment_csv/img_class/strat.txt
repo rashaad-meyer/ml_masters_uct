@@ -1,0 +1,8 @@
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": true,    "first_elem_trainable": true,    "deconv_bias": false}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": true,    "first_elem_trainable": false,    "deconv_bias": true}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": true,    "first_elem_trainable": false,    "deconv_bias": false}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": false,    "first_elem_trainable": true,    "deconv_bias": true}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": false,    "first_elem_trainable": true,    "deconv_bias": false}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": false,    "first_elem_trainable": false,    "deconv_bias": true}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": false,    "first_elem_trainable": false,    "deconv_bias": false}

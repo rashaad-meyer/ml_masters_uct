@@ -5,7 +5,7 @@ from PyTorch.Models.DeconvModels import Deconv2D
 
 class TwoLayerCNN(nn.Module):
     def __init__(self, img_size=(32, 32), layer_1='conv', layer_2='conv', layer_1_in=3, layer_1_out=32, layer_2_out=32,
-                 num_classes=100, deconv_bias=True, first_elem_trainable=True, four_factor=True, dropout=0.5):
+                 num_classes=100, deconv_bias=True, first_elem_trainable=True, four_factor=True, dropout=0.5, **kwargs):
         super(TwoLayerCNN, self).__init__()
 
         if layer_1 == 'conv':
@@ -98,9 +98,9 @@ class ObjDetCNN(nn.Module):
 
 class LeNet5(nn.Module):
     def __init__(self, layer_1, layer_2, layer_3='conv', num_classes=10, input_size=(1, 32, 32),
-                 deconv_bias= False, first_elem_trainable= False, four_factor = True, **kwargs):
+                 deconv_bias=False, first_elem_trainable=False, four_factor=True, **kwargs):
         super(LeNet5, self).__init__()
-        
+
         # 1st Convolutional Layer
         if layer_1 == 'conv':
             self.conv1 = nn.Conv2d(input_size[0], 6, kernel_size=5, stride=1, padding='same')
@@ -109,7 +109,7 @@ class LeNet5(nn.Module):
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv1: Proper module not selected')
-        
+
         self.tanh1 = nn.Tanh()
         self.avgpool1 = nn.AvgPool2d(kernel_size=2, stride=2)
 
@@ -121,7 +121,7 @@ class LeNet5(nn.Module):
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv2: Proper module not selected')
-        
+
         self.tanh2 = nn.Tanh()
         self.avgpool2 = nn.AvgPool2d(kernel_size=2, stride=2)
 
@@ -133,7 +133,7 @@ class LeNet5(nn.Module):
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv3: Proper module not selected')
-        
+
         self.tanh3 = nn.Tanh()
 
         # Fully Connected Layers
