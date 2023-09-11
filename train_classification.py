@@ -30,53 +30,54 @@ def main():
     num_epochs = args.num_epochs
     DECONV = args.deconv
 
-    torch.manual_seed(42)
-
     if args.multi != 'false':
         wandb.login()
 
-        configs = read_json_objects(args.multi)
+        # run each experiment 3 times
+        for exp_run in range(3):
+            torch.manual_seed(exp_run)
+            configs = read_json_objects(args.multi)
 
-        transforms = T.Compose([
-            # T.RandomHorizontalFlip(),
-            # T.RandomCrop(32, padding=4),
-            T.ToTensor(),
-        ])
+            transforms = T.Compose([
+                # T.RandomHorizontalFlip(),
+                # T.RandomCrop(32, padding=4),
+                T.ToTensor(),
+            ])
 
-        g = torch.Generator()
-        g.manual_seed(42)
+            g = torch.Generator()
+            g.manual_seed(exp_run)
 
-        training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
-        train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
+            training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
+            train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
 
-        val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
-        val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
+            val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
+            val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
 
-        num_classes = len(training_data.classes)
+            num_classes = len(training_data.classes)
 
-        for hyperparams in configs:
+            for hyperparams in configs:
 
-            hyperparams.update({
-                'experiment_type': args.multi.split('/')[-1][:-4],
-            })
+                hyperparams.update({
+                    'experiment_type': args.multi.split('/')[-1][:-4],
+                })
 
-            for key, item in hyperparams.items():
-                print(f'{key} is set to {item}')
-            with wandb.init(project="Cifar-final-dev-v0.1", config=hyperparams):
-                config = wandb.config
-                if args.model == 'twolayer':
-                    model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
-                elif args.model == 'lenet':
-                    example, _ = training_data[0]
-                    model = LeNet5(**config, num_classes=num_classes, input_size=example.size())
-                else:
-                    raise NameError('Please pick valid model: lenet or twolayer')
+                for key, item in hyperparams.items():
+                    print(f'{key} is set to {item}')
+                with wandb.init(project="Cifar-final-dev-v0.2", config=hyperparams):
+                    config = wandb.config
+                    if args.model == 'twolayer':
+                        model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
+                    elif args.model == 'lenet':
+                        example, _ = training_data[0]
+                        model = LeNet5(**config, num_classes=num_classes, input_size=example.size())
+                    else:
+                        raise NameError('Please pick valid model: lenet or twolayer')
 
-                criterion = nn.CrossEntropyLoss()
-                optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+                    criterion = nn.CrossEntropyLoss()
+                    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-                history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
-                                                     num_epochs=10)
+                    history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
+                                                         num_epochs=10)
 
     else:
         transforms = T.Compose([
