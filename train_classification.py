@@ -24,6 +24,7 @@ def main():
     parser.add_argument('--multi', default='experiment_csv/img_class/dev.txt',
                         help="Choose which file the experiments are contained in. "
                              "Set to false if you want to use single")
+    parser.add_argument("-d", "--ds", default='cifar', type=str, help="Choose which dataset to use")
     args = parser.parse_args()
 
     learning_rate = 10 ** -args.learning_rate
@@ -38,20 +39,35 @@ def main():
             torch.manual_seed(exp_run)
             configs = read_json_objects(args.multi)
 
-            transforms = T.Compose([
-                # T.RandomHorizontalFlip(),
-                # T.RandomCrop(32, padding=4),
-                T.ToTensor(),
-            ])
-
             g = torch.Generator()
             g.manual_seed(exp_run)
 
-            training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
-            train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
+            if args.ds == 'cifar':
+                transforms = T.Compose([
+                    # T.RandomHorizontalFlip(),
+                    # T.RandomCrop(32, padding=4),
+                    T.ToTensor(),
+                ])
+                training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
+                train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
 
-            val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
-            val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
+                val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
+                val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
+            elif args.ds == 'dtd':
+                transforms = T.Compose([
+                    # T.RandomHorizontalFlip(),
+                    # T.RandomCrop(32, padding=4),
+                    T.ToTensor(),
+                    T.Resize((224, 224)),
+                ])
+                training_data = torchvision.datasets.DTD(root='data', split='train', download=True,
+                                                         transform=transforms)
+                train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
+
+                val_data = torchvision.datasets.DTD(root='data', split='train', download=True, transform=transforms)
+                val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
+            else:
+                raise NameError('Invalid class specified please pick from the following: cifar / dtd')
 
             num_classes = len(training_data.classes)
 
@@ -59,6 +75,7 @@ def main():
 
                 hyperparams.update({
                     'experiment_type': args.multi.split('/')[-1][:-4],
+                    'dataset': args.ds,
                 })
 
                 for key, item in hyperparams.items():
