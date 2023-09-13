@@ -13,6 +13,10 @@ from PyTorch.Models.CnnModules import LeNet5, TwoLayerCNN
 from PyTorch.Models.SRCNN import SRCNN
 import PyTorch.util.helper_functions as helper
 from PyTorch.util.training_functions import train_classification_model
+import datetime
+
+# Store it in a variable called DATE
+DATE = datetime.datetime.now().strftime("%m-%d")
 
 
 def main():
@@ -72,15 +76,15 @@ def main():
             num_classes = len(training_data.classes)
 
             for hyperparams in configs:
-
+                exp_type = args.multi.split('/')[-1][:-4]
                 hyperparams.update({
-                    'experiment_type': args.multi.split('/')[-1][:-4],
+                    'experiment_type': exp_type,
                     'dataset': args.ds,
                 })
 
                 for key, item in hyperparams.items():
                     print(f'{key} is set to {item}')
-                with wandb.init(project="Cifar-final-dev-v0.2", config=hyperparams):
+                with wandb.init(project=f"Cifar10_{exp_type}_{DATE}", config=hyperparams):
                     config = wandb.config
                     if args.model == 'twolayer':
                         model = TwoLayerCNN(**config, num_classes=num_classes, dropout=0.0)
