@@ -61,7 +61,7 @@ def plot_mean_std(username, project_name, metric, exp_type):
         if mean is None:
             continue
 
-        epochs = range(len(mean))
+        epochs = range(1, len(mean) + 1)
 
         plt.plot(epochs, mean, label=label)
         plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
