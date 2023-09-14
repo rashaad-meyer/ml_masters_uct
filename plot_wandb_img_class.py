@@ -1,4 +1,4 @@
-import json
+import os
 import wandb
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,7 +53,7 @@ def generate_legend_label(config, exp_type):
 def plot_mean_std(username, project_name, metrics: list, exp_type):
     plt.figure(figsize=(20, 8))
     for i, metric in enumerate(metrics):
-        print(f'Processing plot {i+1}')
+        print(f'Processing plot {i + 1}')
         plt.subplot(1, 2, i + 1)
 
         print('Fetching Runs...')
@@ -76,15 +76,17 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
 
         plt.xlabel('Epochs')
         plt.ylabel(metric)
-        plt.legend()
+        plt.legend(loc='center right')
 
     plt.show()
+    os.makedirs('gen_imgs', exist_ok=True)
+    plt.savefig(f'gen_imgs/{project_name}_{metrics[0]}_{metrics[1]}.png')
 
 
 # Usage
 def main():
     username = "viibrem"
-    project_name = "Cifar-final-dev-v0.2"
+    project_name = "Cifar10_arch_09-13"
     exp_type = 'arch'
     metrics = ['valid_accuracy', 'train_accuracy']
     plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
