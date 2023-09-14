@@ -3,6 +3,7 @@ import wandb
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
+from tqdm import tqdm
 
 
 def fetch_runs(username, project_name):
@@ -16,7 +17,7 @@ def group_runs_by_config(runs, exp_type):
     grouped_runs = defaultdict(list)
 
     for run in runs:
-        label = generate_legend_label(run.config, exp_type)  # Convert the config dict to string to make it hashable
+        label = generate_legend_label(run.config, exp_type)
         grouped_runs[label].append(run)
 
     return grouped_runs
@@ -46,8 +47,18 @@ def calculate_mean_std(runs, metric):
 def generate_legend_label(config, exp_type):
     if exp_type == 'arch':
         return f"{config['layer_1'][0].upper()}-{config['layer_2'][0].upper()}-{config['layer_3'][0].upper()}"
+    elif exp_type == 'strat':
+        label = []
+        label.append('four factor') if config['four_factor'] else ''
+        label.append('first elem') if config['first_elem_trainable'] else ''
+        label.append('bias') if config['deconv_bias'] else ''
+
+        if len(label) == 0:
+            return 'none'
+
+        return '-'.join(label)
     else:
-        raise NotImplemented('Type still needs to be implemented')
+        raise NameError('Experiment Type not supported')
 
 
 def plot_mean_std(username, project_name, metrics: list, exp_type):
@@ -63,8 +74,8 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
         grouped_runs = group_runs_by_config(runs, exp_type)
 
         print('Plotting...')
-        for label, runs in grouped_runs.items():
-            print('Calculating mean and std for each set')
+        for label, runs in tqdm(grouped_runs.items()):
+
             mean, std = calculate_mean_std(runs, metric)
             if mean is None:
                 continue
@@ -76,7 +87,11 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
 
         plt.xlabel('Epochs')
         plt.ylabel(metric.replace('_', ' ').capitalize())
-        plt.legend(loc='center right', fontsize=15)
+
+        if exp_type == 'arch':
+            plt.legend(loc='best', fontsize=15)
+        elif exp_type == 'strat':
+            plt.legend(loc='upper right', fontsize=10)
 
     # plt.show()
     os.makedirs('gen_imgs', exist_ok=True)
@@ -87,8 +102,8 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
 # Usage
 def main():
     username = "viibrem"
-    project_name = "Cifar10_arch_09-13"
-    exp_type = 'arch'
+    project_name = "Cifar10_strat_09-14"
+    exp_type = project_name.split('_')[1]
     metrics = ['train_epoch_loss', 'valid_epoch_loss']
     # metrics = ['train_accuracy', 'valid_accuracy']
     plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
