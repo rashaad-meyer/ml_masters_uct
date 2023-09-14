@@ -1,4 +1,5 @@
 import argparse
+import datetime
 
 import wandb
 import pandas as pd
@@ -21,6 +22,7 @@ from eval import eval_on_ds
 
 # Global variables
 IMG_SIZE = (96, 96)
+DATE = datetime.datetime.now().strftime("%m-%d")
 
 
 def main():
@@ -67,9 +69,10 @@ def main():
             'same_size': args.same_size,
             'log_interval': args.log_int,
         }]
+        exp_type = 'single'
     else:
-        experiments = pd.read_csv('experiment_csv/regression.csv',
-                                  dtype={'deconv': bool}).to_dict('records')
+        experiments = pd.read_csv(args.multi, dtype={'deconv': bool}).to_dict('records')
+        exp_type = args.multi.split('/')[-1][:-4]
 
     for experiment in experiments:
         experiment.update({
@@ -79,7 +82,9 @@ def main():
             'same_size': args.same_size,
             'log_interval': args.log_int,
         })
-        with wandb.init(project=f"SRCNN-x{args.scale}-batchnorm-v01", config=experiment):
+
+        model_name = "SRCNN" if args.same_size else "ESPCN"
+        with wandb.init(project=f"{model_name}-{exp_type}-x{args.scale}-{DATE}", config=experiment):
             config = wandb.config
             run_experiment(**config)
 
