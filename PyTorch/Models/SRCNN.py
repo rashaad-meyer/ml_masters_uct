@@ -1,6 +1,7 @@
 import logging
 import os
 
+import torch
 import torch.nn as nn
 from torchvision import transforms as T
 from PyTorch.Models.DeconvModels import Deconv2D
@@ -36,9 +37,11 @@ class SRCNN(nn.Module):
         return x
 
 
-class SrCnnPixelShuffle(nn.Module):
+class ESPCN(nn.Module):
     def __init__(self, num_channels=1, channels_1=64, channels_2=32, upscale_factor=2, deconv=False,
-                 bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True, activation='relu'):
+                 bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True, activation='tanh'):
+
+        super(ESPCN, self).__init__()
 
         # Configure logging
         log_path = 'logs/output.log'
@@ -49,8 +52,6 @@ class SrCnnPixelShuffle(nn.Module):
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
         self.logger.setLevel(logging.INFO)
-
-        super(SrCnnPixelShuffle, self).__init__()
 
         if deconv:
             self.conv1 = Deconv2D(num_channels, channels_1, (5, 5), bias=bias, four_factor=four_factor,
@@ -63,28 +64,23 @@ class SrCnnPixelShuffle(nn.Module):
         self.pixel_shuffle = nn.PixelShuffle(upscale_factor)
         self.conv3 = nn.Conv2d(channels_2, num_channels * upscale_factor ** 2, kernel_size=3, padding='same')
 
-        self.batch_norm = nn.BatchNorm2d(channels_1)
-
         if activation == 'tanh':
             self.activation = nn.Tanh()
         elif activation == 'relu':
             self.activation = nn.ReLU()
         else:
             raise NameError('Invalid activation function picked')
-        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = self.conv1(x)
         x = self.activation(x)
-        x = self.batch_norm(x)
 
         x = self.activation(self.conv2(x))
 
         x = self.conv3(x)
 
         x = self.pixel_shuffle(x)
-        x = self.sigmoid(x)
-        self.logger.info('=' * 30)
+        x = torch.clamp(x, min=0.0, max=1.0)
         return x
 
 
