@@ -50,26 +50,34 @@ def generate_legend_label(config, exp_type):
         raise NotImplemented('Type still needs to be implemented')
 
 
-def plot_mean_std(username, project_name, metric, exp_type):
-    runs = fetch_runs(username, project_name)
-    grouped_runs = group_runs_by_config(runs, exp_type)
+def plot_mean_std(username, project_name, metrics: list, exp_type):
+    plt.figure(figsize=(20, 8))
+    for i, metric in enumerate(metrics):
+        print(f'Processing plot {i+1}')
+        plt.subplot(1, 2, i + 1)
 
-    plt.figure(figsize=(12, 8))
+        print('Fetching Runs...')
+        runs = fetch_runs(username, project_name)
 
-    for label, runs in grouped_runs.items():
-        mean, std = calculate_mean_std(runs, metric)
-        if mean is None:
-            continue
+        print('Grouping Runs...')
+        grouped_runs = group_runs_by_config(runs, exp_type)
 
-        epochs = range(1, len(mean) + 1)
+        print('Plotting...')
+        for label, runs in grouped_runs.items():
+            print('Calculating mean and std for each set')
+            mean, std = calculate_mean_std(runs, metric)
+            if mean is None:
+                continue
 
-        plt.plot(epochs, mean, label=label)
-        plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
+            epochs = range(1, len(mean) + 1)
 
-    plt.xlabel('Epochs')
-    plt.ylabel(metric)
-    plt.legend()
-    plt.title(f'{metric} over epochs for various configurations')
+            plt.plot(epochs, mean, label=label)
+            plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
+
+        plt.xlabel('Epochs')
+        plt.ylabel(metric)
+        plt.legend()
+
     plt.show()
 
 
@@ -78,7 +86,8 @@ def main():
     username = "viibrem"
     project_name = "Cifar-final-dev-v0.2"
     exp_type = 'arch'
-    plot_mean_std(username, project_name, metric='valid_accuracy', exp_type=exp_type)
+    metrics = ['valid_accuracy', 'train_accuracy']
+    plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
 
 
 if __name__ == '__main__':
