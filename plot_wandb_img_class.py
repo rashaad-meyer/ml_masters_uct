@@ -75,7 +75,7 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
             plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
 
         plt.xlabel('Epochs')
-        plt.ylabel(metric)
+        plt.ylabel(metric.replace('_', ' ').capitalize())
         plt.legend(loc='center right')
 
     plt.show()
