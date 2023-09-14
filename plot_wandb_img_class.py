@@ -45,7 +45,7 @@ def calculate_mean_std(runs, metric):
 
 def generate_legend_label(config, exp_type):
     if exp_type == 'arch':
-        return f"{config['layer_1']}-{config['layer_2']}-{config['layer_3']}"
+        return f"{config['layer_1'][0].upper()}-{config['layer_2'][0].upper()}-{config['layer_3'][0].upper()}"
     else:
         raise NotImplemented('Type still needs to be implemented')
 
@@ -76,11 +76,12 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
 
         plt.xlabel('Epochs')
         plt.ylabel(metric.replace('_', ' ').capitalize())
-        plt.legend(loc='center right')
+        plt.legend(loc='center right', fontsize=15)
 
-    plt.show()
+    # plt.show()
     os.makedirs('gen_imgs', exist_ok=True)
     plt.savefig(f'gen_imgs/{project_name}_{metrics[0]}_{metrics[1]}.png')
+    plt.close()
 
 
 # Usage
@@ -88,7 +89,8 @@ def main():
     username = "viibrem"
     project_name = "Cifar10_arch_09-13"
     exp_type = 'arch'
-    metrics = ['valid_accuracy', 'train_accuracy']
+    metrics = ['train_epoch_loss', 'valid_epoch_loss']
+    # metrics = ['train_accuracy', 'valid_accuracy']
     plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
 
 
