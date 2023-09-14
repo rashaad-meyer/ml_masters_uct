@@ -16,3 +16,4 @@ wandb
 logs
 /dev/
 */__pycache__
+gen_imgs
