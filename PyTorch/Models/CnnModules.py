@@ -98,14 +98,15 @@ class ObjDetCNN(nn.Module):
 
 class LeNet5(nn.Module):
     def __init__(self, layer_1, layer_2, layer_3='conv', num_classes=10, input_size=(1, 32, 32),
-                 deconv_bias=False, first_elem_trainable=False, four_factor=True, **kwargs):
+                 deconv_bias=False, first_elem_trainable=False, four_factor=True,
+                 channels_1=6, channels_2=16, channels_3=120, filter_size=5, **kwargs):
         super(LeNet5, self).__init__()
 
         # 1st Convolutional Layer
         if layer_1 == 'conv':
-            self.conv1 = nn.Conv2d(input_size[0], 6, kernel_size=5, stride=1, padding='same')
+            self.conv1 = nn.Conv2d(input_size[0], channels_1, kernel_size=filter_size, stride=1, padding='same')
         elif layer_1 == 'deconv':
-            self.conv1 = Deconv2D(input_size[0], 6, kernel_size=(5, 5), bias=deconv_bias,
+            self.conv1 = Deconv2D(input_size[0], channels_1, kernel_size=(filter_size, filter_size), bias=deconv_bias,
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv1: Proper module not selected')
@@ -115,9 +116,9 @@ class LeNet5(nn.Module):
 
         # 2nd Convolutional Layer
         if layer_2 == 'conv':
-            self.conv2 = nn.Conv2d(6, 16, kernel_size=5, padding='same')
+            self.conv2 = nn.Conv2d(channels_1, channels_2, kernel_size=filter_size, padding='same')
         elif layer_2 == 'deconv':
-            self.conv2 = Deconv2D(6, 16, kernel_size=(5, 5), bias=deconv_bias,
+            self.conv2 = Deconv2D(channels_1, channels_2, kernel_size=(filter_size, filter_size), bias=deconv_bias,
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv2: Proper module not selected')
@@ -127,9 +128,9 @@ class LeNet5(nn.Module):
 
         # 3rd Convolutional Layer
         if layer_3 == 'conv':
-            self.conv3 = nn.Conv2d(16, 120, kernel_size=5, stride=1, padding='same')
+            self.conv3 = nn.Conv2d(channels_2, channels_3, kernel_size=filter_size, stride=1, padding='same')
         elif layer_3 == 'deconv':
-            self.conv3 = Deconv2D(16, 120, kernel_size=(5, 5), bias=deconv_bias,
+            self.conv3 = Deconv2D(channels_2, channels_3, kernel_size=(filter_size, filter_size), bias=deconv_bias,
                                   first_elem_trainable=first_elem_trainable, four_factor=four_factor)
         else:
             raise NameError('Conv3: Proper module not selected')
