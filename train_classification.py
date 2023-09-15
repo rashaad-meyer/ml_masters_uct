@@ -29,11 +29,13 @@ def main():
                         help="Choose which file the experiments are contained in. "
                              "Set to false if you want to use single")
     parser.add_argument("-d", "--ds", default='cifar', type=str, help="Choose which dataset to use")
+    parser.add_argument("-b", "--batch_size", default=32, type=int, help="How many epochs to train the network for")
     args = parser.parse_args()
 
     learning_rate = 10 ** -args.learning_rate
     num_epochs = args.num_epochs
     DECONV = args.deconv
+    batch_size = args.batch_size
 
     if args.multi != 'false':
         wandb.login()
@@ -53,10 +55,10 @@ def main():
                     T.ToTensor(),
                 ])
                 training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
-                train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
+                train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=g)
 
                 val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
-                val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
+                val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
             elif args.ds == 'dtd':
                 transforms = T.Compose([
                     # T.RandomHorizontalFlip(),
@@ -66,10 +68,10 @@ def main():
                 ])
                 training_data = torchvision.datasets.DTD(root='data', split='train', download=True,
                                                          transform=transforms)
-                train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True, generator=g)
+                train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=g)
 
                 val_data = torchvision.datasets.DTD(root='data', split='train', download=True, transform=transforms)
-                val_dataloader = DataLoader(val_data, batch_size=32, shuffle=False)
+                val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
             else:
                 raise NameError('Invalid class specified please pick from the following: cifar / dtd')
 
@@ -77,10 +79,11 @@ def main():
 
             for hyperparams in configs:
                 exp_type = args.multi.split('/')[-1][:-4]
-                hyperparams.update({
-                    'experiment_type': exp_type,
-                    'dataset': args.ds,
-                })
+
+                batch_size = hyperparams.get('batch_size', 32)
+                learning_rate = hyperparams.get('learning_rate', 0.001)
+                optimizer_type = hyperparams.get('optimizer', 'adam').lower()
+                exp_type = hyperparams.get('exp_type', exp_type).lower()
 
                 for key, item in hyperparams.items():
                     print(f'{key} is set to {item}')
@@ -95,7 +98,13 @@ def main():
                         raise NameError('Please pick valid model: lenet or twolayer')
 
                     criterion = nn.CrossEntropyLoss()
-                    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
+                    if optimizer_type == 'adam':
+                        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+                    elif optimizer_type == 'sgd':
+                        optimizer = optim.SGD(model.parameters(), lr=learning_rate)
+                    else:
+                        raise NameError('Invalid optimizer specified, please use adam or sgd.')
 
                     history = train_classification_model(model, criterion, optimizer, train_dataloader, val_dataloader,
                                                          num_epochs=10)
