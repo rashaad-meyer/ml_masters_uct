@@ -1,0 +1,1 @@
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true}
