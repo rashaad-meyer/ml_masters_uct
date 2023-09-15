@@ -30,10 +30,8 @@ def main():
     parser.add_argument("-d", "--ds", default='cifar', type=str, help="Choose which dataset to use")
     args = parser.parse_args()
 
-    learning_rate = 10 ** -args.learning_rate
     num_epochs = args.num_epochs
     DECONV = args.deconv
-    batch_size = args.batch_size
 
     if args.multi != 'false':
         wandb.login()
@@ -89,11 +87,14 @@ def main():
             T.ToTensor(),
         ])
 
+        learning_rate = 1e-3
+        batch_size = 32
+
         g = torch.Generator()
         g.manual_seed(42)
 
         training_data = torchvision.datasets.CIFAR100('data', train=True, download=True, transform=transforms)
-        train_dataloader = DataLoader(training_data, batch_size=64, shuffle=False, generator=g)
+        train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=False, generator=g)
 
         print('Setting up model, loss, and criterion')
         print(f'Use deconv module set to {DECONV}')
