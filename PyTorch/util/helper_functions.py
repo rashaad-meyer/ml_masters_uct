@@ -1,7 +1,6 @@
 import csv
 import os
 import re
-import gdown
 import zipfile
 import tarfile
 import requests
@@ -102,6 +101,7 @@ def download_and_unzip_voc_ds(path='data/obj-det'):
 
 
 def download_div2k_h5(output_file):
+    import gdown
     file_name = output_file.split('/')[-1]
 
     # check if path exists
