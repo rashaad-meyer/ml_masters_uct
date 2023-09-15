@@ -34,8 +34,7 @@ def evaluate_regression_model(model: nn.Module, criterion, dataloader, name='mod
 
 
 def load_weights(model, model_path):
-
-    checkpoint = torch.load(model_path)
+    checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
     model.load_state_dict(checkpoint)
 
     return model

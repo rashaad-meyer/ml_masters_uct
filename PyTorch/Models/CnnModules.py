@@ -144,9 +144,12 @@ class LeNet5(nn.Module):
         self.fc1 = nn.Linear(fc1_input_size, 84)
         self.tanh4 = nn.Tanh()
         self.fc2 = nn.Linear(84, num_classes)
+        self.layer1_out = None
 
     def _forward_features(self, x):
         x = self.conv1(x)
+        self.layer1_out = x
+
         x = self.tanh1(x)
         x = self.avgpool1(x)
 

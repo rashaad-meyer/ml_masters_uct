@@ -11,14 +11,19 @@ def impulse_response_of_model(model, img_size):
     model.eval()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    x = F.pad(torch.tensor([[[[1.0]]]]), (0, img_size[-2] - 1, 0, img_size[-1] - 1))
+    x = F.pad(torch.tensor([[[1.0]]]), (0, img_size[-2] - 1, 0, img_size[-1] - 1))
+
+    num_channels = img_size[0]
+    x = x.expand(num_channels, -1, -1).unsqueeze(0)
+
     x = x.to(device)
 
     _ = model(x)
-    y = fft2(model.layer1_out)
+    y = model.layer1_out
+    yf = fft2(y)
 
     # return output magnitude and phase
-    return y.abs(), y.angle()
+    return yf.abs(), yf.angle(), y
 
 
 def save_tensor_images(tensor, file_prefix=None, folder=None):
