@@ -1,1 +1,16 @@
-{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv",   "four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "batch_size": 16, "legend_label": "16", "exp_type":"batch_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "batch_size": 32, "legend_label": "32", "exp_type":"batch_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "batch_size": 64, "legend_label": "64", "exp_type":"batch_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "learning_rate": 0.01, "legend_label": "0.01", "exp_type":"learning_rate"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "learning_rate": 0.001, "legend_label": "0.001", "exp_type":"learning_rate"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "learning_rate": 0.0001, "legend_label": "0.0001", "exp_type":"learning_rate"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "filter_size": 3, "legend_label": "3", "exp_type":"filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "filter_size": 5, "legend_label": "5", "exp_type":"filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "filter_size": 7, "legend_label": "7", "exp_type":"filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "filter_size": 9, "legend_label": "9", "exp_type":"filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "channels_1": 3, "legend_label": "3", "exp_type":"num_filters"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "channels_1": 6, "legend_label": "6", "exp_type":"num_filters"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "channels_1": 12, "legend_label": "12", "exp_type":"num_filters"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "channels_1": 24, "legend_label": "24", "exp_type":"num_filters"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "optimizer": "adam", "legend_label": "adam", "exp_type":"optimizer"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "optimizer": "sgd", "legend_label": "sgd", "exp_type":"optimizer"}
