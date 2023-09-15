@@ -91,10 +91,7 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
         plt.xlabel('Epochs')
         plt.ylabel(metric.replace('_', ' ').capitalize())
 
-        if exp_type == 'arch':
-            plt.legend(loc='best', fontsize=15)
-        elif exp_type == 'strat':
-            plt.legend(loc='upper right', fontsize=10)
+        plt.legend(loc='lower right', fontsize=15)
 
     # plt.show()
     os.makedirs('gen_imgs', exist_ok=True)
