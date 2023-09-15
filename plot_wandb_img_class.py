@@ -45,20 +45,23 @@ def calculate_mean_std(runs, metric):
 
 
 def generate_legend_label(config, exp_type):
-    if exp_type == 'arch':
-        return f"{config['layer_1'][0].upper()}-{config['layer_2'][0].upper()}-{config['layer_3'][0].upper()}"
-    elif exp_type == 'strat':
-        label = []
-        label.append('four factor') if config['four_factor'] else ''
-        label.append('first elem') if config['first_elem_trainable'] else ''
-        label.append('bias') if config['deconv_bias'] else ''
+    try:
+        return config['legend_label']
+    except:
+        if exp_type == 'arch':
+            return f"{config['layer_1'][0].upper()}-{config['layer_2'][0].upper()}-{config['layer_3'][0].upper()}"
+        elif exp_type == 'strat':
+            label = []
+            label.append('four factor') if config['four_factor'] else ''
+            label.append('first elem') if config['first_elem_trainable'] else ''
+            label.append('bias') if config['deconv_bias'] else ''
 
-        if len(label) == 0:
-            return 'none'
+            if len(label) == 0:
+                return 'none'
 
-        return '-'.join(label)
-    else:
-        raise NameError('Experiment Type not supported')
+            return '-'.join(label)
+        else:
+            raise NameError('Experiment Type not supported')
 
 
 def plot_mean_std(username, project_name, metrics: list, exp_type):
