@@ -23,13 +23,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--deconv', dest='deconv', action='store_true')
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
-    parser.add_argument("-lr", "--learning_rate", default=3, type=int, help="Learning rate")
     parser.add_argument("-m", "--model", default='lenet', type=str, help="Choose between two model: lenet or twolayer")
     parser.add_argument('--multi', default='experiment_csv/img_class/dev.txt',
                         help="Choose which file the experiments are contained in. "
                              "Set to false if you want to use single")
     parser.add_argument("-d", "--ds", default='cifar', type=str, help="Choose which dataset to use")
-    parser.add_argument("-b", "--batch_size", default=32, type=int, help="How many epochs to train the network for")
     args = parser.parse_args()
 
     learning_rate = 10 ** -args.learning_rate
