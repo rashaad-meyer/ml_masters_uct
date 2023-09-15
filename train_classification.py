@@ -43,38 +43,6 @@ def main():
             torch.manual_seed(exp_run)
             configs = read_json_objects(args.multi)
 
-            g = torch.Generator()
-            g.manual_seed(exp_run)
-
-            if args.ds == 'cifar':
-                transforms = T.Compose([
-                    # T.RandomHorizontalFlip(),
-                    # T.RandomCrop(32, padding=4),
-                    T.ToTensor(),
-                ])
-                training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
-                train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=g)
-
-                val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
-                val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
-            elif args.ds == 'dtd':
-                transforms = T.Compose([
-                    # T.RandomHorizontalFlip(),
-                    # T.RandomCrop(32, padding=4),
-                    T.ToTensor(),
-                    T.Resize((224, 224)),
-                ])
-                training_data = torchvision.datasets.DTD(root='data', split='train', download=True,
-                                                         transform=transforms)
-                train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=g)
-
-                val_data = torchvision.datasets.DTD(root='data', split='train', download=True, transform=transforms)
-                val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
-            else:
-                raise NameError('Invalid class specified please pick from the following: cifar / dtd')
-
-            num_classes = len(training_data.classes)
-
             for hyperparams in configs:
                 exp_type = args.multi.split('/')[-1][:-4]
 
@@ -82,6 +50,13 @@ def main():
                 learning_rate = hyperparams.get('learning_rate', 0.001)
                 optimizer_type = hyperparams.get('optimizer', 'adam').lower()
                 exp_type = hyperparams.get('exp_type', exp_type).lower()
+
+                g = torch.Generator()
+                g.manual_seed(exp_run)
+
+                train_dataloader, training_data, val_dataloader = get_dataloaders(args, batch_size, g)
+
+                num_classes = len(training_data.classes)
 
                 for key, item in hyperparams.items():
                     print(f'{key} is set to {item}')
@@ -134,6 +109,36 @@ def main():
         history = train_classification_model(model, criterion, optimizer, train_dataloader, num_epochs=num_epochs)
 
         helper.write_history_to_csv('data', history, 'srcnn', DECONV, '')
+
+
+def get_dataloaders(args, batch_size, g):
+    if args.ds == 'cifar':
+        transforms = T.Compose([
+            # T.RandomHorizontalFlip(),
+            # T.RandomCrop(32, padding=4),
+            T.ToTensor(),
+        ])
+        training_data = torchvision.datasets.CIFAR10('data', train=True, download=True, transform=transforms)
+        train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=g)
+
+        val_data = torchvision.datasets.CIFAR10('data', train=False, download=True, transform=T.ToTensor())
+        val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
+    elif args.ds == 'dtd':
+        transforms = T.Compose([
+            # T.RandomHorizontalFlip(),
+            # T.RandomCrop(32, padding=4),
+            T.ToTensor(),
+            T.Resize((224, 224)),
+        ])
+        training_data = torchvision.datasets.DTD(root='data', split='train', download=True,
+                                                 transform=transforms)
+        train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, generator=g)
+
+        val_data = torchvision.datasets.DTD(root='data', split='train', download=True, transform=transforms)
+        val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
+    else:
+        raise NameError('Invalid class specified please pick from the following: cifar / dtd')
+    return train_dataloader, training_data, val_dataloader
 
 
 def read_json_objects(file_path):
