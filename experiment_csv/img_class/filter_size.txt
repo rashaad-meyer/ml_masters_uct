@@ -1,0 +1,4 @@
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "deconv_filter_size": 3, "legend_label": "3", "exp_type":"deconv_filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "deconv_filter_size": 5, "legend_label": "5", "exp_type":"deconv_filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "deconv_filter_size": 7, "legend_label": "7", "exp_type":"deconv_filter_size"}
+{"layer_1": "deconv",   "layer_2": "conv",      "layer_3": "conv","four_factor": true,    "first_elem_trainable": true,    "deconv_bias": true, "deconv_filter_size": 9, "legend_label": "9", "exp_type":"deconv_filter_size"}
