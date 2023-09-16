@@ -74,19 +74,18 @@ def main():
         experiments = pd.read_csv(args.multi, dtype={'deconv': bool}).to_dict('records')
         exp_type = args.multi.split('/')[-1][:-4]
 
-    for experiment in experiments:
-        experiment.update({
-            'color': args.color,
-            'dataset': args.ds,
-            'scale': args.scale,
-            'same_size': args.same_size,
-            'log_interval': args.log_int,
-        })
+    # run experiments 3 times for validity and consistency
+    for _ in range(3):
+        for experiment in experiments:
+            experiment.update({
+                'color': args.color,
+                'dataset': args.ds,
+                'log_interval': args.log_int,
+            })
 
-        model_name = "SRCNN" if args.same_size else "ESPCN"
-        with wandb.init(project=f"{model_name}-{exp_type}-x{args.scale}-{DATE}", config=experiment):
-            config = wandb.config
-            run_experiment(**config)
+            with wandb.init(project=f"{exp_type}-{DATE}", config=experiment):
+                config = wandb.config
+                run_experiment(**config)
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
