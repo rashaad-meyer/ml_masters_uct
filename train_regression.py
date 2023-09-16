@@ -40,7 +40,7 @@ def main():
     parser.add_argument("-n", "--num_epochs", default=10, type=int, help="How many epochs to train the network for")
     parser.add_argument("-lr", "--learning_rate", default=4, type=int, help="Learning rate")
 
-    parser.add_argument("--multi", default='', dest='multi', action='store_true')
+    parser.add_argument("--multi", default='', help="Specify file that contains experiments")
 
     parser.add_argument("--color", default='ycbcr', help="Select color space rgb/gray/ycbcr")
 
@@ -53,7 +53,7 @@ def main():
     args = parser.parse_args()
     wandb.login()
 
-    if not args.multi:
+    if args.multi == '':
         experiments = [{
             'path': args.path,
             'model_name': args.model,
@@ -71,7 +71,7 @@ def main():
         }]
         exp_type = 'single'
     else:
-        experiments = pd.read_csv(args.multi, dtype={'deconv': bool}).to_dict('records')
+        experiments = pd.read_csv(args.multi).to_dict('records')
         exp_type = args.multi.split('/')[-1][:-4]
 
     # run experiments 3 times for validity and consistency
