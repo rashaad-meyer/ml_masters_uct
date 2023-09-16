@@ -1,9 +1,11 @@
 import os
+import sys
 import wandb
-import matplotlib.pyplot as plt
 import numpy as np
-from collections import defaultdict
 from tqdm import tqdm
+from PIL import Image
+import matplotlib.pyplot as plt
+from collections import defaultdict
 
 
 def fetch_runs(username, project_name):
@@ -95,17 +97,44 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
 
     # plt.show()
     os.makedirs('gen_imgs', exist_ok=True)
-    plt.savefig(f'gen_imgs/{project_name}_{metrics[0]}_{metrics[1]}.png')
+    file_name = f'gen_imgs/{project_name}_{metrics[0]}_{metrics[1]}.png'
+    plt.savefig(file_name)
     plt.close()
+    crop_image(image_path=file_name, crop_width=150, crop_height=40)
+    print(f'Plot saved to: {file_name}')
+
+
+def crop_image(image_path, crop_width=150, crop_height=40):
+    """
+    Crop the sides of an image by a specified number of pixels.
+
+    :param crop_height: number of pixels to crop bottom and top
+    :param crop_width: number of pixels to crop left and right
+    :param image_path: Path to the image file.
+    :param pixels_to_crop: Number of pixels to crop from each side.
+    :return: Cropped image object.
+    """
+    with Image.open(image_path) as img:
+        width, height = img.size
+
+        # Calculate new boundaries for cropping
+        left = crop_width
+        upper = crop_height
+        right = width - crop_width
+        lower = height - crop_height
+
+        cropped_img = img.crop((left, upper, right, lower))
+
+    cropped_img.save(image_path)
 
 
 # Usage
 def main():
     username = "viibrem"
-    project_name = "Cifar10_strat_09-14"
+    project_name = "Cifar10_optimizer_09-15"
     exp_type = project_name.split('_')[1]
-    metrics = ['train_epoch_loss', 'valid_epoch_loss']
-    # metrics = ['train_accuracy', 'valid_accuracy']
+    # metrics = ['train_epoch_loss', 'valid_epoch_loss']
+    metrics = ['train_accuracy', 'valid_accuracy']
     plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
 
 
