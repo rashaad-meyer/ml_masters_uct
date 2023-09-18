@@ -90,7 +90,7 @@ def main():
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
                    color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None,
-                   four_factor=True, log_interval=0):
+                   four_factor=True, log_interval=0, **kwargs):
     # FIXME add padding to list of arguments
     torch.manual_seed(42)
     if dataset == 'div2k':
