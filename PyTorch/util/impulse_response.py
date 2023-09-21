@@ -8,10 +8,20 @@ from PyTorch.Models.CnnModules import TwoLayerCNN
 
 
 def impulse_response_of_model(model, img_size):
+    """
+
+    :param model:
+    :param img_size: (C x H x W)
+    :return:
+    """
     model.eval()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    x = F.pad(torch.tensor([[[1.0]]]), (0, img_size[-2] - 1, 0, img_size[-1] - 1))
+    x = torch.zeros(img_size)
+
+    x[0, x.size(-2) // 2, x.size(-1) // 2] = 1.0
+    x[1, x.size(-2) // 2, x.size(-1) // 2] = 1.0
+    x[2, x.size(-2) // 2, x.size(-1) // 2] = 1.0
 
     num_channels = img_size[0]
     x = x.expand(num_channels, -1, -1).unsqueeze(0)
