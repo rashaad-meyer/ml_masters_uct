@@ -88,7 +88,7 @@ def main():
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
                    color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None,
-                   four_factor=True, log_interval=0, **kwargs):
+                   four_factor=True, log_interval=0, filter_1_size=5, channels_1=64, **kwargs):
     # FIXME add padding to list of arguments
     torch.manual_seed(42)
     if dataset == 'div2k':
@@ -169,8 +169,8 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
             use_pixel_shuffle = True
 
         if use_pixel_shuffle:
-            model = ESPCN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,
-                          first_elem_trainable=first_elem_trainable, pad_inner=pad_inner,
+            model = ESPCN(num_channels=num_channels, channels_1=channels_1, filter_1_size=filter_1_size, channels_2=32,
+                          deconv=deconv, bias=bias, first_elem_trainable=first_elem_trainable, pad_inner=pad_inner,
                           four_factor=four_factor, upscale_factor=scale)
         else:
             model = SRCNN(num_channels=num_channels, channels_1=64, channels_2=32, deconv=deconv, bias=bias,

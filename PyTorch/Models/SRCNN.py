@@ -38,7 +38,8 @@ class SRCNN(nn.Module):
 
 
 class ESPCN(nn.Module):
-    def __init__(self, num_channels=1, channels_1=64, channels_2=32, upscale_factor=2, deconv=False,
+    def __init__(self, num_channels=1, channels_1=64, channels_2=32, filter_1_size=5, upscale_factor=2,
+                 deconv=False,
                  bias=True, first_elem_trainable=False, pad_inner=None, four_factor=True, activation='tanh'):
 
         super(ESPCN, self).__init__()
@@ -54,10 +55,11 @@ class ESPCN(nn.Module):
         self.logger.setLevel(logging.INFO)
 
         if deconv:
-            self.conv1 = Deconv2D(num_channels, channels_1, (5, 5), bias=bias, four_factor=four_factor,
-                                  first_elem_trainable=first_elem_trainable, pad_inner=pad_inner)
+            self.conv1 = Deconv2D(num_channels, channels_1, (filter_1_size, filter_1_size), bias=bias,
+                                  four_factor=four_factor, first_elem_trainable=first_elem_trainable,
+                                  pad_inner=pad_inner)
         else:
-            self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=5, padding='same')
+            self.conv1 = nn.Conv2d(num_channels, channels_1, kernel_size=filter_1_size, padding='same')
 
         self.conv2 = nn.Conv2d(channels_1, channels_2, kernel_size=3, padding='same')
 
