@@ -18,12 +18,23 @@ def impulse_response_of_model(model, img_size):
 
     x = x.to(device)
 
-    _ = model(x)
-    y = model.layer1_out
-    yf = fft2(y)
+    with torch.no_grad():
+        _ = model(x)
+        y = model.layer1_out
+        yf = fft2(y)
 
     # return output magnitude and phase
     return yf.abs(), yf.angle(), y
+
+
+def image_response_of_model(model, image):
+    model.eval()
+
+    with torch.no_grad():
+        _ = model(image)
+        y = model.layer1_out
+
+    return y
 
 
 def save_tensor_images(tensor, file_prefix=None, folder=None):
