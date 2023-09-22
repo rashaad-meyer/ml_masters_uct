@@ -50,32 +50,32 @@ def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_t
         grouped_runs = group_runs_by_config(runs, exp_type)
 
         # Set up the color map
-        cmap = plt.get_cmap('tab20c')
+        cmap = plt.get_cmap('tab20b')
         # Create a color normalizer
         norm = mpl.colors.Normalize(vmin=0, vmax=len(grouped_runs))
 
         print('Plotting...')
         for idx, (label, runs) in tqdm(enumerate(grouped_runs.items())):
 
-            mean, std = calculate_mean_std(runs, metric)
-            if mean is None:
+            metric_history = runs[0].history()[metric].values
+            if metric_history is None:
                 continue
 
-            epochs = range(1, len(mean) + 1)
+            epochs = range(1, len(metric_history) + 1)
 
             color = cmap(norm(idx))
-            plt.plot(epochs, mean, label=label, color=color)
+            plt.plot(epochs, metric_history, label=label, color=color)
             # plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
 
         # get first instance
-        mean, _ = calculate_mean_std(baseline_runs, metric)
+        metric_history = baseline_runs[0].history()[metric].values
 
-        if mean is not None:
-            epochs = range(1, len(mean) + 1)
-            plt.plot(epochs, mean, label='baseline', color='red')
+        if metric_history is not None:
+            epochs = range(1, len(metric_history) + 1)
+            plt.plot(epochs, metric_history, label='baseline', color='red')
 
-        plt.xlabel('Epochs')
-        plt.ylabel(metric.replace('_', ' ').capitalize())
+        plt.xlabel('Epochs', fontsize=14)
+        plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=14)
 
         plt.legend(loc='lower right', fontsize=15)
 
