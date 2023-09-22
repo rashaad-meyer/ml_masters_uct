@@ -4,6 +4,7 @@ import wandb
 import numpy as np
 from tqdm import tqdm
 from PIL import Image
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from collections import defaultdict
 
@@ -78,20 +79,25 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
         print('Grouping Runs...')
         grouped_runs = group_runs_by_config(runs, exp_type)
 
+        # Set up the color map
+        cmap = plt.get_cmap('tab20b')
+        # Create a color normalizer
+        norm = mpl.colors.Normalize(vmin=0, vmax=len(grouped_runs))
+
         print('Plotting...')
-        for label, runs in tqdm(grouped_runs.items()):
+        for idx, (label, runs) in tqdm(enumerate(grouped_runs.items())):
 
             mean, std = calculate_mean_std(runs, metric)
             if mean is None:
                 continue
 
             epochs = range(1, len(mean) + 1)
-
+            color = cmap(norm(idx))
             plt.plot(epochs, mean, label=label)
             plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
 
-        plt.xlabel('Epochs')
-        plt.ylabel(metric.replace('_', ' ').capitalize())
+        plt.xlabel('Epochs', fontsize=14)
+        plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=14)
 
         plt.legend(loc='lower right', fontsize=15)
 
