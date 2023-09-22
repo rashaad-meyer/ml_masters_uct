@@ -74,8 +74,8 @@ def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_t
             epochs = range(1, len(metric_history) + 1)
             plt.plot(epochs, metric_history, label='baseline', color='red')
 
-        plt.xlabel('Epochs', fontsize=14)
-        plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=14)
+        plt.xlabel('Epochs', fontsize=16)
+        plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=16)
 
         plt.legend(loc='lower right', fontsize=15)
 
@@ -84,7 +84,7 @@ def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_t
     file_name = f'gen_imgs/{project_name}_{metrics[0]}_{metrics[1]}.png'
     plt.savefig(file_name)
     plt.close()
-    crop_image(image_path=file_name, crop_width=150, crop_height=40)
+    crop_image(image_path=file_name, crop_width=150, crop_height=30)
     print(f'Plot saved to: {file_name}')
 
 
