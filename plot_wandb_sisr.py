@@ -36,7 +36,7 @@ def group_runs_by_config(runs, exp_type):
     return grouped_runs
 
 
-def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_type):
+def plot_mean_std(username, project_name, baseline_project, additional_project, metrics: list, exp_type):
     plt.figure(figsize=(20, 8))
     for i, metric in enumerate(metrics):
         print(f'Processing plot {i + 1}')
@@ -45,6 +45,10 @@ def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_t
         print('Fetching Runs...')
         runs = fetch_runs(username, project_name)
         baseline_runs = fetch_runs(username, baseline_project)
+        if additional_project is not None:
+            additional_runs = fetch_runs(username, additional_project)
+        else:
+            additional_runs = None
 
         print('Grouping Runs...')
         grouped_runs = group_runs_by_config(runs, exp_type)
@@ -74,6 +78,14 @@ def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_t
             epochs = range(1, len(metric_history) + 1)
             plt.plot(epochs, metric_history, label='baseline', color='red')
 
+        if additional_runs is not None:
+            # additional project
+            metric_history = additional_runs[0].history()[metric].values
+
+            if metric_history is not None:
+                epochs = range(1, len(metric_history) + 1)
+                plt.plot(epochs, metric_history, label='no padding', color='green')
+
         plt.xlabel('Epochs', fontsize=16)
         plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=16)
 
@@ -91,13 +103,14 @@ def plot_mean_std(username, project_name, baseline_project, metrics: list, exp_t
 # Usage
 def main():
     username = "viibrem"
-    project_name = "srcnn_x2-09-17"
+    project_name = "srcnn_padding_x2-09-18"
     baseline_project = "base_srcnn_x2-09-16"
+    additional_project = "srcnn_x2-09-17"
     exp_type = project_name.split('_')[1]
     # metrics = ['train_epoch_loss', 'valid_epoch_loss']
     metrics = ['train_psnr', 'valid_psnr']
 
-    plot_mean_std(username, project_name, baseline_project, metrics=metrics, exp_type=exp_type)
+    plot_mean_std(username, project_name, baseline_project, additional_project, metrics=metrics, exp_type=exp_type)
 
 
 if __name__ == '__main__':
