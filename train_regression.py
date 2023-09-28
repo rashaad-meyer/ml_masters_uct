@@ -73,17 +73,17 @@ def main():
     else:
         experiments = pd.read_csv(args.multi).to_dict('records')
         exp_type = args.multi.split('/')[-1][:-4]
+    for _ in range(3):
+        for experiment in experiments:
+            experiment.update({
+                'color': args.color,
+                'dataset': args.ds,
+                'log_interval': args.log_int,
+            })
 
-    for experiment in experiments:
-        experiment.update({
-            'color': args.color,
-            'dataset': args.ds,
-            'log_interval': args.log_int,
-        })
-
-        with wandb.init(project=f"{exp_type}-{DATE}", config=experiment):
-            config = wandb.config
-            run_experiment(**config)
+            with wandb.init(project=f"{exp_type}-{DATE}", config=experiment):
+                config = wandb.config
+                run_experiment(**config)
 
 
 def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bias=True, first_elem_trainable=False,
