@@ -16,11 +16,15 @@ def generate_legend_label(config, exp_type):
         return config['legend_label']
     except:
         label = []
-        label.append('four factor') if config['four_factor'] else ''
-        label.append('first elem') if config['first_elem_trainable'] else ''
+        if exp_type == 'loss':
+            label.append(config['loss'])
+        else:
+            label = []
+            label.append('FF') if config['four_factor'] else ''
+            label.append('FET') if config['first_elem_trainable'] else ''
 
         if len(label) == 0:
-            return 'none'
+            return 'NONE'
 
         return '-'.join(label)
 
@@ -76,7 +80,7 @@ def plot_mean_std(username, project_name, baseline_project, additional_project, 
 
         if metric_history is not None:
             epochs = range(1, len(metric_history) + 1)
-            plt.plot(epochs, metric_history, label='baseline', color='red')
+            plt.plot(epochs, metric_history, label='BASELINE', color='red')
 
         if additional_runs is not None:
             # additional project
@@ -84,10 +88,10 @@ def plot_mean_std(username, project_name, baseline_project, additional_project, 
 
             if metric_history is not None:
                 epochs = range(1, len(metric_history) + 1)
-                plt.plot(epochs, metric_history, label='no padding', color='green')
+                plt.plot(epochs, metric_history, label='NO PADDING', color='green')
 
-        plt.xlabel('Epochs', fontsize=16)
-        plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=16)
+        plt.xlabel('Epochs'.upper(), fontsize=16)
+        plt.ylabel(metric.replace('_', ' ').upper(), fontsize=16)
 
         plt.legend(loc='lower right', fontsize=15)
 
@@ -103,14 +107,38 @@ def plot_mean_std(username, project_name, baseline_project, additional_project, 
 # Usage
 def main():
     username = "viibrem"
-    project_name = "srcnn_padding_x2-09-18"
+
+    # ESPCN START
+    # =======================================
+    # project_names = [
+    #     "espcn_filter_size_x2-09-22",
+    #     "espcn_loss_x2-09-22",
+    #     "espcn_num_filters_x2-09-21",
+    # ]
+    # baseline_project = "base_espcn_x2-09-23"
+    # additional_projects = [None, None, None]
+    # ======================================
+
+    # SRCNN START
+    # =======================================
+    project_names = [
+        "srcnn_x2-09-17",
+        "srcnn_padding_x2-09-18",
+    ]
     baseline_project = "base_srcnn_x2-09-16"
-    additional_project = "srcnn_x2-09-17"
-    exp_type = project_name.split('_')[1]
+    additional_projects = [None, "srcnn_x2-09-17"]
+    # ======================================
+
     # metrics = ['train_epoch_loss', 'valid_epoch_loss']
     metrics = ['train_psnr', 'valid_psnr']
-
-    plot_mean_std(username, project_name, baseline_project, additional_project, metrics=metrics, exp_type=exp_type)
+    for project_name, additional_project in zip(project_names, additional_projects):
+        exp_type = project_name.split('_')[1]
+        plot_mean_std(username,
+                      project_name,
+                      baseline_project,
+                      additional_project,
+                      metrics=metrics,
+                      exp_type=exp_type)
 
 
 if __name__ == '__main__':

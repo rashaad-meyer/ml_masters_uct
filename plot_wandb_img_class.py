@@ -55,14 +55,14 @@ def generate_legend_label(config, exp_type):
             return f"{config['layer_1'][0].upper()}-{config['layer_2'][0].upper()}-{config['layer_3'][0].upper()}"
         elif exp_type == 'strat':
             label = []
-            label.append('four factor') if config['four_factor'] else ''
-            label.append('first elem') if config['first_elem_trainable'] else ''
-            label.append('bias') if config['deconv_bias'] else ''
+            label.append('FF') if config['four_factor'] else ''
+            label.append('FET') if config['first_elem_trainable'] else ''
+            label.append('B') if config['deconv_bias'] else ''
 
             if len(label) == 0:
                 return 'none'
 
-            return '-'.join(label)
+            return ' + '.join(label)
         else:
             raise NameError('Experiment Type not supported')
 
@@ -93,13 +93,13 @@ def plot_mean_std(username, project_name, metrics: list, exp_type):
 
             epochs = range(1, len(mean) + 1)
             color = cmap(norm(idx))
-            plt.plot(epochs, mean, label=label)
-            plt.fill_between(epochs, mean - std, mean + std, alpha=0.2)
+            plt.plot(epochs, mean, label=label.upper(), color=color)
+            plt.fill_between(epochs, mean-std, mean + std, alpha=0.2)
 
-        plt.xlabel('Epochs', fontsize=16)
-        plt.ylabel(metric.replace('_', ' ').capitalize(), fontsize=16)
+        plt.xlabel('EPOCHS', fontsize=16)
+        plt.ylabel(metric.replace('_', ' ').upper(), fontsize=16)
 
-        plt.legend(loc='lower right', fontsize=15)
+        plt.legend(loc='best', fontsize=15)
 
     # plt.show()
     os.makedirs('gen_imgs', exist_ok=True)
@@ -126,8 +126,8 @@ def crop_image(image_path, crop_width=150, crop_height=40):
         # Calculate new boundaries for cropping
         left = crop_width
         upper = crop_height
-        right = width - crop_width
-        lower = height - crop_height
+        right = width-crop_width
+        lower = height-crop_height
 
         cropped_img = img.crop((left, upper, right, lower))
 
@@ -137,11 +137,20 @@ def crop_image(image_path, crop_width=150, crop_height=40):
 # Usage
 def main():
     username = "viibrem"
-    project_name = "Cifar10_optimizer_09-15"
-    exp_type = project_name.split('_')[1]
-    # metrics = ['train_epoch_loss', 'valid_epoch_loss']
-    metrics = ['train_accuracy', 'valid_accuracy']
-    plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
+    project_names = [
+        "Cifar10_arch_09-13",
+        # "Cifar10_batch_size_09-15",
+        # "Cifar10_filter_size_09-15",
+        # "Cifar10_learning_rate_09-15",
+        # "Cifar10_num_filters_09-15",
+        # "Cifar10_optimizer_09-15",
+        "Cifar10_strat_09-14",
+    ]
+    for project_name in project_names:
+        exp_type = project_name.split('_')[1]
+        metrics = ['train_epoch_loss', 'valid_epoch_loss']
+        # metrics = ['train_accuracy', 'valid_accuracy']
+        plot_mean_std(username, project_name, metrics=metrics, exp_type=exp_type)
 
 
 if __name__ == '__main__':
