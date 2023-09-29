@@ -90,7 +90,6 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
                    color='rgb', dataset='div2k', scale=2, padding=False, same_size=False, pad_inner=None,
                    four_factor=True, log_interval=0, filter_1_size=5, channels_1=64, **kwargs):
     # FIXME add padding to list of arguments
-    torch.manual_seed(42)
     if dataset == 'div2k':
         lr_train_path, hr_train_path = helper.download_and_unzip_div2k(path)
         lr_val_path, hr_val_path = helper.download_and_unzip_div2k(path, dataset_type='valid')
