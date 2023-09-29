@@ -130,7 +130,7 @@ def run_experiment(path, model_name, deconv, loss, num_epochs, learning_rate, bi
         val_data = EvalDataset(val_path, same_size=same_size)
 
         g = torch.Generator()
-        g.manual_seed(0)
+        g.manual_seed(4)
 
         train_dataloader = DataLoader(train_data, batch_size=16, shuffle=True, generator=g)
         val_dataloader = DataLoader(val_data, batch_size=1, shuffle=True, generator=g)
