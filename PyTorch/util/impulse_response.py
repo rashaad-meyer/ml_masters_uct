@@ -2,7 +2,7 @@ import os
 import torch
 import torch.nn.functional as F
 import torchvision.transforms as T
-from torch.fft import fft2
+from torch.fft import fft2, fftshift
 
 from PyTorch.Models.CnnModules import TwoLayerCNN
 
@@ -32,6 +32,7 @@ def impulse_response_of_model(model, img_size):
         _ = model(x)
         y = model.layer1_out
         yf = fft2(y)
+        yf = fftshift(yf, dim=(-1, -2))
 
     # return output magnitude and phase
     return yf.abs(), yf.angle(), y
