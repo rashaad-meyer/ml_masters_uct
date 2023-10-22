@@ -8,7 +8,7 @@ from PyTorch.Datasets.AudioDatasets import UrbanSound8KDataset
 from PyTorch.Models.CnnAudio import AudioDNN
 from PyTorch.util.training_functions import train_classification_model
 
-experiments = [
+EXPERIMENTS = [
     {'mode': 'deconv'},
     {'mode': 'conv'}
 ]
@@ -20,7 +20,7 @@ def main():
 
     train_dataloader = DataLoader(training_data, batch_size=32, shuffle=True)
 
-    for experiment in experiments:
+    for experiment in EXPERIMENTS:
         with wandb.init(project=f"one-dimension-example", config=experiment):
             config = wandb.config
             model = AudioDNN(**experiment)
