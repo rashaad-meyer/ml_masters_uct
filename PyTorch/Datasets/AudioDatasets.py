@@ -3,6 +3,7 @@ import torch
 import librosa
 import torchaudio
 import pandas as pd
+import torch.nn as nn
 from torch.utils.data import Dataset
 
 
@@ -17,11 +18,13 @@ class UrbanSound8KDataset(Dataset):
         self.metadata = pd.read_csv(csv_file)
         self.root_dir = root_dir
         self.transform = transform
+        self.MAX_LENGTH = 89009
 
     def __len__(self):
         return len(self.metadata)
 
     def __getitem__(self, idx):
+
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
@@ -31,17 +34,19 @@ class UrbanSound8KDataset(Dataset):
         label = self.metadata.iloc[idx, 6]
         label_encoded = int(label)
 
-        sample = {'waveform': waveform, 'sample_rate': sample_rate, 'label': label_encoded}
+        waveform = torch.tensor(waveform)
+        waveform = nn.functional.pad(waveform, (0, self.MAX_LENGTH - waveform.size(-1)))
 
-        if self.transform:
-            sample = self.transform(sample)
-
-        return sample
+        return waveform, label_encoded
 
 
 if __name__ == '__main__':
     # Usage example
     dataset = UrbanSound8KDataset(csv_file='../../data/urban8k/UrbanSound8K/UrbanSound8K/metadata/UrbanSound8K.csv',
                                   root_dir='../../data/urban8k/UrbanSound8K/UrbanSound8K/audio/')
-    for i in range(20):
-        print(len(dataset[i]['waveform']))
+    lengths = []
+    for i in range(len(dataset)):
+        lengths.append(len(dataset[i]['waveform']))
+        print(dataset[i]['sample_rate'])
+
+    print(max(lengths))
