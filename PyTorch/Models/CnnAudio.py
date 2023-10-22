@@ -9,7 +9,7 @@ class AudioDNN(nn.Module):
         if mode == 'deconv':
             self.conv1 = Deconv1D(bias=False, first_elem_trainable=False)
         elif mode == 'conv':
-            self.conv1 = nn.Conv1d(1, )
+            self.conv1 = nn.Conv1d(1, 1, 1)
         self.fc1 = nn.Linear(89009, 10)
         self.relu = nn.ReLU()
         self.flatten = nn.Flatten()
