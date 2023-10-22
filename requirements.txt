@@ -13,3 +13,7 @@ super-image
 pyyaml
 h5py
 gdown
+pillow
+requests
+torchaudio
+seaborn
