@@ -37,3 +37,21 @@ Once you've done this you're ready to start running some of the scripts
 
 
 ## Running the experiments
+
+### Single Image Super Resolution
+
+```
+python train_regression.py --multi experiment_csv/sisr/srcnn_x2.csv
+```
+
+### Image Classification
+
+```
+python train_classification.py --multi experiment_csv/img_class/strat.txt
+```
+
+### Sound Classification
+
+```
+python train_1d_classification.py
+```
