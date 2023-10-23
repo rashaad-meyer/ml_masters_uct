@@ -25,7 +25,7 @@ Note: You can get a Weights and Biases API key by signing up and finding it in t
 
 On Linux
 ```
-$ export WANDB_API_KEY=YOUR_API_KEY
+export WANDB_API_KEY=YOUR_API_KEY
 ```
 
 On Windows (CMD)
