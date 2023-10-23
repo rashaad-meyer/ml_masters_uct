@@ -38,6 +38,9 @@ Once you've done this you're ready to start running some of the scripts
 
 ## Running the experiments
 
+Make sure you're in the root directory of this project then run one of the following commands depending on which
+type of experiment you would like to run
+
 ### Single Image Super Resolution
 
 ```
