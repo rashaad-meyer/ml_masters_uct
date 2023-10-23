@@ -16,3 +16,4 @@ gdown
 pillow
 requests
 seaborn
+librosa
