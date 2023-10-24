@@ -98,7 +98,7 @@ class Deconv2D(nn.Module):
 
 class Deconv1D(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, kernel_size=2, bias=True, first_elem_trainable=False,
-                 two_factor=True):
+                 two_factor=True, mode='deconv'):
         super(Deconv1D, self).__init__()
 
         init_factor = (kernel_size * (in_channels + out_channels))
@@ -122,6 +122,7 @@ class Deconv1D(nn.Module):
         self.w = w
         self.first_elem_trainable = first_elem_trainable
         self.two_factor = two_factor
+        self.mode = mode
 
         if bias:
             self.b = nn.Parameter(data=torch.rand(1, out_channels, 1) - 0.5, requires_grad=True)
@@ -138,7 +139,13 @@ class Deconv1D(nn.Module):
             w = torch.reshape(w, (self.out_channels, self.in_channels,) + (self.kernel_size,))
 
         hm1 = nn.functional.pad(w, (0, x.size(-1) - w.size(-1)))
-        gm1f = 1 / fft2(hm1)
+
+        if self.mode == 'deconv':
+            gm1f = 1 / fft2(hm1)
+        elif self.mode == 'conv':
+            gm1f = fft2(hm1)
+        else:
+            raise NameError('Choose valid mode ie conv or deconv')
 
         if self.two_factor:
             gm2f_ = torch.flip(gm1f, dims=(-1,))
