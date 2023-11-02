@@ -11,10 +11,14 @@ class AudioDNN(nn.Module):
         self.fc1 = nn.Linear(89009, 10)
         self.relu = nn.ReLU()
         self.flatten = nn.Flatten()
+        self.layer1_out = None
 
     def forward(self, x):
         x = x.unsqueeze(dim=1)
         x = self.conv1(x)
+
+        self.layer1_out = x
+
         x = self.relu(x)
         x = self.flatten(x)
         x = self.fc1(x)
