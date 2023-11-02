@@ -130,7 +130,8 @@ def plot_dists(tensors, tensors2, file_name=None):
 
         # Convert the PyTorch tensor to a NumPy array
         data = tensor.view(-1).detach().numpy()
-        sns.histplot(data, bins=50, ax=axes[row, col])
+        sns.histplot(data, bins=50, ax=axes[row, col], label='Deconv')
+        axes[row, col].set_yscale('log')  # Set yscale for this axis
 
     if tensors2 is not None:
         for i, tensor in enumerate(tensors):
@@ -140,8 +141,10 @@ def plot_dists(tensors, tensors2, file_name=None):
             # Convert the PyTorch tensor to a NumPy array
         
             data = tensors2[0].view(-1).detach().numpy()
-            sns.histplot(data, bins="auto", ax=axes[row, col])
+            sns.histplot(data, bins="auto", ax=axes[row, col], label='Conv')
             axes[row, col].set_yscale('log')  # Set yscale for this axis
+            axes[row, col].legend()
+            axes[row, col].set_title(f'Filter {i+1}')
 
     if file_name is None:
         # Show the plot
